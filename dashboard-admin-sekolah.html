@@ -63,9 +63,18 @@
             <div class="flex items-center">
                 <button onclick="toggleSidebarMobile()" class="md:hidden mr-4 text-2xl text-gray-700 focus:outline-none hover:text-blue-600 transition">☰</button>
                 
-                <div><h1 class="text-lg md:text-xl font-bold text-gray-700">Nama Portal Anda</h1></div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold text-gray-700">Admin Sekolah</h1>
+                    <p class="text-[10px] md:text-xs text-emerald-600 font-bold bg-emerald-50 inline-block px-2 py-0.5 rounded border border-emerald-200 mt-1 uppercase">Portal Manajemen</p>
+                </div>
             </div>
-            </header>
+            
+            <div class="flex items-center space-x-3">
+                <span class="text-sm font-bold text-gray-600 hidden md:block" id="namaAdminLokal">Memuat...</span>
+                
+                <div class="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-black border border-emerald-200">A</div>
+            </div>
+        </header>
 
         <div class="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 pb-20">
 
@@ -1297,4 +1306,5 @@
 </body>
 
 </html>
+
 
