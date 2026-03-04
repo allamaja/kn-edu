@@ -502,29 +502,52 @@
         };
 
         window.bukaTab = (t) => {
-            let tabs = ['tabDashboard','tabKomparasi','tabReview','tabSemuaSoal','tabKurikulum','tabSekolah','tabJadwal','tabPaket'];
-            let menus = ['menuDashboard','menuKomparasi','menuReview','menuSemuaSoal','menuKurikulum','menuSekolah','menuJadwal','menuPaket'];
+    let tabs = ['tabDashboard','tabKomparasi','tabReview','tabSemuaSoal','tabKurikulum','tabSekolah','tabJadwal','tabPaket'];
+    let menus = ['menuDashboard','menuKomparasi','menuReview','menuSemuaSoal','menuKurikulum','menuSekolah','menuJadwal','menuPaket'];
+    
+    // 1. Sembunyikan semua tab konten
+    tabs.forEach(x => { let e = document.getElementById(x); if(e) e.classList.add('hidden'); });
+    
+    // 2. Kembalikan semua menu ke ukuran langsing (Tidak Aktif)
+    menus.forEach(x => { 
+        let e = document.getElementById(x); 
+        if(e) {
+            // Base class langsing (Ultra-Compact)
+            let baseClass = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs border border-transparent";
+            // Khusus menu Review V2, tambahkan justify-between agar badge merah tetap di kanan
+            if(x === 'menuReview') baseClass += " justify-between";
             
-            tabs.forEach(x => { let e = document.getElementById(x); if(e) e.classList.add('hidden'); });
-            menus.forEach(x => { let e = document.getElementById(x); if(e) e.className = "w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition"; });
-            
-            let targetTab = document.getElementById(t); 
-            if(targetTab) targetTab.classList.remove('hidden');
-            
-            let colorClass = t === 'tabKurikulum' ? 'bg-yellow-500 text-yellow-900' : (t === 'tabPaket' ? 'bg-blue-600 text-white' : 'bg-teal-600 text-white');
-            let activeMenu = document.getElementById('menu' + t.substring(3)); 
-            if(activeMenu) activeMenu.className = `w-full text-left px-4 py-3 rounded-xl font-bold shadow-md transition ${colorClass}`;
-            
-            // Pemicu Penarikan Data (Data Fetching Triggers)
-            if(t === 'tabDashboard') window.muatDashboard();
-            if(t === 'tabKomparasi') jalankanMesinKomparasi();
-            if(t === 'tabKurikulum') { window.muatKurikulum(); window.muatJenisUjian(); }
-            if(t === 'tabReview') window.muatSoalPending();
-            if(t === 'tabSemuaSoal') window.muatSemuaSoal();
-            if(t === 'tabSekolah') window.muatDaftarSekolah();
-            if(t === 'tabPaket') { window.muatSemuaSoal(); window.muatDaftarPaket(); }
-            if(t === 'tabJadwal') { window.muatDaftarPaket(); window.muatJenisUjian(); window.muatDaftarJadwal(); }
-        };
+            e.className = `${baseClass} text-slate-400 hover:bg-slate-800 hover:text-slate-200`; 
+        }
+    });
+    
+    // 3. Tampilkan tab konten yang dituju
+    let targetTab = document.getElementById(t); 
+    if(targetTab) targetTab.classList.remove('hidden');
+    
+    // 4. Warnai menu yang sedang aktif dengan gaya kaca (Glass) yang langsing
+    let activeStyle = 'bg-teal-500/10 text-teal-400 border-teal-500/20'; // Default Teal
+    if (t === 'tabKurikulum') activeStyle = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'; // Kuning
+    if (t === 'tabPaket') activeStyle = 'bg-blue-500/10 text-blue-400 border-blue-500/20'; // Biru
+
+    let activeMenu = document.getElementById('menu' + t.substring(3)); 
+    if(activeMenu) {
+        let baseActiveClass = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs font-medium border";
+        if(t === 'tabReview') baseActiveClass += " justify-between";
+        
+        activeMenu.className = `${baseActiveClass} ${activeStyle}`;
+    }
+    
+    // 5. Pemicu Penarikan Data (Data Fetching Triggers) - TIDAK ADA YANG DIUBAH
+    if(t === 'tabDashboard') window.muatDashboard();
+    if(t === 'tabKomparasi') jalankanMesinKomparasi();
+    if(t === 'tabKurikulum') { window.muatKurikulum(); window.muatJenisUjian(); }
+    if(t === 'tabReview') window.muatSoalPending();
+    if(t === 'tabSemuaSoal') window.muatSemuaSoal();
+    if(t === 'tabSekolah') window.muatDaftarSekolah();
+    if(t === 'tabPaket') { window.muatSemuaSoal(); window.muatDaftarPaket(); }
+    if(t === 'tabJadwal') { window.muatDaftarPaket(); window.muatJenisUjian(); window.muatDaftarJadwal(); }
+};
 
         window.muatDashboard = async () => {
             try {
@@ -1448,6 +1471,7 @@
 </body>
 
 </html>
+
 
 
 
