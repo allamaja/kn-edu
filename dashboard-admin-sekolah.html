@@ -25,6 +25,12 @@
         math-field { font-size: 1.5rem; background-color: white; border: 2px solid #cbd5e1; border-radius: 0.75rem; padding: 0.5rem; outline: none; }
         math-field:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
     </style>
+    <script>
+        window.addEventListener('pageshow', function(event) {
+            // Jika halaman dimuat dari cache (karena tombol back), paksa refresh!
+            if (event.persisted) { window.location.reload(); }
+        });
+    </script>
 </head>
 <body class="bg-[#f8fafc] h-screen flex font-sans text-gray-800 overflow-hidden selection:bg-emerald-200">
 
@@ -1291,3 +1297,4 @@
 </body>
 
 </html>
+
