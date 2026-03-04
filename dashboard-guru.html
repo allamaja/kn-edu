@@ -31,21 +31,50 @@
 </head>
 <body class="bg-[#f8fafc] h-screen flex font-sans text-gray-800 overflow-hidden selection:bg-orange-200">
 
-    <aside id="sidebarUtama" class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex z-50 shadow-xl h-full absolute md:relative transition-all duration-300">
-        <div class="p-6 border-b border-slate-700">
-            <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-xl shadow-sm">👨‍🏫</div>
-                <div><h2 class="text-xl font-bold text-orange-400">Ruang Guru</h2><p class="text-xs text-slate-400 truncate w-32" id="namaSekolahSidebar">Memuat...</p></div>
+    <aside id="sidebarUtama" class="w-56 bg-slate-900 text-white flex flex-col hidden md:flex z-50 shadow-2xl h-screen sticky top-0 border-r border-slate-800">
+        <div class="p-4 border-b border-slate-800 shrink-0">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded flex items-center justify-center text-sm shadow-sm">👨‍🏫</div>
+                <div>
+                    <h2 class="text-base font-bold text-slate-100 leading-tight">Ruang Guru</h2>
+                    <p class="text-[9px] text-orange-400 font-medium uppercase tracking-wider truncate w-32" id="namaSekolahSidebar">Memuat...</p>
+                </div>
             </div>
         </div>
-        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            <button onclick="bukaTab('tabDashboard')" id="menuDashboard" class="w-full text-left px-4 py-3 rounded-xl bg-orange-500 text-white font-bold shadow-md transition flex items-center">📊 Ringkasan</button>
-            <button onclick="bukaTab('tabBuatSoal')" id="menuBuatSoal" class="w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition flex items-center">✨ Tulis Soal (V2)</button>
-            <button onclick="bukaTab('tabBankSoal')" id="menuBankSoal" class="w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition">📚 Karya Soal Saya</button>
-            <button onclick="bukaTab('tabPaket')" id="menuPaket" class="w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition">📦 Rakit Paket Ujian</button>
-            <button onclick="bukaTab('tabNilai')" id="menuNilai" class="w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition">📈 Data Nilai & Koreksi</button>
+        <nav class="flex-1 px-3 py-4 overflow-y-auto flex flex-col gap-4">
+            <div class="flex flex-col gap-0.5">
+                <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Utama</p>
+                <button onclick="bukaTab('tabDashboard')" id="menuDashboard" class="w-full text-left px-2.5 py-1.5 rounded-lg bg-orange-500/10 text-orange-400 font-medium transition flex items-center text-xs border border-orange-500/20">
+                    <span class="w-5 text-center mr-2">📊</span> Ringkasan
+                </button>
+            </div>
+            <div class="flex flex-col gap-0.5">
+                <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Manajemen Soal</p>
+                <button onclick="bukaTab('tabBuatSoal')" id="menuBuatSoal" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2 text-yellow-500">✨</span> Tulis Soal (V2)
+                </button>
+                <button onclick="bukaTab('tabBankSoal')" id="menuBankSoal" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2">📚</span> Karya Soal
+                </button>
+                <button onclick="bukaTab('tabPaket')" id="menuPaket" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2">📦</span> Rakit Paket
+                </button>
+            </div>
+            <div class="flex flex-col gap-0.5">
+                <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Evaluasi</p>
+                <button onclick="bukaTab('tabNilai')" id="menuNilai" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2">📈</span> Data Nilai
+                </button>
+            </div>
         </nav>
-        <div class="p-4 border-t border-slate-700"><button onclick="keluarAplikasi()" class="w-full text-left px-4 py-2 text-red-400 hover:bg-slate-800 rounded-xl transition font-bold">🚪 Keluar</button></div>
+        <div class="p-3 border-t border-slate-800 bg-slate-900/50 shrink-0">
+            <div class="px-1 mb-3">
+                <p class="text-[9px] text-slate-500 leading-tight">Dikembangkan oleh <br> <span class="font-bold text-teal-400">Tim IT Khairunnas - Allam</span> <br> © 2026 Yayasan Khairunnas.</p>
+            </div>
+            <button onclick="keluarAplikasi()" class="w-full text-left px-2.5 py-1.5 text-red-400/80 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition font-medium flex items-center text-xs">
+                <span class="w-5 text-center mr-2">🚪</span> Keluar Sesi
+            </button>
+        </div>
     </aside>
 
     <main class="flex-1 flex flex-col overflow-y-auto relative w-full">
@@ -346,16 +375,30 @@
             } else window.location.replace("index.html");
         });
 
-        window.bukaTab = (t) => {
-            ['tabDashboard','tabBuatSoal','tabBankSoal','tabPaket','tabNilai'].forEach(id=>{let e=document.getElementById(id);if(e)e.classList.add('hidden');});
-            ['menuDashboard','menuBuatSoal','menuBankSoal','menuPaket','menuNilai'].forEach(id=>{let e=document.getElementById(id);if(e)e.className="w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition flex items-center";});
-            let mt = document.getElementById(t); if(mt) mt.classList.remove('hidden');
-            let mBtn = document.getElementById('menu'+t.substring(3)); if(mBtn) mBtn.className="w-full text-left px-4 py-3 rounded-xl bg-orange-500 text-white font-bold shadow-md transition flex items-center";
-            if(t==='tabDashboard') window.updateStatistik();
-            if(t==='tabBankSoal') window.muatBankSoalPribadi();
-            if(t==='tabPaket') { window.muatBankSoalGlobalLokal(); window.muatDaftarPaketLokal(); }
-            if(t==='tabNilai') window.muatDataNilai();
-        };
+       window.bukaTab = (t) => {
+    let tabs = ['tabDashboard','tabBuatSoal','tabBankSoal','tabPaket','tabNilai'];
+    let menus = ['menuDashboard','menuBuatSoal','menuBankSoal','menuPaket','menuNilai'];
+
+    tabs.forEach(id => { let e = document.getElementById(id); if(e) e.classList.add('hidden'); });
+    
+    // Reset semua menu jadi langsing & redup
+    menus.forEach(id => {
+        let e = document.getElementById(id);
+        if(e) e.className = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs border border-transparent text-slate-400 hover:bg-slate-800 hover:text-slate-200";
+    });
+
+    let mt = document.getElementById(t); if(mt) mt.classList.remove('hidden');
+
+    // Menu aktif bergaya elegan (Oranye)
+    let mBtn = document.getElementById('menu' + t.substring(3)); 
+    if(mBtn) mBtn.className = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs font-medium border bg-orange-500/10 text-orange-400 border-orange-500/20";
+
+    // Triggers
+    if(t === 'tabDashboard') window.updateStatistik();
+    if(t === 'tabBankSoal') window.muatBankSoalPribadi();
+    if(t === 'tabPaket') { window.muatBankSoalGlobalLokal(); window.muatDaftarPaketLokal(); }
+    if(t === 'tabNilai') window.muatDataNilai();
+};
 
         // ==========================================
         // 3. FITUR KOREKSI ESAI (GRADING DESK V2)
@@ -598,4 +641,5 @@
 </body>
 
 </html>
+
 
