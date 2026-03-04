@@ -34,28 +34,64 @@
 </head>
 <body class="bg-[#f8fafc] h-screen flex font-sans text-gray-800 overflow-hidden selection:bg-emerald-200">
 
-    <aside id="sidebarUtama" class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex z-50 shadow-xl h-full absolute md:relative transition-all duration-300">
-        <div class="p-6 border-b border-slate-700">
-            <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-xl shadow-sm">🏫</div>
-                <div><h2 class="text-xl font-bold text-emerald-400">Admin Panel</h2><p class="text-xs text-slate-400 truncate w-32" id="namaSekolahSidebar">Memuat...</p></div>
+    <aside id="sidebarUtama" class="w-56 bg-slate-900 text-white flex flex-col hidden md:flex z-50 shadow-2xl h-screen sticky top-0 border-r border-slate-800">
+        <div class="p-4 border-b border-slate-800 shrink-0">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded flex items-center justify-center text-sm shadow-sm">🏫</div>
+                <div>
+                    <h2 class="text-base font-bold text-slate-100 leading-tight">Admin Panel</h2>
+                    <p class="text-[9px] text-emerald-400 font-medium uppercase tracking-wider truncate w-32" id="namaSekolahSidebar">Memuat...</p>
+                </div>
             </div>
         </div>
-        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            <button onclick="bukaTab('tabDashboard')" id="menuDashboard" class="w-full text-left px-4 py-3 rounded-xl bg-emerald-600 text-white font-medium shadow-md transition flex items-center">📊 Dashboard Cabang</button>
-            <button onclick="bukaTab('tabAnalitik')" id="menuAnalitik" class="w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition flex items-center">📈 Analitik & Data</button>
-            <button onclick="bukaTab('tabReview')" id="menuReview" class="w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition flex items-center justify-between">
-                <span>📋 Review Soal V2</span><span id="badgePending" class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">0</span>
-            </button>
-            <button onclick="bukaTab('tabSemuaSoal')" id="menuSemuaSoal" class="w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition">📚 Bank Soal Lokal</button>
-            <button onclick="bukaTab('tabPaket')" id="menuPaket" class="w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition">📦 Paket Ujian Lokal</button>
-            <button onclick="bukaTab('tabJadwal')" id="menuJadwal" class="w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition">📅 Jadwal Ujian</button>
-            <button onclick="bukaTab('tabUser')" id="menuUser" class="w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition text-emerald-300 font-medium">👥 Manajemen User</button>
-            <button onclick="bukaTab('tabLaporan')" id="menuLaporan" class="w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition flex items-center justify-between">
-                <span>🆘 Helpdesk Siswa</span><span id="badgeLaporanAktif" class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full hidden shadow-sm animate-pulse">0</span>
-            </button>
+        <nav class="flex-1 px-3 py-4 overflow-y-auto flex flex-col gap-4">
+            <div class="flex flex-col gap-0.5">
+                <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Analitik</p>
+                <button onclick="bukaTab('tabDashboard')" id="menuDashboard" class="w-full text-left px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 font-medium transition flex items-center text-xs border border-emerald-500/20">
+                    <span class="w-5 text-center mr-2">📊</span> Dasbor Cabang
+                </button>
+                <button onclick="bukaTab('tabAnalitik')" id="menuAnalitik" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2">📈</span> Data Center
+                </button>
+            </div>
+            <div class="flex flex-col gap-0.5">
+                <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Master Soal</p>
+                <button onclick="bukaTab('tabReview')" id="menuReview" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center justify-between text-xs border border-transparent">
+                    <div class="flex items-center"><span class="w-5 text-center mr-2">📋</span> Review V2</div>
+                    <span id="badgePending" class="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">0</span>
+                </button>
+                <button onclick="bukaTab('tabSemuaSoal')" id="menuSemuaSoal" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2">📚</span> Soal Lokal
+                </button>
+                <button onclick="bukaTab('tabPaket')" id="menuPaket" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2">📦</span> Paket Lokal
+                </button>
+            </div>
+            <div class="flex flex-col gap-0.5">
+                <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Pelaksanaan</p>
+                <button onclick="bukaTab('tabJadwal')" id="menuJadwal" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2 text-blue-400">📅</span> Jadwal Aktif
+                </button>
+                <button onclick="bukaTab('tabLaporan')" id="menuLaporan" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center justify-between text-xs border border-transparent">
+                    <div class="flex items-center"><span class="w-5 text-center mr-2">🆘</span> Helpdesk</div>
+                    <span id="badgeLaporanAktif" class="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse hidden">0</span>
+                </button>
+            </div>
+            <div class="flex flex-col gap-0.5">
+                <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Sistem</p>
+                <button onclick="bukaTab('tabUser')" id="menuUser" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2">👥</span> Manajemen User
+                </button>
+            </div>
         </nav>
-        <div class="p-4 border-t border-slate-700"><button onclick="keluarAplikasi()" class="w-full text-left px-4 py-2 text-red-400 hover:bg-slate-800 rounded-xl transition">🚪 Keluar</button></div>
+        <div class="p-3 border-t border-slate-800 bg-slate-900/50 shrink-0">
+            <div class="px-1 mb-3">
+                <p class="text-[9px] text-slate-500 leading-tight">Dikembangkan oleh <br> <span class="font-bold text-teal-400">Tim IT Khairunnas - Allam</span> <br> © 2026 Yayasan Khairunnas.</p>
+            </div>
+            <button onclick="keluarAplikasi()" class="w-full text-left px-2.5 py-1.5 text-red-400/80 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition font-medium flex items-center text-xs">
+                <span class="w-5 text-center mr-2">🚪</span> Keluar Sesi
+            </button>
+        </div>
     </aside>
 
     <main class="flex-1 flex flex-col overflow-y-auto relative w-full">
@@ -562,21 +598,42 @@
         };
 
         window.bukaTab = (idTab) => {
-            ['tabDashboard','tabAnalitik','tabReview','tabSemuaSoal','tabUser','tabJadwal','tabPaket','tabLaporan'].forEach(t => { let e = document.getElementById(t); if(e) e.classList.add('hidden'); });
-            ['menuDashboard','menuAnalitik','menuReview','menuSemuaSoal','menuUser','menuJadwal','menuPaket','menuLaporan'].forEach(m => { let e = document.getElementById(m); if(e) e.className = "w-full text-left px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition flex items-center justify-between"; });
-            let e = document.getElementById(idTab); if(e) e.classList.remove('hidden');
-            let mId = 'menu' + idTab.substring(3), m = document.getElementById(mId);
-            if(m) m.className = `w-full text-left px-4 py-3 rounded-xl text-white font-bold shadow-md transition flex items-center justify-between ${idTab === 'tabUser' ? 'bg-emerald-700' : 'bg-emerald-600'}`;
-            
-            if(idTab === 'tabDashboard') window.muatDashboardLokal();
-            if(idTab === 'tabAnalitik') { renderGrafikTren(); siapkanDropdownAnalisis(); }
-            if(idTab === 'tabSemuaSoal') window.muatBankSoalLokal();
-            if(idTab === 'tabUser') window.muatDataUserLokal();
-            if(idTab === 'tabReview') window.muatSoalLokalPending();
-            if(idTab === 'tabPaket') { window.muatBankSoalGlobalLokal(); window.muatDaftarPaketLokal(); }
-            if(idTab === 'tabJadwal') { window.muatDaftarPaketLokal(); window.muatDaftarJadwal(); }
-            if(idTab === 'tabLaporan') window.muatLaporanKendala();
-        };
+    let tabs = ['tabDashboard','tabAnalitik','tabReview','tabSemuaSoal','tabUser','tabJadwal','tabPaket','tabLaporan'];
+    let menus = ['menuDashboard','menuAnalitik','menuReview','menuSemuaSoal','menuUser','menuJadwal','menuPaket','menuLaporan'];
+
+    tabs.forEach(t => { let e = document.getElementById(t); if(e) e.classList.add('hidden'); });
+    
+    // Reset semua menu ke langsing & redup, amankan layout badge
+    menus.forEach(m => { 
+        let e = document.getElementById(m); 
+        if(e) {
+            let baseClass = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs border border-transparent";
+            if(m === 'menuReview' || m === 'menuLaporan') baseClass += " justify-between"; // Amankan posisi badge merah
+            e.className = `${baseClass} text-slate-400 hover:bg-slate-800 hover:text-slate-200`;
+        }
+    });
+
+    let e = document.getElementById(idTab); if(e) e.classList.remove('hidden');
+    
+    // Warnai menu aktif gaya kaca Emerald
+    let mId = 'menu' + idTab.substring(3), m = document.getElementById(mId);
+    if(m) {
+        let baseActiveClass = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs font-medium border";
+        if(idTab === 'tabReview' || idTab === 'tabLaporan') baseActiveClass += " justify-between";
+        
+        m.className = `${baseActiveClass} bg-emerald-500/10 text-emerald-400 border-emerald-500/20`;
+    }
+    
+    // Triggers
+    if(idTab === 'tabDashboard') window.muatDashboardLokal();
+    if(idTab === 'tabAnalitik') { renderGrafikTren(); siapkanDropdownAnalisis(); }
+    if(idTab === 'tabSemuaSoal') window.muatBankSoalLokal();
+    if(idTab === 'tabUser') window.muatDataUserLokal();
+    if(idTab === 'tabReview') window.muatSoalLokalPending();
+    if(idTab === 'tabPaket') { window.muatBankSoalGlobalLokal(); window.muatDaftarPaketLokal(); }
+    if(idTab === 'tabJadwal') { window.muatDaftarPaketLokal(); window.muatDaftarJadwal(); }
+    if(idTab === 'tabLaporan') window.muatLaporanKendala();
+};
 
         window.muatDashboardLokal = async () => {
             if(!idSekolahGlobal) return;
@@ -1309,6 +1366,7 @@
 </body>
 
 </html>
+
 
 
 
