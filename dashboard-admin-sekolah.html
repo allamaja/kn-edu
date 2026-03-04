@@ -28,7 +28,7 @@
 </head>
 <body class="bg-[#f8fafc] h-screen flex font-sans text-gray-800 overflow-hidden selection:bg-emerald-200">
 
-    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex z-20">
+    <aside id="sidebarUtama" class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex z-50 shadow-xl h-full absolute md:relative transition-all duration-300">
         <div class="p-6 border-b border-slate-700">
             <div class="flex items-center space-x-3">
                 <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-xl shadow-sm">🏫</div>
@@ -53,10 +53,13 @@
     </aside>
 
     <main class="flex-1 flex flex-col overflow-y-auto relative w-full">
-        <header class="bg-white shadow-sm border-b px-8 py-4 flex justify-between items-center sticky top-0 z-10">
-            <div><h1 class="text-xl font-bold text-gray-700">Ruang Kendali Sekolah</h1><p class="text-xs text-gray-500 font-medium" id="idSekolahHeader">ID: ...</p></div>
-            <div class="flex items-center space-x-3"><span class="text-sm font-medium text-gray-600" id="namaAdminLokal">Admin</span><div class="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold">TU</div></div>
-        </header>
+        <header class="bg-white shadow-sm border-b px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-10 w-full">
+            <div class="flex items-center">
+                <button onclick="toggleSidebarMobile()" class="md:hidden mr-4 text-2xl text-gray-700 focus:outline-none hover:text-blue-600 transition">☰</button>
+                
+                <div><h1 class="text-lg md:text-xl font-bold text-gray-700">Nama Portal Anda</h1></div>
+            </div>
+            </header>
 
         <div class="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 pb-20">
 
@@ -1262,6 +1265,29 @@
             document.getElementById('statSoalSulit').innerText = countSulit; document.getElementById('statSoalMudah').innerText = countMudah; document.getElementById('statPartisipan').innerText = totalPartisipan;
             document.getElementById('kontainerHasilAnalisis').classList.remove('hidden');
         };
+        // FITUR BUKA-TUTUP MENU DI HP
+        window.toggleSidebarMobile = () => {
+            const sidebar = document.getElementById('sidebarUtama');
+            if (sidebar.classList.contains('hidden')) {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('flex', 'absolute', 'inset-y-0', 'left-0'); // Muncul melayang
+            } else {
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('flex', 'absolute', 'inset-y-0', 'left-0');
+            }
+        };
+        
+        // Tutup otomatis kalau salah satu menu diklik (khusus di HP)
+        window.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebarUtama');
+            if (window.innerWidth < 768 && !sidebar.classList.contains('hidden')) {
+                // Jika klik di luar sidebar dan bukan klik tombol hamburger
+                if (!sidebar.contains(e.target) && e.target.innerText !== '☰') {
+                    toggleSidebarMobile();
+                }
+            }
+        });
     </script>
 </body>
+
 </html>
