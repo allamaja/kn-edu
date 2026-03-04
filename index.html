@@ -24,11 +24,15 @@
                         <input type="text" id="emailLogin" required placeholder="Masukkan Username" class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm">
             </div>
 
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
-                <input type="password" id="password" placeholder="Masukkan Kata Sandi" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-            </div>
+            <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="text-xl">🔑</span>
+                        </div>
+                        <input type="password" id="password" placeholder="Masukkan kata sandi..." required class="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-700 font-medium placeholder-gray-400">
+                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-blue-600 transition-colors focus:outline-none">
+                            <span id="ikonMata" class="text-xl">👁️</span>
+                        </button>
+                    </div>
 
             <p id="pesanError" class="text-red-500 text-sm hidden text-center">
                 Username atau Kata Sandi salah.
@@ -107,9 +111,22 @@
                 Swal.fire('Login Gagal', 'Username atau password salah!', 'error');
             }
         });
+        // Fitur Ikon Mata Password
+        window.togglePassword = () => {
+            const passInput = document.getElementById('password');
+            const ikon = document.getElementById('ikonMata');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                ikon.innerText = '🙈'; // Ganti ikon mata tertutup
+            } else {
+                passInput.type = 'password';
+                ikon.innerText = '👁️'; // Ganti ikon mata terbuka
+            }
+        };
     </script>
 
 </body>
 
 </html>
+
 
