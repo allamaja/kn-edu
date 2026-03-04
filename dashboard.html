@@ -10,18 +10,22 @@
 </head>
 <body class="bg-[#f8fafc] min-h-screen font-sans text-gray-800 selection:bg-blue-200 flex flex-col relative pb-20 md:pb-0">
 
-    <header class="bg-blue-600 shadow-md px-6 py-4 flex justify-between items-center sticky top-0 z-40">
-        <div class="flex items-center">
-            <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-xl shadow-sm mr-3">🎓</div>
-            <h1 class="text-xl font-bold text-white tracking-wide">Khairunnas Edu</h1>
+    <header class="bg-blue-600 shadow-md px-3 md:px-6 py-3 md:py-4 flex justify-between items-center sticky top-0 z-40 w-full">
+        <div class="flex items-center shrink-0 mr-2">
+            <div class="w-7 h-7 md:w-8 md:h-8 bg-white rounded-lg flex items-center justify-center text-lg md:text-xl shadow-sm mr-2 md:mr-3 shrink-0">🎓</div>
+            <h1 class="text-base sm:text-lg md:text-xl font-bold text-white tracking-wide truncate max-w-[110px] xs:max-w-[160px] sm:max-w-none">Khairunnas Edu</h1>
         </div>
-        <div class="flex items-center space-x-3 md:space-x-4">
-            <span class="text-sm font-medium text-blue-100 hidden md:block" id="teksSapaanHeader">Halo, Memuat...</span>
-            <div class="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center font-black shadow-sm uppercase" id="inisialUser">S</div>
+
+        <div class="flex items-center space-x-1.5 sm:space-x-2 md:space-x-4 shrink-0">
+            <span class="text-xs md:text-sm font-medium text-blue-100 hidden md:block" id="teksSapaanHeader">Halo, Memuat...</span>
             
-            <button onclick="toggleCatatan()" title="Catatan Cloud" class="bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border border-yellow-200 w-10 h-10 rounded-full flex items-center justify-center transition shadow-sm focus:outline-none">📝</button>
-            <button onclick="bukaModalPassword()" title="Ganti Password" class="bg-blue-700 hover:bg-blue-800 text-white w-10 h-10 rounded-full flex items-center justify-center transition shadow-sm border border-blue-500 focus:outline-none">⚙️</button>
-            <button onclick="keluarAplikasi()" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-4 py-2.5 md:py-2 rounded-full transition shadow-sm border border-red-400">Keluar</button>
+            <div class="w-8 h-8 md:w-10 md:h-10 text-sm md:text-base bg-white text-blue-600 rounded-full flex items-center justify-center font-black shadow-sm uppercase shrink-0" id="inisialUser">S</div>
+            
+            <button onclick="toggleCatatan()" title="Catatan Cloud" class="bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border border-yellow-200 w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition shadow-sm focus:outline-none shrink-0 text-sm md:text-base">📝</button>
+            
+            <button onclick="bukaModalPassword()" title="Ganti Password" class="bg-blue-700 hover:bg-blue-800 text-white w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition shadow-sm border border-blue-500 focus:outline-none shrink-0 text-sm md:text-base">⚙️</button>
+            
+            <button onclick="keluarAplikasi()" class="bg-red-500 hover:bg-red-600 text-white text-[10px] md:text-xs font-bold px-2.5 py-1.5 md:px-4 md:py-2 rounded-full transition shadow-sm border border-red-400 shrink-0">Keluar</button>
         </div>
     </header>
 
@@ -506,4 +510,5 @@
 </body>
 
 </html>
+
 
