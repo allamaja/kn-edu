@@ -53,9 +53,17 @@
             <div class="flex items-center">
                 <button onclick="toggleSidebarMobile()" class="md:hidden mr-4 text-2xl text-gray-700 focus:outline-none hover:text-blue-600 transition">☰</button>
                 
-                <div><h1 class="text-lg md:text-xl font-bold text-gray-700">Nama Portal Anda</h1></div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold text-gray-700">Portal Pendidik</h1>
+                    <p class="text-[10px] md:text-xs text-blue-600 font-bold bg-blue-50 inline-block px-2 py-0.5 rounded border border-blue-200 mt-1 uppercase" id="badgeMapelGuru">Mapel: Sinkronisasi...</p>
+                </div>
             </div>
-            </header>
+            
+            <div class="flex items-center space-x-3">
+                <span class="text-sm font-bold text-gray-600 hidden md:block" id="namaGuruLokal">Memuat...</span>
+                <div class="w-10 h-10 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center font-black border border-orange-200">G</div>
+            </div>
+        </header>
 
         <div class="p-6 md:p-8 max-w-5xl mx-auto w-full space-y-6 pb-20">
 
@@ -564,7 +572,30 @@
         window.toggleSoalPaket=c=>{if(c.checked)pilihanSoalSementara.add(c.value);else pilihanSoalSementara.delete(c.value);document.getElementById('counterSoalPaket').innerText=`${pilihanSoalSementara.size} TERPILIH`;};
         window.simpanPaketBaru=async()=>{let n=document.getElementById('namaPaketBaru').value;if(!n||pilihanSoalSementara.size===0)return Swal.fire('Oops','Isi nama dan pilih soal!','warning');Swal.fire({title:'Merakit...',didOpen:()=>Swal.showLoading()});await addDoc(collection(db,"paket_soal"),{nama_paket:n,soal_ids:Array.from(pilihanSoalSementara),sekolah_id:profilGuru.sekolah_id,dibuat_pada:new Date()});window.tutupModalPaket();Swal.fire({title:'Berhasil!',icon:'success',timer:1000,showConfirmButton:false});window.muatDaftarPaketLokal();};
         window.hapusPaket=async(i)=>{if((await Swal.fire({title:'Hapus Paket?',icon:'warning',showCancelButton:true,confirmButtonColor:'#d33'})).isConfirmed){await deleteDoc(doc(db,"paket_soal",i));window.muatDaftarPaketLokal();}};
+       // FITUR BUKA-TUTUP MENU DI HP
+        window.toggleSidebarMobile = () => {
+            const sidebar = document.getElementById('sidebarUtama');
+            if (sidebar.classList.contains('hidden')) {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('flex', 'absolute', 'inset-y-0', 'left-0'); // Muncul melayang
+            } else {
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('flex', 'absolute', 'inset-y-0', 'left-0');
+            }
+        };
+        
+        // Tutup otomatis kalau salah satu menu diklik (khusus di HP)
+        window.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebarUtama');
+            if (window.innerWidth < 768 && !sidebar.classList.contains('hidden')) {
+                // Jika klik di luar sidebar dan bukan klik tombol hamburger
+                if (!sidebar.contains(e.target) && e.target.innerText !== '☰') {
+                    toggleSidebarMobile();
+                }
+            }
+        }); 
     </script>
 </body>
 
 </html>
+
