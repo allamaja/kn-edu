@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Ujian - SmartKhairunnas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-[#f8fafc] min-h-screen font-sans text-gray-800 selection:bg-blue-200 flex flex-col md:flex-row">
+
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex z-20 shrink-0 h-screen sticky top-0">
+        <div class="p-6 border-b border-slate-700">
+            <h2 class="text-2xl font-bold text-blue-400">SmartStudent</h2>
+            <p class="text-xs text-slate-400 mt-1">Portal Belajar Siswa</p>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2">
+            <a href="dashboard.html" class="block px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition">🏠 Beranda</a>
+            <a href="latihan.html" class="block px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 transition">🎯 Latihan Mandiri</a>
+            <a href="#" class="block px-4 py-3 rounded-xl bg-blue-600 text-white font-medium shadow-md transition">📈 Riwayat Ujian</a>
+        </nav>
+        <div class="p-4 border-t border-slate-700">
+            <button onclick="keluarAplikasi()" class="w-full text-left px-4 py-2 text-red-400 hover:bg-slate-800 rounded-xl transition font-bold">🚪 Keluar</button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col relative w-full overflow-y-auto h-screen">
+        <header class="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+            <div class="flex items-center">
+                <a href="dashboard.html" class="md:hidden mr-4 text-2xl">🏠</a>
+                <h1 class="text-xl font-bold text-gray-700">Rapor & Riwayat Ujian</h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="text-sm font-medium text-gray-600" id="namaSiswaHeader">Siswa</span>
+                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold" id="inisialUser">S</div>
+            </div>
+        </header>
+
+        <div class="p-4 md:p-6 lg:p-8 max-w-5xl mx-auto w-full space-y-8 pb-20">
+
+            <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800 mb-2">Evaluasi Hasil Belajarmu</h2>
+                    <p class="text-gray-500 font-medium">Di sini kamu bisa melihat nilai ujian resmi yang telah lalu dan mengakses pembahasan dari Guru.</p>
+                </div>
+                <div class="text-6xl drop-shadow-sm transform hover:scale-110 transition">📑</div>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-gray-800 mb-4 text-lg border-b pb-2">Daftar Ujian Terakhir</h3>
+                
+                <div id="kontainerRiwayat" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="col-span-1 md:col-span-2 text-center py-12 bg-gray-50 rounded-3xl border border-dashed border-gray-300">
+                        <span class="text-4xl block mb-3 animate-bounce">🔍</span>
+                        <p class="text-gray-500 font-bold">Mencari tumpukan rapormu di server...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        const app = initializeApp({ apiKey: "AIzaSyCTd3H3E9baMGDQpHbJDBFzupuSaIUn0v0", authDomain: "smartkhairunnas.firebaseapp.com", projectId: "smartkhairunnas", storageBucket: "smartkhairunnas.firebasestorage.app", messagingSenderId: "3009868062", appId: "1:3009868062:web:f6d158a8aa60fabf91590f" });
+        const db = getFirestore(app); const auth = getAuth(app);
+
+        let usernameSiswaAktif = "";
+
+        // 1. KEAMANAN & IDENTITAS
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                usernameSiswaAktif = user.email.split('@')[0];
+                document.getElementById('namaSiswaHeader').innerText = usernameSiswaAktif;
+                document.getElementById('inisialUser').innerText = usernameSiswaAktif.charAt(0).toUpperCase();
+                
+                muatRiwayatUjian();
+            } else {
+                window.location.replace("index.html");
+            }
+        });
+
+        // ==========================================
+        // FITUR KONFIRMASI LOGOUT
+        // ==========================================
+        window.keluarAplikasi = () => {
+            Swal.fire({
+                title: 'Keluar Aplikasi?',
+                text: "Apakah Anda yakin ingin mengakhiri sesi ini?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Ya, Keluar!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true // Membalik posisi tombol agar tombol batal ada di kanan (lebih aman)
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Memutus Sesi...',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                    signOut(auth).then(() => window.location.replace("index.html"));
+                }
+            });
+        };
+
+        // 2. MESIN PENARIK RIWAYAT & PENAHAN PEMBAHASAN
+        async function muatRiwayatUjian() {
+            const kontainer = document.getElementById('kontainerRiwayat');
+            
+            try {
+                // A. Tarik Semua Master Jadwal Ujian (Untuk Cek Deadline Penahanan Pembahasan)
+                const snapJadwal = await getDocs(collection(db, "jadwal_ujian"));
+                let jadwalMap = {};
+                snapJadwal.forEach(doc => { jadwalMap[doc.id] = doc.data(); });
+
+                // B. Tarik Hasil Ujian si Siswa ini saja
+                const qHasil = query(collection(db, "hasil_ujian"), where("username", "==", usernameSiswaAktif));
+                const snapHasil = await getDocs(qHasil);
+                
+                let arrayHasil = [];
+                snapHasil.forEach(doc => { arrayHasil.push({ id: doc.id, ...doc.data() }) });
+
+                // Urutkan dari ujian yang paling baru dikerjakan (Descending)
+                arrayHasil.sort((a,b) => b.waktu_selesai.toDate() - a.waktu_selesai.toDate());
+
+                if(arrayHasil.length === 0) {
+                    kontainer.innerHTML = `
+                        <div class="col-span-1 md:col-span-2 text-center py-12 bg-white rounded-3xl border border-gray-200 shadow-sm">
+                            <span class="text-5xl block mb-4 grayscale opacity-50">📭</span>
+                            <h3 class="text-xl font-bold text-gray-700">Belum Ada Riwayat</h3>
+                            <p class="text-gray-500 mt-1">Kamu belum pernah mengerjakan ujian resmi satupun.</p>
+                        </div>`;
+                    return;
+                }
+
+                let htmlKartu = '';
+                const waktuSekarang = new Date();
+
+                arrayHasil.forEach(hasil => {
+                    let tglSelesai = hasil.waktu_selesai ? hasil.waktu_selesai.toDate() : new Date();
+                    let tglTeks = tglSelesai.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour:'2-digit', minute:'2-digit' });
+                    
+                    // Detail Dinamis
+                    let nilai = hasil.nilai_akhir !== undefined ? hasil.nilai_akhir : (hasil.skor_akhir || 0); // Kompatibilitas mundur
+                    let namaUjian = hasil.nama_ujian || "Ujian Tanpa Nama";
+                    let mapel = hasil.mapel || "Campuran";
+
+                    // LOGIKA PEWARNAAN NILAI
+                    let warnaNilai = nilai >= 75 ? "text-green-500" : (nilai >= 50 ? "text-yellow-500" : "text-red-500");
+
+                    // --- LOGIKA GEMBOK PEMBAHASAN PINTAR ---
+                    let bolehBuka = false; 
+                    let infoGembok = "";
+                    let jadwalTerkait = jadwalMap[hasil.id_jadwal]; // Cari referensi jadwal aslinya
+
+                    if (hasil.aturan_rilis_bahas === 'langsung') {
+                        bolehBuka = true; // Admin mengizinkan langsung lihat setelah selesai
+                    } else if (hasil.aturan_rilis_bahas === 'setelah_ujian_tutup') {
+                        if (jadwalTerkait) {
+                            let batasAkhir = new Date(jadwalTerkait.waktu_selesai);
+                            if (waktuSekarang > batasAkhir) {
+                                bolehBuka = true; // Jadwal sudah lewat, gembok terbuka!
+                            } else {
+                                // Masih ada siswa lain yang mungkin sedang ujian
+                                let tglBukaTeks = batasAkhir.toLocaleString('id-ID', { day: 'numeric', month: 'short', hour:'2-digit', minute:'2-digit' });
+                                infoGembok = `Bisa dibuka pada: ${tglBukaTeks}`;
+                            }
+                        } else {
+                            bolehBuka = true; // Fallback jika jadwal asli terhapus oleh admin
+                        }
+                    }
+
+                    // Tampilan Tombol berdasarkan izin (Gembok)
+                    let tombolBahasHtml = "";
+                    if (bolehBuka) {
+                        tombolBahasHtml = `
+                            <button onclick="lihatPembahasan('${hasil.id}')" class="w-full mt-4 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 px-4 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center group shadow-sm">
+                                <span class="mr-2 group-hover:animate-pulse">💡</span> Evaluasi & Pembahasan
+                            </button>
+                        `;
+                    } else {
+                        tombolBahasHtml = `
+                            <div class="mt-4 bg-gray-50 border border-gray-200 px-4 py-2 rounded-xl text-center">
+                                <p class="font-bold text-gray-400 text-sm flex items-center justify-center"><span class="mr-1">🔒</span> Belum Rilis</p>
+                                <p class="text-[10px] text-red-500 mt-1 font-medium tracking-wide">${infoGembok}</p>
+                            </div>
+                        `;
+                    }
+
+                    htmlKartu += `
+                        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 hover:shadow-md transition transform hover:-translate-y-1 relative overflow-hidden flex flex-col">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-gray-50 rounded-full z-0 opacity-50"></div>
+                            
+                            <div class="relative z-10 flex-1">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="pr-2">
+                                        <span class="bg-blue-100 text-blue-600 border border-blue-200 text-[10px] font-black px-2 py-1 rounded tracking-widest uppercase">${mapel}</span>
+                                        <h3 class="font-bold text-gray-800 text-lg mt-2 leading-tight">${namaUjian}</h3>
+                                        <p class="text-[11px] text-gray-400 font-medium mt-1">Dikerjakan: ${tglTeks}</p>
+                                    </div>
+                                    <div class="text-center bg-gray-50 px-4 py-3 rounded-2xl border border-gray-100 shrink-0">
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Skor</p>
+                                        <p class="text-3xl font-black ${warnaNilai} leading-none">${nilai}</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-3 gap-3 mt-5 text-center border-t border-gray-100 pt-4">
+                                    <div class="bg-green-50 p-2 rounded-xl border border-green-100">
+                                        <p class="text-[10px] text-green-600 font-bold uppercase">Benar</p>
+                                        <p class="text-xl font-black text-green-700">${hasil.detail?.benar || 0}</p>
+                                    </div>
+                                    <div class="bg-red-50 p-2 rounded-xl border border-red-100">
+                                        <p class="text-[10px] text-red-600 font-bold uppercase">Salah</p>
+                                        <p class="text-xl font-black text-red-700">${hasil.detail?.salah || 0}</p>
+                                    </div>
+                                    <div class="bg-gray-50 p-2 rounded-xl border border-gray-200">
+                                        <p class="text-[10px] text-gray-500 font-bold uppercase">Kosong</p>
+                                        <p class="text-xl font-black text-gray-600">${hasil.detail?.kosong || 0}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-auto relative z-10">
+                                ${tombolBahasHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                kontainer.innerHTML = htmlKartu;
+
+            } catch (error) {
+                console.error("Gagal muat riwayat:", error);
+                kontainer.innerHTML = '<div class="col-span-2 text-center py-10 text-red-500 bg-red-50 rounded-2xl border border-red-200 font-bold">Gagal memuat riwayat. Periksa koneksi internetmu.</div>';
+            }
+        }
+
+        // 3. FUNGSI KLIK PEMBAHASAN
+        window.lihatPembahasan = (idHasil) => {
+            // Melempar ke halaman pembahasan dengan membawa ID di URL
+            window.location.href = `review-hasil.html?id=${idHasil}`;
+        };
+    </script>
+</body>
+</html>

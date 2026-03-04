@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SmartKhairunnas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md mx-4">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-blue-600 mb-2">SmartKhairunnas</h1>
+            <p class="text-gray-500">Portal Belajar & Ujian Mandiri</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            
+            <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Username</label>
+                        <input type="text" id="emailLogin" required placeholder="Cth: allam atau budi" class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm">
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
+                <input type="password" id="password" placeholder="Masukkan Kata Sandi" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+            </div>
+
+            <p id="pesanError" class="text-red-500 text-sm hidden text-center">
+                Username atau Kata Sandi salah.
+            </p>
+
+            <button type="submit" 
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 shadow-md">
+                Masuk ke Portal
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <a href="#" class="text-sm text-blue-600 hover:underline">Lupa Kata Sandi? Hubungi Guru</a>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+        // BARU: Kita import fitur database untuk mengecek Role
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCTd3H3E9baMGDQpHbJDBFzupuSaIUn0v0",
+            authDomain: "smartkhairunnas.firebaseapp.com",
+            projectId: "smartkhairunnas",
+            storageBucket: "smartkhairunnas.firebasestorage.app",
+            messagingSenderId: "3009868062",
+            appId: "1:3009868062:web:f6d158a8aa60fabf91590f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app); // Nyalakan koneksi ke Database
+
+        const formLogin = document.getElementById('loginForm');
+        const pesanError = document.getElementById('pesanError');
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // 1. Ambil input, hilangkan spasi, dan jadikan huruf kecil semua
+            let inputUser = document.getElementById('emailLogin').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            
+            // 2. MESIN PENYERAGAMAN DOMAIN
+            let emailUntukFirebase = inputUser;
+            if (!inputUser.includes('@')) {
+                emailUntukFirebase = inputUser + '@smartkhairunnas.com';
+            }
+
+            Swal.fire({ title: 'Mencocokkan Kunci...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                // 3. Login menggunakan email yang sudah dimanipulasi
+                const userCredential = await signInWithEmailAndPassword(auth, emailUntukFirebase, password);
+                
+                // Cek Role di Firestore
+                const q = query(collection(db, "users"), where("email", "==", emailUntukFirebase));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    const userData = querySnapshot.docs[0].data();
+                    Swal.fire({icon: 'success', title: 'Akses Diberikan!', text: `Selamat datang, ${userData.nama}`, timer: 1500, showConfirmButton: false})
+                    .then(() => {
+                        if (userData.role === 'admin_yayasan') window.location.replace("dashboard-yayasan.html");
+                        else if (userData.role === 'admin_sekolah') window.location.replace("dashboard-admin-sekolah.html");
+                        else if (userData.role === 'guru') window.location.replace("dashboard-guru.html");
+                        else window.location.replace("dashboard.html"); // default ke siswa
+                    });
+                } else {
+                    Swal.fire('Error', 'Data pengguna tidak ditemukan di database.', 'error');
+                    signOut(auth);
+                }
+            } catch (error) {
+                Swal.fire('Login Gagal', 'Username atau password salah!', 'error');
+            }
+        });
+    </script>
+
+</body>
+</html>

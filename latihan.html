@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latihan Mandiri - SmartKhairunnas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .grid-nav::-webkit-scrollbar { width: 6px; }
+        .grid-nav::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        /* Transisi halus saat notepad terbuka/tertutup */
+        #panelCatatan { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
+    </style>
+</head>
+<body class="bg-[#f8fafc] min-h-screen font-sans text-gray-800 flex flex-col selection:bg-blue-200">
+
+    <header class="bg-white shadow-sm border-b border-gray-200 px-4 md:px-6 py-3 flex justify-between items-center sticky top-0 z-40">
+        <div class="flex items-center">
+            <a href="dashboard.html" class="text-gray-400 hover:text-blue-600 transition mr-4 hidden md:block">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            </a>
+            <div>
+                <h1 class="text-base md:text-xl font-black text-blue-600">Latihan Bebas</h1>
+                <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest">Santai & Fokus Belajar</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleCatatan()" class="flex items-center bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border border-yellow-200 px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition shadow-sm">
+                <span class="mr-2">📝</span> <span class="hidden md:inline">Buku</span> Catatan
+            </button>
+            <div id="panelTimer" class="hidden items-center bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-xl font-bold font-mono text-base md:text-lg shadow-sm">
+                ⏱️ <span id="teksTimer" class="ml-2">00:00:00</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 relative">
+
+        <div id="panelCatatan" class="fixed bottom-0 right-0 md:bottom-8 md:right-8 w-full md:w-80 bg-white rounded-t-3xl md:rounded-3xl shadow-2xl border border-gray-200 z-50 transform translate-y-full opacity-0 transition-all duration-300">
+            <div class="p-4 border-b bg-yellow-50 flex justify-between items-center rounded-t-3xl md:rounded-t-3xl border-yellow-100">
+                <h3 class="font-bold text-yellow-800 flex items-center"><span class="mr-2">☁️</span> Catatan Cloud</h3>
+                <button onclick="toggleCatatan()" class="text-gray-400 hover:text-red-500 font-bold text-2xl leading-none focus:outline-none">&times;</button>
+            </div>
+            <div class="p-4 bg-white">
+                <p class="text-[10px] text-gray-400 mb-2 font-medium leading-tight">Tersimpan otomatis ke akunmu. Terbawa ke perangkat mana saja.</p>
+                <textarea id="teksCatatanSiswa" rows="8" class="w-full p-3 bg-yellow-50/30 border border-yellow-200 rounded-xl outline-none focus:ring-2 focus:ring-yellow-400 text-sm font-mono text-gray-700 placeholder-gray-300" placeholder="Ketik ringkasan belajarmu di sini..."></textarea>
+            </div>
+            <div class="p-3 border-t bg-gray-50 text-right rounded-b-3xl">
+                <span id="statusCatatan" class="text-[10px] font-bold text-green-600">Siap digunakan</span>
+            </div>
+        </div>
+
+        <div id="layarSetup" class="max-w-3xl mx-auto space-y-6 mt-4 md:mt-10">
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-400 to-purple-500"></div>
+                <div class="text-6xl md:text-7xl mb-4">🎯</div>
+                <h2 class="text-2xl md:text-3xl font-black text-gray-800">Ruang Latihan Mandiri</h2>
+                <p class="text-gray-500 mt-2 font-medium">Tidak ada larangan buka buku. Silakan asah pemahamanmu sedalam mungkin!</p>
+            </div>
+
+            <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Mata Pelajaran</label>
+                        <select id="setupMapel" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-gray-700 dinamis-mapel">
+                            <option value="">Memuat Mapel...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Sub Bab Materi</label>
+                        <select id="setupBab" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-gray-700" disabled>
+                            <option value="">Pilih Mapel Dulu</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Target Jumlah Soal</label>
+                        <input type="number" id="setupJumlah" min="1" max="50" value="10" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-black text-xl text-center text-blue-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Target Waktu (Menit)</label>
+                        <input type="number" id="setupWaktu" min="1" max="120" value="15" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-black text-xl text-center text-blue-600">
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <button id="btnMulaiLatihan" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-2xl font-black text-lg shadow-lg shadow-blue-200 transition transform hover:-translate-y-1">
+                        🚀 GAS MULAI LATIHAN!
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="layarCBT" class="hidden flex flex-col lg:flex-row gap-6 mt-4 md:mt-0">
+            <div class="flex-1 space-y-4">
+                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-200 min-h-[450px] flex flex-col relative">
+                    <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
+                        <div class="flex items-center space-x-3">
+                            <h2 class="text-xl font-black text-gray-800 bg-gray-100 px-4 py-1.5 rounded-lg" id="labelNomorSoal">No. 1</h2>
+                            <span class="bg-blue-50 text-blue-600 border border-blue-200 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">Latihan</span>
+                        </div>
+                        <button onclick="intipPembahasan()" class="text-xs font-bold text-gray-500 hover:text-purple-600 bg-gray-50 hover:bg-purple-50 px-3 py-2 rounded-lg border border-gray-200 transition flex items-center shadow-sm">
+                            <span class="mr-1">👀</span> Intip Jawaban
+                        </button>
+                    </div>
+
+                    <div class="mb-8"><p id="teksPertanyaan" class="text-lg md:text-xl text-gray-800 leading-relaxed font-medium">Memuat pertanyaan...</p></div>
+                    <div class="space-y-3 mt-auto" id="kontainerOpsi"></div>
+                </div>
+
+                <div class="flex justify-between items-center bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
+                    <button id="btnSebelumnya" class="px-5 md:px-6 py-3 text-gray-500 bg-gray-50 font-bold rounded-xl transition cursor-not-allowed opacity-50">&larr; <span class="hidden md:inline">Sebelumnya</span></button>
+                    <button id="btnRagu" class="px-5 md:px-8 py-3 text-yellow-700 bg-yellow-50 border border-yellow-200 hover:bg-yellow-100 font-bold rounded-xl transition shadow-sm"><span class="mr-2">🤔</span> <span class="hidden md:inline">Tandai</span> Ragu</button>
+                    <button id="btnSelanjutnya" class="px-5 md:px-6 py-3 text-white bg-blue-600 hover:bg-blue-700 font-bold rounded-xl transition shadow-md"><span class="hidden md:inline">Selanjutnya</span> &rarr;</button>
+                </div>
+            </div>
+
+            <div class="w-full lg:w-80 shrink-0">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 sticky top-24">
+                    <h3 class="font-black text-gray-800 mb-4 pb-3 border-b flex items-center justify-between">Navigasi <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded" id="progressTeks">0/0</span></h3>
+                    <div class="grid grid-cols-5 gap-2 mb-6 max-h-[300px] overflow-y-auto grid-nav p-1" id="gridNavigasi"></div>
+                    <button id="btnKumpulkan" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3.5 rounded-xl font-black shadow-md transition transform hover:-translate-y-1">🏁 Selesai Latihan</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="layarHasil" class="hidden max-w-4xl mx-auto space-y-6 pb-20 mt-4 md:mt-10">
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-blue-500"></div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Latihan Selesai! 🎉</h2>
+                <p class="text-gray-500 mb-6">Berikut adalah skor dan evaluasi jujur untuk pengerjaanmu.</p>
+                <div class="text-8xl md:text-9xl font-black text-blue-600 mb-2 tracking-tighter drop-shadow-md" id="teksNilaiAkhir">100</div>
+                <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">Skor Akhir</p>
+                
+                <button onclick="location.reload()" class="mt-8 bg-gray-800 hover:bg-gray-900 text-white px-8 py-3 rounded-xl font-bold transition shadow-lg">Mulai Latihan Baru</button>
+            </div>
+
+            <div class="flex items-center space-x-3 mb-4 mt-8 px-2">
+                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl shadow-sm">💡</div>
+                <h2 class="text-xl font-black text-gray-800">Pembahasan Lengkap</h2>
+            </div>
+            
+            <div id="kontainerPembahasan" class="space-y-4"></div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        const app = initializeApp({ apiKey: "AIzaSyCTd3H3E9baMGDQpHbJDBFzupuSaIUn0v0", authDomain: "smartkhairunnas.firebaseapp.com", projectId: "smartkhairunnas", storageBucket: "smartkhairunnas.firebasestorage.app", messagingSenderId: "3009868062", appId: "1:3009868062:web:f6d158a8aa60fabf91590f" });
+        const db = getFirestore(app); const auth = getAuth(app);
+
+        // STATE LATIHAN
+        let daftarSoal = []; let indexAktif = 0; let jawabanSiswa = {}; let raguRagu = {};
+        let timerInterval; let sisaDetik = 0; let dataKurikulum = [];
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) window.location.replace("index.html");
+            // Muat Data Kurikulum untuk Dropdown
+            const snap = await getDocs(collection(db, "kurikulum"));
+            let oMapel = '<option value="">Semua Mapel</option>';
+            snap.forEach(d => { dataKurikulum.push(d.data()); oMapel += `<option value="${d.data().nama_mapel}">${d.data().nama_mapel}</option>`; });
+            document.getElementById('setupMapel').innerHTML = oMapel;
+        });
+
+        // LOGIKA DROPDOWN MAPEL-BAB
+        document.getElementById('setupMapel').addEventListener('change', e => {
+            const m = e.target.value, sBab = document.getElementById('setupBab');
+            if(!m){ sBab.innerHTML='<option value="">Pilih Mapel Dulu</option>'; sBab.disabled=true; } 
+            else { 
+                sBab.disabled=false; sBab.innerHTML='<option value="">Semua Bab</option>'; 
+                let obj = dataKurikulum.find(x => x.nama_mapel === m); 
+                if(obj?.sub_bab) obj.sub_bab.forEach(b => sBab.innerHTML+=`<option value="${b}">${b}</option>`); 
+            }
+        });
+
+        // ==========================================
+        // FITUR SMART CLOUD NOTEPAD (AUTO-SAVE)
+        // ==========================================
+        let timerSimpanCatatan = null;
+
+        window.toggleCatatan = () => {
+            const p = document.getElementById('panelCatatan');
+            if (p.classList.contains('translate-y-full')) {
+                p.classList.remove('translate-y-full', 'opacity-0');
+                if(userData) muatCatatanCloud(); // Sedot data terbaru dari cloud saat dibuka
+            } else {
+                p.classList.add('translate-y-full', 'opacity-0');
+            }
+        };
+
+        // Menarik catatan dari Firestore
+        async function muatCatatanCloud() {
+            try {
+                document.getElementById('statusCatatan').innerText = "Menyinkronkan...";
+                document.getElementById('statusCatatan').className = "text-[10px] font-bold text-blue-500 animate-pulse";
+                
+                const docSnap = await getDoc(doc(db, "catatan_siswa", userData.id));
+                if (docSnap.exists()) {
+                    document.getElementById('teksCatatanSiswa').value = docSnap.data().isi || "";
+                }
+                
+                document.getElementById('statusCatatan').innerText = "✔ Sinkron";
+                document.getElementById('statusCatatan').className = "text-[10px] font-bold text-green-600";
+            } catch(e) { console.error("Gagal muat catatan"); }
+        }
+
+        // Sensor Ketik (Debounce) untuk Hemat Database
+        document.getElementById('teksCatatanSiswa').addEventListener('input', (e) => {
+            const status = document.getElementById('statusCatatan');
+            status.innerText = "Merekam ke Cloud...";
+            status.className = "text-[10px] font-bold text-yellow-600";
+            
+            clearTimeout(timerSimpanCatatan);
+            
+            // Tunggu 2 detik setelah user BERHENTI mengetik, baru lempar ke Cloud
+            timerSimpanCatatan = setTimeout(async () => {
+                if(!userData) return;
+                try {
+                    // Pakai setDoc dengan merge agar membuat baru jika belum ada, atau update jika sudah ada
+                    await setDoc(doc(db, "catatan_siswa", userData.id), {
+                        isi: e.target.value,
+                        update_terakhir: new Date()
+                    }, { merge: true });
+                    
+                    status.innerText = "✔ Tersimpan di Cloud";
+                    status.className = "text-[10px] font-bold text-green-600";
+                } catch(err) {
+                    status.innerText = "❌ Gagal Menyimpan (Cek Internet)";
+                    status.className = "text-[10px] font-bold text-red-600";
+                }
+            }, 2000); 
+        });
+
+        // ==========================================
+        // MULAI MESIN LATIHAN
+        // ==========================================
+        document.getElementById('btnMulaiLatihan').addEventListener('click', async () => {
+            const mapel = document.getElementById('setupMapel').value, bab = document.getElementById('setupBab').value;
+            const tJumlah = parseInt(document.getElementById('setupJumlah').value), tWaktu = parseInt(document.getElementById('setupWaktu').value);
+
+            Swal.fire({ title: 'Merakit Latihan...', didOpen: () => Swal.showLoading()});
+            try {
+                // Tarik Soal yang berstatus "Latihan"
+                const q = query(collection(db, "bank_soal"), where("kuadran", "==", "Latihan"), where("status", "==", "aktif"));
+                const snap = await getDocs(q); let sm = [];
+                snap.forEach(d => { let x = d.data(); x.id=d.id; if((mapel==="" || x.metadata?.mapel===mapel) && (bab==="" || x.metadata?.sub_bab===bab)) sm.push(x); });
+
+                if(sm.length === 0) return Swal.fire('Kosong', 'Tidak ada soal Latihan untuk Mapel/Bab ini.', 'info');
+
+                // Acak & Potong
+                sm.sort(() => Math.random() - 0.5); daftarSoal = sm.slice(0, Math.min(tJumlah, sm.length));
+                for(let i=0; i<daftarSoal.length; i++){ jawabanSiswa[i]=null; raguRagu[i]=false; }
+                
+                Swal.close();
+                document.getElementById('layarSetup').classList.add('hidden'); document.getElementById('layarCBT').classList.remove('hidden');
+                document.getElementById('panelTimer').classList.remove('hidden'); document.getElementById('panelTimer').classList.add('flex');
+
+                renderGrid(); renderSoal(0); mulaiTimer(tWaktu * 60);
+
+            } catch (err) { Swal.fire('Error', 'Gagal memuat soal.', 'error'); }
+        });
+
+        // ==========================================
+        // RENDER SOAL & GRID
+        // ==========================================
+        function renderSoal(idx) {
+            indexAktif = idx; const s = daftarSoal[idx];
+            document.getElementById('labelNomorSoal').innerText = `No. ${idx + 1}`;
+            // Render Editor HTML (V1 & V2)
+            let qlEditor = document.getElementById('teksPertanyaan');
+            if(s.pertanyaan && !s.pertanyaan.startsWith('<')) qlEditor.innerHTML = `<p>${s.pertanyaan}</p>`;
+            else qlEditor.innerHTML = s.pertanyaan || "";
+
+            // Render Matematika (KaTeX)
+            setTimeout(() => {
+                document.querySelectorAll('.ql-formula').forEach(el => {
+                    let latex = el.getAttribute('data-value');
+                    if(latex) { try { katex.render(latex, el, {throwOnError: false}); } catch(e){} }
+                });
+            }, 10);
+
+            let ho = ''; ['A','B','C','D'].forEach(h => {
+                let io = s[`opsi_${h.toLowerCase()}`];
+                if(io) {
+                    let cek = jawabanSiswa[idx] === h ? 'checked' : '';
+                    let kls = cek ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-200' : 'border-gray-200 hover:bg-gray-50';
+                    let blt = cek ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-500 border-gray-300 bg-white';
+                    ho += `<div class="flex items-center p-3 md:p-4 border rounded-2xl cursor-pointer transition ${kls}" onclick="pilihJawaban('${h}')"><input type="radio" class="hidden" ${cek}><span class="w-8 h-8 rounded-full border-2 flex shrink-0 items-center justify-center font-bold mr-4 transition-colors ${blt}">${h}</span><span class="font-medium flex-1 text-gray-800">${io}</span></div>`;
+                }
+            });
+            document.getElementById('kontainerOpsi').innerHTML = ho;
+
+            // Tombol Navigasi Bawah
+            const br = document.getElementById('btnRagu'), bs = document.getElementById('btnSebelumnya'), bn = document.getElementById('btnSelanjutnya');
+            if(raguRagu[idx]){ br.className="px-5 py-3 text-yellow-900 bg-yellow-400 font-bold rounded-xl shadow-sm"; } 
+            else { br.className="px-5 py-3 text-yellow-700 bg-yellow-50 border border-yellow-200 hover:bg-yellow-100 font-bold rounded-xl"; }
+
+            bs.disabled = (idx === 0); bs.className = (idx === 0) ? "px-5 py-3 text-gray-400 bg-gray-100 font-bold rounded-xl opacity-50 cursor-not-allowed" : "px-5 py-3 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-bold rounded-xl shadow-sm";
+            bn.innerHTML = (idx === daftarSoal.length - 1) ? "Selesai" : "Selanjutnya &rarr;";
+            bn.className = (idx === daftarSoal.length - 1) ? "px-6 py-3 text-white bg-green-600 hover:bg-green-700 font-bold rounded-xl shadow-md" : "px-6 py-3 text-white bg-blue-600 hover:bg-blue-700 font-bold rounded-xl shadow-md";
+            
+            renderGrid();
+        }
+
+        window.pilihJawaban = (h) => { jawabanSiswa[indexAktif] = h; raguRagu[indexAktif] = false; renderSoal(indexAktif); };
+        document.getElementById('btnSebelumnya').onclick = () => { if(indexAktif > 0) renderSoal(indexAktif - 1); };
+        document.getElementById('btnSelanjutnya').onclick = () => { if(indexAktif < daftarSoal.length - 1) renderSoal(indexAktif + 1); else document.getElementById('btnKumpulkan').click(); };
+        document.getElementById('btnRagu').onclick = () => { raguRagu[indexAktif] = !raguRagu[indexAktif]; renderSoal(indexAktif); };
+
+        function renderGrid() {
+            const g = document.getElementById('gridNavigasi'); g.innerHTML = ''; let t = 0;
+            for(let i=0; i<daftarSoal.length; i++) {
+                if(jawabanSiswa[i]) t++;
+                let b = document.createElement('button'); b.innerText = i + 1;
+                b.className = "w-full aspect-square rounded-xl font-black text-sm flex items-center justify-center transition border-2 shadow-sm transform hover:scale-105 ";
+                if (i === indexAktif) b.className += "ring-4 ring-blue-200 border-transparent ";
+                if (raguRagu[i]) b.className += "bg-yellow-400 text-yellow-900 border-yellow-500 ";
+                else if (jawabanSiswa[i]) b.className += "bg-blue-600 text-white border-blue-700 ";
+                else b.className += "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 ";
+                b.onclick = () => renderSoal(i); g.appendChild(b);
+            }
+            document.getElementById('progressTeks').innerText = `${t}/${daftarSoal.length}`;
+        }
+
+        // ==========================================
+        // FITUR BANTUAN LATIHAN
+        // ==========================================
+        window.intipPembahasan = () => {
+            let s = daftarSoal[indexAktif];
+            Swal.fire({
+                title: `💡 Kunci: ${s.kunci}`,
+                html: `<div class="text-left text-sm text-gray-700 bg-gray-50 p-4 rounded-xl border border-gray-200 mt-2">${s.pembahasan || 'Tidak ada pembahasan spesifik untuk soal ini. Coba pahami sendiri ya!'}</div>`,
+                confirmButtonColor: '#2563eb'
+            });
+        };
+
+        // ==========================================
+        // TIMER & KUMPULKAN
+        // ==========================================
+        function mulaiTimer(totalDetik) {
+            sisaDetik = totalDetik; const tT = document.getElementById('teksTimer');
+            timerInterval = setInterval(() => {
+                sisaDetik--;
+                let m = Math.floor(sisaDetik / 60); let s = sisaDetik % 60;
+                tT.innerText = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
+                if (sisaDetik <= 0) { clearInterval(timerInterval); Swal.fire('Waktu Habis!','Silakan cek hasil latihanmu.','info').then(()=>koreksiAkhir()); }
+            }, 1000);
+        }
+
+        document.getElementById('btnKumpulkan').onclick = () => {
+            let k = Object.values(jawabanSiswa).filter(v => v === null).length;
+            Swal.fire({ title: 'Akhiri Latihan?', text: k>0?`Ada ${k} soal belum dijawab. Yakin selesai?`:"Periksa catatanmu sebelum mengakhiri.", icon: 'question', showCancelButton: true, confirmButtonColor: '#2563eb' }).then((r) => { if(r.isConfirmed){ clearInterval(timerInterval); koreksiAkhir(); }});
+        };
+
+        function koreksiAkhir() {
+            let b = 0; const kb = document.getElementById('kontainerPembahasan'); kb.innerHTML = '';
+            daftarSoal.forEach((s, i) => {
+                let j = jawabanSiswa[i]; let ib = (j === s.kunci); if(ib) b++;
+                kb.innerHTML += `
+                    <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-5 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1.5 h-full ${ib ? 'bg-green-500' : 'bg-red-500'}"></div>
+                        <div class="flex-1 ml-2">
+                            <h4 class="font-bold text-gray-800 mb-2"><span class="text-gray-400 mr-2">No.${i+1}</span> ${s.pertanyaan}</h4>
+                            <div class="flex items-center space-x-4 mb-3 text-sm">
+                                <span class="bg-gray-100 px-3 py-1 rounded-lg border text-gray-600">Jawabanmu: <b class="${ib ? 'text-green-600' : 'text-red-600'}">${j||'Kosong'}</b></span>
+                                ${!ib ? `<span class="bg-blue-50 px-3 py-1 rounded-lg border border-blue-100 text-blue-700">Kunci: <b>${s.kunci}</b></span>` : ''}
+                            </div>
+                            <p class="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-100"><b>Pembahasan:</b> ${s.pembahasan || '-'}</p>
+                        </div>
+                    </div>`;
+            });
+            document.getElementById('teksNilaiAkhir').innerText = Math.round((b / daftarSoal.length) * 100);
+            document.getElementById('layarCBT').classList.add('hidden'); document.getElementById('panelTimer').classList.add('hidden'); document.getElementById('layarHasil').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
