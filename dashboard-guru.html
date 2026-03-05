@@ -12,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script>window.Quill = Quill;</script>
     <script defer src="https://unpkg.com/mathlive"></script>
 
     <style>
@@ -146,15 +147,15 @@
                             <div id="editorPertanyaan" class="editor-soal"></div>
                         </div>
 
-                        <div id="areaOpsiJawaban" class="space-y-3 bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                        <div id="areaOpsiJawaban" class="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
                             <div class="flex justify-between items-center border-b pb-2 mb-2">
                                 <label class="block text-sm font-bold text-gray-700">Pilihan Jawaban & Kunci</label>
                                 <span class="text-xs text-gray-500 font-medium" id="petunjukOpsi">Pilih 1 bulatan biru sebagai kunci.</span>
-                            </div>
-                            <div class="flex items-start space-x-3"><div class="pt-2"><input type="radio" name="inputKunci" value="A" class="w-6 h-6 text-blue-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-lg pt-1">A</span><input type="text" id="inputOpsiA" placeholder="Teks Pilihan A" class="flex-1 px-4 py-2.5 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500"></div>
-                            <div class="flex items-start space-x-3"><div class="pt-2"><input type="radio" name="inputKunci" value="B" class="w-6 h-6 text-blue-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-lg pt-1">B</span><input type="text" id="inputOpsiB" placeholder="Teks Pilihan B" class="flex-1 px-4 py-2.5 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500"></div>
-                            <div class="flex items-start space-x-3"><div class="pt-2"><input type="radio" name="inputKunci" value="C" class="w-6 h-6 text-blue-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-lg pt-1">C</span><input type="text" id="inputOpsiC" placeholder="Teks Pilihan C" class="flex-1 px-4 py-2.5 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500"></div>
-                            <div class="flex items-start space-x-3"><div class="pt-2"><input type="radio" name="inputKunci" value="D" class="w-6 h-6 text-blue-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-lg pt-1">D</span><input type="text" id="inputOpsiD" placeholder="Teks Pilihan D" class="flex-1 px-4 py-2.5 border rounded-xl outline-none focus:ring-2 focus:ring-orange-500"></div>
+                            </div>                            
+                            <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="inputKunci" value="A" class="w-6 h-6 text-blue-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">A</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiA" class="min-h-[60px]"></div></div></div>
+                            <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="inputKunci" value="B" class="w-6 h-6 text-blue-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">B</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiB" class="min-h-[60px]"></div></div></div>
+                            <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="inputKunci" value="C" class="w-6 h-6 text-blue-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">C</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiC" class="min-h-[60px]"></div></div></div>
+                            <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="inputKunci" value="D" class="w-6 h-6 text-blue-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">D</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiD" class="min-h-[60px]"></div></div></div>
                         </div>
 
                         <div class="bg-yellow-50 p-5 rounded-2xl border border-yellow-200">
@@ -292,18 +293,48 @@
         let dataKurikulumGlobal=[], soalPribadi=[], dataSoalSeluruhnya=[], dataPaketLokal=[], pilihanSoalSementara=new Set(), dataNilaiLokal=[];
 
         // ==========================================
-        // 1. INIT QUILL & PEMBAJAKAN MATHLIVE
+        // 1. INIT QUILL & PEMBAJAKAN MATHLIVE V2 (Pro Version)
         // ==========================================
         const toolbarOpsi = [['bold', 'italic', 'underline', 'strike'], [{ 'script': 'sub'}, { 'script': 'super' }], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['formula', 'image'], ['clean']];
-        let quillPertanyaan = new Quill('#editorPertanyaan', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Ketik teks pertanyaan di sini...' });
+        
+        // Init Pertanyaan & Pembahasan
+        let quillPertanyaan = new Quill('#editorPertanyaan', { 
+            modules: { 
+                formula: true, 
+                toolbar: toolbarOpsi,
+                imageResize: {
+                    displayStyles: { backgroundColor: 'black', border: 'none', color: 'white' },
+                    modules: [ 'Resize', 'DisplaySize', 'Toolbar' ]
+                }
+            }, 
+            theme: 'snow', 
+            placeholder: 'Ketik teks pertanyaan di sini...' 
+        });        
         let quillPembahasan = new Quill('#editorPembahasan', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Ketik kunci rubrik / penjelasan di sini...' });
 
+        // Init 4 Opsi Jawaban
+        let quillOpsiA = new Quill('#editorOpsiA', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Teks Pilihan A' });
+        let quillOpsiB = new Quill('#editorOpsiB', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Teks Pilihan B' });
+        let quillOpsiC = new Quill('#editorOpsiC', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Teks Pilihan C' });
+        let quillOpsiD = new Quill('#editorOpsiD', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Teks Pilihan D' });
+        
+        // Peta Editor Opsi untuk mempermudah pemanggilan (Jembatan Data)
+        const mapQuillOpsi = { 'A': quillOpsiA, 'B': quillOpsiB, 'C': quillOpsiC, 'D': quillOpsiD };
+
+        // Pembajakan Tombol Formula untuk ke-6 Editor
         let targetEditorMath = null;
-        quillPertanyaan.getModule('toolbar').addHandler('formula', () => { targetEditorMath = quillPertanyaan; bukaModalMath(); });
-        quillPembahasan.getModule('toolbar').addHandler('formula', () => { targetEditorMath = quillPembahasan; bukaModalMath(); });
+        const pasangMath = (quillObj) => { quillObj.getModule('toolbar').addHandler('formula', () => { targetEditorMath = quillObj; bukaModalMath(); }); };
+        
+        pasangMath(quillPertanyaan);
+        pasangMath(quillPembahasan);
+        pasangMath(quillOpsiA);
+        pasangMath(quillOpsiB);
+        pasangMath(quillOpsiC);
+        pasangMath(quillOpsiD);
 
         window.bukaModalMath = () => { let mf = document.getElementById('mathFieldVirtual'); mf.value = ''; document.getElementById('modalMathKeyboard').classList.remove('hidden'); setTimeout(() => { mf.focus(); }, 100); };
         window.tutupModalMath = () => { document.getElementById('modalMathKeyboard').classList.add('hidden'); targetEditorMath = null; };
+        
         window.sisipkanRumus = () => {
             if(!targetEditorMath) return;
             let latexCode = document.getElementById('mathFieldVirtual').value;
@@ -595,11 +626,113 @@
         window.muatPengumumanGuru=async()=>{let k=document.getElementById('kontainerPengumuman');try{const s=await getDocs(collection(db,"pengumuman"));let l=[];s.forEach(d=>{let x=d.data();if(x.target==="GLOBAL"||x.target===profilGuru.sekolah_id)l.push(x);});l.sort((a,b)=>b.dibuat_pada.toDate()-a.dibuat_pada.toDate());if(l.length>0){let h='';l.forEach(p=>{let wBg=p.tipe==='warning'?'bg-yellow-50 border-yellow-300':(p.tipe==='success'?'bg-emerald-50 border-emerald-300':'bg-blue-50 border-blue-300'),wJ=p.tipe==='warning'?'text-yellow-800':(p.tipe==='success'?'text-emerald-800':'text-blue-800');h+=`<div class="${wBg} border p-4 rounded-xl shadow-sm"><h4 class="${wJ} font-black">${p.judul} <span class="text-[9px] text-gray-500 font-normal ml-2">${p.pembuat}</span></h4><p class="text-sm text-gray-700 mt-1">${p.isi}</p></div>`;});k.innerHTML=h;k.classList.remove('hidden');}}catch(e){}};
         window.muatMasterKurikulum=async()=>{const s=await getDocs(collection(db,"kurikulum"));dataKurikulumGlobal=[];let o='<option value="">-- Mapel --</option>';s.forEach(d=>{let m=d.data();dataKurikulumGlobal.push(m);o+=`<option value="${m.nama_mapel}">${m.nama_mapel}</option>`;});document.querySelectorAll('.dinamis-mapel').forEach(el=>el.innerHTML=o);};
         document.getElementById('inputMapel')?.addEventListener('change',e=>{const m=e.target.value,sb=document.getElementById('inputBab');if(!m){sb.innerHTML='<option value="">Pilih Mapel Dulu</option>';sb.disabled=true;}else{sb.disabled=false;sb.innerHTML='<option value="">-- Sub Bab --</option>';let ob=dataKurikulumGlobal.find(x=>x.nama_mapel===m);if(ob?.sub_bab)ob.sub_bab.forEach(b=>sb.innerHTML+=`<option value="${b}">${b}</option>`);}});
-        document.getElementById('formTulisSoal')?.addEventListener('submit',async e=>{e.preventDefault();let t=document.getElementById('inputTipeSoal').value,kT=quillPertanyaan.root.innerHTML,kB=quillPembahasan.root.innerHTML;if(quillPertanyaan.getText().trim().length===0&&!kT.includes('<img')&&!kT.includes('<span class="ql-formula"'))return Swal.fire('Oops','Pertanyaan kosong!','warning');let aO=[];let vD=false;if(t==='pg'||t==='pg_kompleks'){document.querySelectorAll('.input-kunci-dinamis').forEach((el,i)=>{let h=['A','B','C','D'][i],tO=document.getElementById('inputOpsi'+h).value,iB=el.checked;if(iB)vD=true;aO.push({label:h,teks:tO,benar:iB});});if(!vD)return Swal.fire('Oops','Pilih minimal 1 kunci!','warning');}else if(t==='essay'){vD=true;}if(kT.length>500000)return Swal.fire('Gambar Besar!','Maksimal 500KB.','error');let id=document.getElementById('inputIdSoal').value,py={tipe_soal:t,pertanyaan:kT,opsi:aO,pembahasan:kB,kuadran:document.getElementById('inputKuadran').value,status:'pending_review',pembuat_id:profilGuru.nama,pembuat_email:profilGuru.email,sekolah_id:profilGuru.sekolah_id,metadata:{mapel:document.getElementById('inputMapel').value,sub_bab:document.getElementById('inputBab').value,kelas:document.getElementById('inputKelas').value,jenjang:profilGuru.jenjang}};Swal.fire({title:'Mengirim...',didOpen:()=>Swal.showLoading()});try{if(id===""){py.dibuat_pada=new Date();await addDoc(collection(db,"bank_soal"),py);Swal.fire('Terkirim!','Menunggu Review Admin.','success');}else{await updateDoc(doc(db,"bank_soal",id),py);Swal.fire('Diperbarui!','Masuk antrean Review.','success');}window.batalEditForm();window.muatBankSoalPribadi();}catch(er){Swal.fire('Error','Gagal.','error');}});
-        window.batalEditForm=()=>{document.getElementById('formTulisSoal').reset();document.getElementById('inputIdSoal').value="";quillPertanyaan.root.innerHTML="";quillPembahasan.root.innerHTML="";document.getElementById('inputBab').innerHTML='<option value="">Pilih Mapel</option>';document.getElementById('inputBab').disabled=true;document.getElementById('judulFormSoal').innerText="✨ Tulis Pertanyaan Baru V2";document.getElementById('btnKirimSoal').innerHTML="🚀 Kirim Soal";document.getElementById('btnBatalEdit').classList.add('hidden');window.ubahUIJenisSoal();};
+        document.getElementById('formTulisSoal')?.addEventListener('submit', async e => {
+            e.preventDefault();
+            let t = document.getElementById('inputTipeSoal').value, kT = quillPertanyaan.root.innerHTML, kB = quillPembahasan.root.innerHTML;
+            
+            // Validasi kosong
+            if (quillPertanyaan.getText().trim().length === 0 && !kT.includes('<img') && !kT.includes('<span class="ql-formula"')) 
+                return Swal.fire('Oops', 'Pertanyaan kosong!', 'warning');
+            if (kT.length > 500000) return Swal.fire('Gambar Besar!', 'Maksimal 500KB.', 'error');
+        
+            let aO = [];
+            let vD = false;
+            
+            if (t === 'pg' || t === 'pg_kompleks') {
+                document.querySelectorAll('.input-kunci-dinamis').forEach((el, i) => {
+                    let h = ['A', 'B', 'C', 'D'][i];
+                    let tO = mapQuillOpsi[h].root.innerHTML; // PIPA DATA BARU (Baca dari Quill)
+                    let iB = el.checked;
+                    if (iB) vD = true;
+                    aO.push({ label: h, teks: tO, benar: iB });
+                });
+                if (!vD) return Swal.fire('Oops', 'Pilih minimal 1 kunci jawaban!', 'warning');
+            } else if (t === 'essay') {
+                vD = true;
+            }
+        
+            let id = document.getElementById('inputIdSoal').value;
+            let py = {
+                tipe_soal: t, pertanyaan: kT, opsi: aO, pembahasan: kB,
+                kuadran: document.getElementById('inputKuadran').value, status: 'pending_review',
+                pembuat_id: profilGuru.nama, pembuat_email: profilGuru.email, sekolah_id: profilGuru.sekolah_id,
+                metadata: { mapel: document.getElementById('inputMapel').value, sub_bab: document.getElementById('inputBab').value, kelas: document.getElementById('inputKelas').value, jenjang: profilGuru.jenjang }
+            };
+        
+            Swal.fire({ title: 'Mengirim...', didOpen: () => Swal.showLoading() });
+            try {
+                if (id === "") {
+                    py.dibuat_pada = new Date();
+                    await addDoc(collection(db, "bank_soal"), py);
+                    Swal.fire('Terkirim!', 'Menunggu Review Admin.', 'success');
+                } else {
+                    await updateDoc(doc(db, "bank_soal", id), py);
+                    Swal.fire('Diperbarui!', 'Masuk antrean Review.', 'success');
+                }
+                window.batalEditForm();
+                window.muatBankSoalPribadi();
+            } catch (er) { Swal.fire('Error', 'Gagal menyimpan.', 'error'); }
+        });
+        window.batalEditForm = () => {
+            document.getElementById('formTulisSoal').reset();
+            document.getElementById('inputIdSoal').value = "";
+            
+            // Reset semua 6 Editor
+            quillPertanyaan.root.innerHTML = "";
+            quillPembahasan.root.innerHTML = "";
+            ['A','B','C','D'].forEach(h => mapQuillOpsi[h].root.innerHTML = ""); 
+            
+            document.getElementById('inputBab').innerHTML = '<option value="">Pilih Mapel</option>';
+            document.getElementById('inputBab').disabled = true;
+            document.getElementById('judulFormSoal').innerText = "✨ Tulis Pertanyaan Baru V2";
+            document.getElementById('btnKirimSoal').innerHTML = "🚀 Kirim Soal";
+            document.getElementById('btnBatalEdit').classList.add('hidden');
+            window.ubahUIJenisSoal();
+        };
         window.muatBankSoalPribadi=async()=>{const tb=document.getElementById('tabelSoalSaya');if(tb)tb.innerHTML='<tr><td colspan="4" class="text-center py-8">Menarik arsip...</td></tr>';try{const s=await getDocs(query(collection(db,"bank_soal"),where("sekolah_id","==",profilGuru.sekolah_id),where("pembuat_email","==",profilGuru.email)));soalPribadi=[];s.forEach(d=>soalPribadi.push({id:d.id,...d.data()}));let h='';soalPribadi.forEach(d=>{let w=d.status==='aktif'?'bg-green-100 text-green-700':(d.status==='ditolak'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700');let dt=document.createElement("div");dt.innerHTML=d.pertanyaan;let tp=dt.textContent||dt.innerText||"";let bt=d.tipe_soal==='essay'?'📝 ESSAY':(d.tipe_soal==='pg_kompleks'?'☑️ PG KOMPLEKS':'🔘 PG');h+=`<tr class="border-b hover:bg-orange-50"><td class="px-6 py-4"><span class="px-2 py-1 rounded text-[10px] font-black uppercase block mb-1 w-max ${w}">${d.status.replace('_',' ')}</span><span class="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-2 rounded uppercase tracking-widest block w-max">${bt}</span></td><td class="px-6 py-4 text-xs font-bold text-gray-700">${d.metadata?.mapel||'-'}<br><span class="font-normal text-orange-600">Kls: ${d.metadata?.kelas||'-'}</span></td><td class="px-6 py-4"><div class="line-clamp-2 text-sm text-gray-600 italic">"${tp}"</div></td><td class="px-6 py-4 text-center"><button onclick="editSoalSaya('${d.id}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-1 transition">✏️ Edit</button><button onclick="hapusSoalSaya('${d.id}')" class="text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition">🗑️</button></td></tr>`;});if(tb)tb.innerHTML=h||'<tr><td colspan="4" class="text-center py-8 text-gray-400 border-2 border-dashed rounded-xl m-4">Belum ada karya soal.</td></tr>';window.updateStatistik();}catch(e){}};
         window.updateStatistik=()=>{let p=0,a=0,t=0;soalPribadi.forEach(s=>{if(s.status==='aktif')a++;else if(s.status==='ditolak')t++;else p++;});document.getElementById('statPending').innerText=p;document.getElementById('statAktif').innerText=a;document.getElementById('statDitolak').innerText=t;};
-        window.editSoalSaya=(id)=>{let s=soalPribadi.find(x=>x.id===id);if(!s)return;document.getElementById('inputIdSoal').value=s.id;document.getElementById('inputMapel').value=s.metadata?.mapel||"";let sb=document.getElementById('inputBab');sb.innerHTML='<option value="">-- Sub Bab --</option>';sb.disabled=false;let ob=dataKurikulumGlobal.find(m=>m.nama_mapel===s.metadata?.mapel);if(ob?.sub_bab)ob.sub_bab.forEach(b=>sb.innerHTML+=`<option value="${b}">${b}</option>`);sb.value=s.metadata?.sub_bab||"";document.getElementById('inputKelas').value=s.metadata?.kelas||"";document.getElementById('inputKuadran').value=s.kuadran||"Lokal";document.getElementById('inputTipeSoal').value=s.tipe_soal||"pg";window.ubahUIJenisSoal();quillPertanyaan.root.innerHTML=s.pertanyaan||"";quillPembahasan.root.innerHTML=s.pembahasan||"";if(s.opsi&&Array.isArray(s.opsi)){s.opsi.forEach(op=>{let it=document.getElementById('inputOpsi'+op.label);if(it)it.value=op.teks;document.querySelectorAll('.input-kunci-dinamis').forEach(el=>{if(el.value===op.label)el.checked=op.benar;});});}else{['A','B','C','D'].forEach(h=>document.getElementById('inputOpsi'+h).value=s['opsi_'+h.toLowerCase()]||"");document.querySelectorAll('.input-kunci-dinamis').forEach(el=>el.checked=(el.value===s.kunci));}document.getElementById('judulFormSoal').innerText="✏️ Revisi Karya V2";document.getElementById('btnKirimSoal').innerHTML="💾 Ajukan Ulang";document.getElementById('btnBatalEdit').classList.remove('hidden');window.bukaTab('tabBuatSoal');};
+        window.editSoalSaya = (id) => {
+            let s = soalPribadi.find(x => x.id === id);
+            if (!s) return;
+            document.getElementById('inputIdSoal').value = s.id;
+            document.getElementById('inputMapel').value = s.metadata?.mapel || "";
+            
+            let sb = document.getElementById('inputBab');
+            sb.innerHTML = '<option value="">-- Sub Bab --</option>';
+            sb.disabled = false;
+            let ob = dataKurikulumGlobal.find(m => m.nama_mapel === s.metadata?.mapel);
+            if (ob?.sub_bab) ob.sub_bab.forEach(b => sb.innerHTML += `<option value="${b}">${b}</option>`);
+            sb.value = s.metadata?.sub_bab || "";
+            
+            document.getElementById('inputKelas').value = s.metadata?.kelas || "";
+            document.getElementById('inputKuadran').value = s.kuadran || "Lokal";
+            document.getElementById('inputTipeSoal').value = s.tipe_soal || "pg";
+            window.ubahUIJenisSoal();
+            
+            quillPertanyaan.root.innerHTML = s.pertanyaan || "";
+            quillPembahasan.root.innerHTML = s.pembahasan || "";
+            
+            // PIPA DATA BARU (Kirim data Firebase ke Quill Opsi)
+            if (s.opsi && Array.isArray(s.opsi)) {
+                s.opsi.forEach(op => {
+                    if(mapQuillOpsi[op.label]) mapQuillOpsi[op.label].root.innerHTML = op.teks;
+                    document.querySelectorAll('.input-kunci-dinamis').forEach(el => {
+                        if (el.value === op.label) el.checked = op.benar;
+                    });
+                });
+            } else {
+                // Fallback untuk format database versi lama
+                ['A', 'B', 'C', 'D'].forEach(h => {
+                    if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = s['opsi_' + h.toLowerCase()] || "";
+                });
+                document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = (el.value === s.kunci));
+            }
+            
+            document.getElementById('judulFormSoal').innerText = "✏️ Revisi Karya V2";
+            document.getElementById('btnKirimSoal').innerHTML = "💾 Ajukan Ulang";
+            document.getElementById('btnBatalEdit').classList.remove('hidden');
+            window.bukaTab('tabBuatSoal');
+        };
         window.hapusSoalSaya=id=>{Swal.fire({title:'Hapus Soal?',icon:'warning',showCancelButton:true,confirmButtonColor:'#d33'}).then(async r=>{if(r.isConfirmed){await deleteDoc(doc(db,"bank_soal",id));window.muatBankSoalPribadi();}});};
 
         // FITUR IMPORT EXCEL AUTO-UPGRADE V2
@@ -641,5 +774,6 @@
 </body>
 
 </html>
+
 
 
