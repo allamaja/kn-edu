@@ -296,22 +296,19 @@
         // 1. INIT QUILL & PEMBAJAKAN MATHLIVE V2 (Pro Version)
         // ==========================================
         
-        // OBAT ERROR: Daftarkan modul Resize secara manual sebelum dipakai!
-        Quill.register('modules/imageResize', window.ImageResize.default || window.ImageResize);
-
         const toolbarOpsi = [['bold', 'italic', 'underline', 'strike'], [{ 'script': 'sub'}, { 'script': 'super' }], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['formula', 'image'], ['clean']];
         
         // Konfigurasi Resize yang elegan
         const resizeConfig = {
-            displaySize: true, // Akan memunculkan angka ukuran pixel saat gambar ditarik
+            displaySize: true, // Memunculkan angka ukuran pixel saat gambar ditarik
             modules: [ 'Resize', 'DisplaySize', 'Toolbar' ]
         };
 
-        // Init Pertanyaan & Pembahasan (Sekarang sudah disuntik imageResize)
+        // Init Pertanyaan & Pembahasan
         let quillPertanyaan = new Quill('#editorPertanyaan', { modules: { formula: true, toolbar: toolbarOpsi, imageResize: resizeConfig }, theme: 'snow', placeholder: 'Ketik teks pertanyaan di sini...' });
         let quillPembahasan = new Quill('#editorPembahasan', { modules: { formula: true, toolbar: toolbarOpsi, imageResize: resizeConfig }, theme: 'snow', placeholder: 'Ketik kunci rubrik / penjelasan di sini...' });
 
-        // Init 4 Opsi Jawaban (Semua bisa narik gambar!)
+        // Init 4 Opsi Jawaban
         let quillOpsiA = new Quill('#editorOpsiA', { modules: { formula: true, toolbar: toolbarOpsi, imageResize: resizeConfig }, theme: 'snow', placeholder: 'Teks Pilihan A' });
         let quillOpsiB = new Quill('#editorOpsiB', { modules: { formula: true, toolbar: toolbarOpsi, imageResize: resizeConfig }, theme: 'snow', placeholder: 'Teks Pilihan B' });
         let quillOpsiC = new Quill('#editorOpsiC', { modules: { formula: true, toolbar: toolbarOpsi, imageResize: resizeConfig }, theme: 'snow', placeholder: 'Teks Pilihan C' });
@@ -769,6 +766,7 @@
 </body>
 
 </html>
+
 
 
 
