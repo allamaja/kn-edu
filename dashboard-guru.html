@@ -293,33 +293,104 @@
         let dataKurikulumGlobal=[], soalPribadi=[], dataSoalSeluruhnya=[], dataPaketLokal=[], pilihanSoalSementara=new Set(), dataNilaiLokal=[];
 
         // ==========================================
-        // 1. INIT QUILL & PEMBAJAKAN MATHLIVE V2 (Pro Version)
+        // 1. INIT QUILL, MATHLIVE & AUTO-COMPRESSOR V2
         // ==========================================
         
-        // PENYEMBUH FATAL ERROR: Daftarkan modul BlotFormatter
         Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
 
         const toolbarOpsi = [['bold', 'italic', 'underline', 'strike'], [{ 'script': 'sub'}, { 'script': 'super' }], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['formula', 'image'], ['clean']];
 
-        // Init Pertanyaan & Pembahasan (Menggunakan blotFormatter, BUKAN imageResize)
+        // Init Pertanyaan & Pembahasan
         let quillPertanyaan = new Quill('#editorPertanyaan', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Ketik teks pertanyaan di sini...' });
         let quillPembahasan = new Quill('#editorPembahasan', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Ketik kunci rubrik / penjelasan di sini...' });
 
-        // Init 4 Opsi Jawaban (Semuanya disuntik blotFormatter)
+        // Init 4 Opsi Jawaban
         let quillOpsiA = new Quill('#editorOpsiA', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan A' });
         let quillOpsiB = new Quill('#editorOpsiB', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan B' });
         let quillOpsiC = new Quill('#editorOpsiC', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan C' });
         let quillOpsiD = new Quill('#editorOpsiD', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan D' });
         
-        // Peta Editor Opsi untuk mempermudah pemanggilan
         const mapQuillOpsi = { 'A': quillOpsiA, 'B': quillOpsiB, 'C': quillOpsiC, 'D': quillOpsiD };
 
-        // Pembajakan Tombol Formula untuk ke-6 Editor
+        // --- SISTEM KOMPRESI SILUMAN (LAPIS BAJA: MAX 1 MB + CANVAS COMPRESSION) ---
+        const prosesKompresiGambar = (quillObj) => {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/png, image/jpeg, image/jpg, image/webp');
+            input.click();
+
+            input.onchange = async () => {
+                const file = input.files[0];
+                if (!file) return;
+
+                // 🛡️ PERTAHANAN LAPIS 1: CEK UKURAN ASLI SEBELUM MASUK MEMORI
+                const maxBytes = 1 * 1024 * 1024; // 1 MB
+                if (file.size > maxBytes) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Gambar Terlalu Besar!',
+                        text: 'Ukuran maksimal foto asli adalah 1 MB. Silakan potong/kecilkan gambar Anda terlebih dahulu.',
+                        confirmButtonColor: '#f97316'
+                    });
+                    input.value = ''; // Bersihkan pilihan
+                    return; // Batalkan proses
+                }
+
+                // Tampilkan loading agar guru tahu sistem sedang bekerja
+                Swal.fire({ title: 'Memampatkan Gambar...', text: 'Mengoptimalkan ukuran untuk server', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // 🛡️ PERTAHANAN LAPIS 2: BATASI LEBAR AGAR TIDAK LEBIH DARI 800px (Tetap HD & Jelas dibaca)
+                        const MAX_WIDTH = 800;
+                        if (width > MAX_WIDTH) {
+                            height = Math.round((height * MAX_WIDTH) / width);
+                            width = MAX_WIDTH;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Isi background putih (Mencegah PNG transparan jadi hitam saat diubah ke JPEG)
+                        ctx.fillStyle = "#FFFFFF";
+                        ctx.fillRect(0, 0, width, height);
+                        
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // 🛡️ PERTAHANAN LAPIS 3: KONVERSI KE JPEG KUALITAS 70%
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                        // Sisipkan gambar yang sudah diet ekstrem ke editor
+                        const range = quillObj.getSelection(true) || { index: quillObj.getLength() };
+                        quillObj.insertEmbed(range.index, 'image', compressedBase64);
+                        quillObj.setSelection(range.index + 1);
+                        
+                        Swal.close();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            };
+        };
+
+        // --- PEMBAJAKAN TOMBOL FORMULA & GAMBAR UNTUK KE-6 EDITOR ---
         let targetEditorMath = null;
-        const pasangMath = (quillObj) => { quillObj.getModule('toolbar').addHandler('formula', () => { targetEditorMath = quillObj; bukaModalMath(); }); };
+        const pasangFiturCustom = (quillObj) => { 
+            // Bajak tombol FX
+            quillObj.getModule('toolbar').addHandler('formula', () => { targetEditorMath = quillObj; bukaModalMath(); }); 
+            // Bajak tombol Gambar
+            quillObj.getModule('toolbar').addHandler('image', () => { prosesKompresiGambar(quillObj); }); 
+        };
         
-        pasangMath(quillPertanyaan); pasangMath(quillPembahasan);
-        pasangMath(quillOpsiA); pasangMath(quillOpsiB); pasangMath(quillOpsiC); pasangMath(quillOpsiD);
+        pasangFiturCustom(quillPertanyaan); pasangFiturCustom(quillPembahasan);
+        pasangFiturCustom(quillOpsiA); pasangFiturCustom(quillOpsiB); pasangFiturCustom(quillOpsiC); pasangFiturCustom(quillOpsiD);
 
         window.bukaModalMath = () => { let mf = document.getElementById('mathFieldVirtual'); mf.value = ''; document.getElementById('modalMathKeyboard').classList.remove('hidden'); setTimeout(() => { mf.focus(); }, 100); };
         window.tutupModalMath = () => { document.getElementById('modalMathKeyboard').classList.add('hidden'); targetEditorMath = null; };
@@ -763,6 +834,7 @@
 </body>
 
 </html>
+
 
 
 
