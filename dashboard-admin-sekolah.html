@@ -18,6 +18,7 @@
     </style>
     
     <script defer src="https://unpkg.com/mathlive"></script>
+    
 
     <style>
         /* Penyesuaian UI Editor agar lebih rapi */
@@ -28,6 +29,21 @@
         /* Kustomisasi input MathLive */
         math-field { font-size: 1.5rem; background-color: white; border: 2px solid #cbd5e1; border-radius: 0.75rem; padding: 0.5rem; outline: none; }
         math-field:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        /* Mencegah gambar raksasa di dalam editor soal dan pembahasan */
+        .editor-soal img, .editor-bahas img {
+            max-width: 100%; /* Gambar akan otomatis mengecil jika layarnya kecil */
+            height: auto;
+            border-radius: 8px;
+            margin: 10px 0;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        /* Efek saat gambar dilewati mouse agar lebih interaktif */
+        .editor-soal img:hover, .editor-bahas img:hover {
+            border-color: #3b82f6; /* Warna biru */
+            opacity: 0.9;
+        }
     </style>
     <script>
         window.addEventListener('pageshow', function(event) {
@@ -346,7 +362,7 @@
         </div>
     </main>
 
-    <div id="modalEditor" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center z-[100] p-4 overflow-y-auto backdrop-blur-sm">
+    <div id="modalEditor" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center z-[100] p-4 overflow-y-auto">
         <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl my-8 flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-6 border-b border-gray-100 shrink-0">
                 <div class="flex items-center space-x-3">
@@ -355,8 +371,9 @@
                 </div>
                 <button onclick="tutupModalEditor()" class="text-gray-400 hover:text-red-500 text-3xl font-bold focus:outline-none">&times;</button>
             </div>            
-            <div class="p-6 md:p-8 overflow-y-auto flex-1 space-y-6">
-                <input type="hidden" id="editIdSoal"><input type="hidden" id="editAsalTab">                
+            <div class="p-6 md:p-8 overflow-y-auto flex-1 space-y-5">
+                <input type="hidden" id="editIdSoal"><input type="hidden" id="editAsalTab">
+                
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 bg-emerald-50 p-5 rounded-2xl border border-emerald-100">
                     <div><label class="block text-xs font-bold text-emerald-800 mb-1">Mapel</label><select id="editMapel" class="w-full p-2 border border-emerald-200 rounded-lg dinamis-mapel text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white"></select></div>
                     <div><label class="block text-xs font-bold text-emerald-800 mb-1">Sub Bab</label><select id="editBab" class="w-full p-2 border border-emerald-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white"><option value="-">-</option></select></div>
@@ -367,28 +384,26 @@
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <label class="block text-sm font-bold text-gray-700">Teks Pertanyaan</label>
-                        <span class="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-500 font-bold">💡 Mendukung Rumus (KaTeX) & Gambar Max 2MB</span>
+                        <span class="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-500 font-bold">💡 Klik tombol "fx" untuk papan rumus</span>
                     </div>
-                    <div id="editorPertanyaan" class="bg-white rounded-b-xl min-h-[150px] text-base"></div>
+                    <div id="editorPertanyaan" class="editor-soal"></div>
                 </div>
-                <div id="areaOpsiJawaban" class="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                <div id="areaOpsiJawaban" class="space-y-3 bg-gray-50 p-5 rounded-2xl border border-gray-200">
                     <div class="flex justify-between items-center border-b pb-2 mb-2">
                         <label class="block text-sm font-bold text-gray-700">Pilihan Jawaban & Kunci</label>
                         <span class="text-xs text-gray-500 font-medium" id="petunjukOpsi">Pilih 1 bulatan hijau sebagai kunci.</span>
-                    </div>                    
-                    <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="editKunci" value="A" class="w-6 h-6 text-emerald-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">A</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiA" class="min-h-[60px]"></div></div></div>                    
-                    <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="editKunci" value="B" class="w-6 h-6 text-emerald-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">B</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiB" class="min-h-[60px]"></div></div></div>                    
-                    <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="editKunci" value="C" class="w-6 h-6 text-emerald-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">C</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiC" class="min-h-[60px]"></div></div></div>
-                    <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="editKunci" value="D" class="w-6 h-6 text-emerald-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">D</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiD" class="min-h-[60px]"></div></div></div>
+                    </div>
+                    <div class="flex items-start space-x-3"><div class="pt-2"><input type="radio" name="editKunci" value="A" class="w-6 h-6 text-emerald-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-lg pt-1">A</span><input type="text" id="editOpsiA" class="flex-1 px-4 py-2.5 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                    <div class="flex items-start space-x-3"><div class="pt-2"><input type="radio" name="editKunci" value="B" class="w-6 h-6 text-emerald-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-lg pt-1">B</span><input type="text" id="editOpsiB" class="flex-1 px-4 py-2.5 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                    <div class="flex items-start space-x-3"><div class="pt-2"><input type="radio" name="editKunci" value="C" class="w-6 h-6 text-emerald-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-lg pt-1">C</span><input type="text" id="editOpsiC" class="flex-1 px-4 py-2.5 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                    <div class="flex items-start space-x-3"><div class="pt-2"><input type="radio" name="editKunci" value="D" class="w-6 h-6 text-emerald-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-lg pt-1">D</span><input type="text" id="editOpsiD" class="flex-1 px-4 py-2.5 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500"></div>
                 </div>
                 <div class="mt-2 pt-4 border-t">
                     <label class="block text-sm font-bold text-yellow-600 mb-2">💡 Pembahasan / Penjelasan</label>
-                    <div class="bg-yellow-50 border border-yellow-300 rounded-lg overflow-hidden">
-                        <div id="editorPembahasan" class="min-h-[100px]"></div>
-                    </div>
+                    <div id="editorPembahasan" class="editor-bahas bg-yellow-50 border-yellow-200"></div>
                 </div>
-            </div>
-            <div class="p-6 border-t flex justify-between bg-gray-50 rounded-b-3xl shrink-0">
+            </div>            
+            <div class="p-6 border-t flex justify-between bg-gray-50 rounded-b-3xl">
                 <div>
                     <button onclick="aksiHapusTolakDariModal()" id="btnTolakModal" class="hidden px-6 py-3 text-white bg-red-500 rounded-xl font-bold hover:bg-red-600 transition shadow-sm mr-2">❌ Tolak Soal</button>
                     <button onclick="tutupModalEditor()" class="px-6 py-3 text-gray-600 bg-gray-200 rounded-xl font-bold hover:bg-gray-300 transition">Batal</button>
@@ -1368,6 +1383,7 @@
 </body>
 
 </html>
+
 
 
 
