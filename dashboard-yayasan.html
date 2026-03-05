@@ -355,8 +355,53 @@
         </div>
     </div>
 
-    <div id="modalPaket" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center z-50 p-4"><div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl flex flex-col h-[90vh]"><div class="flex justify-between items-center p-6 border-b shrink-0"><h3 class="text-xl font-bold">📦 Rakit Paket</h3><button onclick="tutupModalPaket()" class="text-3xl font-bold">&times;</button></div><div class="p-6 overflow-y-auto flex-1 bg-white"><div class="mb-4"><input type="text" id="namaPaketBaru" placeholder="Nama Paket" class="w-full px-4 py-3 border rounded-xl font-bold"></div><div class="grid grid-cols-5 gap-3 mb-4 bg-gray-50 p-4 rounded-xl border"><input type="text" id="filterCariPaket" placeholder="Cari..." class="col-span-2 px-3 py-2 border rounded-lg" oninput="renderPilihanSoal()"><select id="filterMapelPaket" class="px-3 py-2 border rounded-lg dinamis-mapel" onchange="renderPilihanSoal()"></select><select id="filterKelasPaket" class="px-3 py-2 border rounded-lg" onchange="renderPilihanSoal()"><option value="">Semua Kls</option><option value="12">12</option><option value="11">11</option><option value="10">10</option></select><select id="filterSumberPaket" class="px-3 py-2 border rounded-lg" onchange="renderPilihanSoal()"><option value="Global">Global</option><option value="Lokal">Lokal</option></select></div><div id="listPilihanSoal" class="space-y-2 h-72 overflow-y-auto pr-2"></div></div><div class="p-6 border-t flex justify-between items-center"><span id="counterSoalPaket" class="font-black text-teal-600">0 TERPILIH</span><button onclick="simpanPaketBaru()" class="bg-teal-600 text-white font-bold px-8 py-3 rounded-xl">Simpan Paket</button></div></div></div>
-
+    <div id="modalPaket" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl flex flex-col h-[90vh]">        
+        <div class="flex justify-between items-center p-6 border-b shrink-0">
+            <h3 class="text-xl font-bold">📦 Rakit Paket</h3>
+            <button onclick="tutupModalPaket()" class="text-3xl font-bold hover:text-red-500 transition">&times;</button>
+        </div>        
+        <div class="p-6 overflow-y-auto flex-1 bg-white">
+            <div class="mb-4">
+                <input type="text" id="namaPaketBaru" placeholder="Nama Paket (Misal: Ujian Akhir Semester Genap 2026)" class="w-full px-4 py-3 border rounded-xl font-bold focus:ring-2 focus:ring-teal-500 outline-none">
+            </div>            
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-3 mb-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <input type="text" id="filterCariPaket" placeholder="Cari Soal..." class="md:col-span-2 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" oninput="renderPilihanSoal()">
+                <select id="filterJenjangPaket" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" onchange="renderPilihanSoal()">
+                    <option value="">Semua Jenjang</option>
+                    <option value="SMA">SMA</option>
+                    <option value="SMP">SMP</option>
+                    <option value="SD">SD</option>
+                </select>
+                <select id="filterMapelPaket" class="px-3 py-2 border rounded-lg dinamis-mapel focus:ring-2 focus:ring-teal-500 outline-none" onchange="renderPilihanSoal()"></select>  
+                <select id="filterKelasPaket" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" onchange="renderPilihanSoal()">
+                    <option value="">Semua Kls</option>
+                    <option value="12">12</option>
+                    <option value="11">11</option>
+                    <option value="10">10</option>
+                    <option value="9">9</option>
+                    <option value="8">8</option>
+                    <option value="7">7</option>
+                    <option value="6">6</option>
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                </select>                
+                <select id="filterSumberPaket" class="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" onchange="renderPilihanSoal()">
+                    <option value="Global">Global</option>
+                    <option value="Lokal">Lokal</option>
+                </select>
+            </div>            
+            <div id="listPilihanSoal" class="space-y-2 h-72 overflow-y-auto pr-2"></div>
+        </div>        
+        <div class="p-6 border-t flex justify-between items-center bg-gray-50 rounded-b-3xl shrink-0">
+            <span id="counterSoalPaket" class="font-black text-teal-600 bg-teal-100 px-4 py-2 rounded-lg">0 TERPILIH</span>
+            <button onclick="simpanPaketBaru()" class="bg-teal-600 text-white font-bold px-8 py-3 rounded-xl shadow-md hover:bg-teal-700 transition">Simpan Paket</button>
+        </div>        
+    </div>
+</div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
@@ -1486,6 +1531,7 @@
 </body>
 
 </html>
+
 
 
 
