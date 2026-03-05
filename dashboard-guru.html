@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
-    <script>window.Quill = Quill;</script>
+    <script src="https://cdn.jsdelivr.net/npm/quill-image-resize-js@3.0.3/build/quill-image-resize.min.js"></script>
     <script defer src="https://unpkg.com/mathlive"></script>
 
     <style>
@@ -295,42 +295,37 @@
         // ==========================================
         // 1. INIT QUILL & PEMBAJAKAN MATHLIVE V2 (Pro Version)
         // ==========================================
+        
+        // OBAT ERROR: Daftarkan modul Resize secara manual sebelum dipakai!
+        Quill.register('modules/imageResize', window.ImageResize.default || window.ImageResize);
+
         const toolbarOpsi = [['bold', 'italic', 'underline', 'strike'], [{ 'script': 'sub'}, { 'script': 'super' }], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['formula', 'image'], ['clean']];
         
-        // Init Pertanyaan & Pembahasan
-        let quillPertanyaan = new Quill('#editorPertanyaan', { 
-            modules: { 
-                formula: true, 
-                toolbar: toolbarOpsi,
-                imageResize: {
-                    displayStyles: { backgroundColor: 'black', border: 'none', color: 'white' },
-                    modules: [ 'Resize', 'DisplaySize', 'Toolbar' ]
-                }
-            }, 
-            theme: 'snow', 
-            placeholder: 'Ketik teks pertanyaan di sini...' 
-        });        
-        let quillPembahasan = new Quill('#editorPembahasan', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Ketik kunci rubrik / penjelasan di sini...' });
+        // Konfigurasi Resize yang elegan
+        const resizeConfig = {
+            displaySize: true, // Akan memunculkan angka ukuran pixel saat gambar ditarik
+            modules: [ 'Resize', 'DisplaySize', 'Toolbar' ]
+        };
 
-        // Init 4 Opsi Jawaban
-        let quillOpsiA = new Quill('#editorOpsiA', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Teks Pilihan A' });
-        let quillOpsiB = new Quill('#editorOpsiB', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Teks Pilihan B' });
-        let quillOpsiC = new Quill('#editorOpsiC', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Teks Pilihan C' });
-        let quillOpsiD = new Quill('#editorOpsiD', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Teks Pilihan D' });
+        // Init Pertanyaan & Pembahasan (Sekarang sudah disuntik imageResize)
+        let quillPertanyaan = new Quill('#editorPertanyaan', { modules: { formula: true, toolbar: toolbarOpsi, imageResize: resizeConfig }, theme: 'snow', placeholder: 'Ketik teks pertanyaan di sini...' });
+        let quillPembahasan = new Quill('#editorPembahasan', { modules: { formula: true, toolbar: toolbarOpsi, imageResize: resizeConfig }, theme: 'snow', placeholder: 'Ketik kunci rubrik / penjelasan di sini...' });
+
+        // Init 4 Opsi Jawaban (Semua bisa narik gambar!)
+        let quillOpsiA = new Quill('#editorOpsiA', { modules: { formula: true, toolbar: toolbarOpsi, imageResize: resizeConfig }, theme: 'snow', placeholder: 'Teks Pilihan A' });
+        let quillOpsiB = new Quill('#editorOpsiB', { modules: { formula: true, toolbar: toolbarOpsi, imageResize: resizeConfig }, theme: 'snow', placeholder: 'Teks Pilihan B' });
+        let quillOpsiC = new Quill('#editorOpsiC', { modules: { formula: true, toolbar: toolbarOpsi, imageResize: resizeConfig }, theme: 'snow', placeholder: 'Teks Pilihan C' });
+        let quillOpsiD = new Quill('#editorOpsiD', { modules: { formula: true, toolbar: toolbarOpsi, imageResize: resizeConfig }, theme: 'snow', placeholder: 'Teks Pilihan D' });
         
-        // Peta Editor Opsi untuk mempermudah pemanggilan (Jembatan Data)
+        // Peta Editor Opsi untuk mempermudah pemanggilan
         const mapQuillOpsi = { 'A': quillOpsiA, 'B': quillOpsiB, 'C': quillOpsiC, 'D': quillOpsiD };
 
         // Pembajakan Tombol Formula untuk ke-6 Editor
         let targetEditorMath = null;
         const pasangMath = (quillObj) => { quillObj.getModule('toolbar').addHandler('formula', () => { targetEditorMath = quillObj; bukaModalMath(); }); };
         
-        pasangMath(quillPertanyaan);
-        pasangMath(quillPembahasan);
-        pasangMath(quillOpsiA);
-        pasangMath(quillOpsiB);
-        pasangMath(quillOpsiC);
-        pasangMath(quillOpsiD);
+        pasangMath(quillPertanyaan); pasangMath(quillPembahasan);
+        pasangMath(quillOpsiA); pasangMath(quillOpsiB); pasangMath(quillOpsiC); pasangMath(quillOpsiD);
 
         window.bukaModalMath = () => { let mf = document.getElementById('mathFieldVirtual'); mf.value = ''; document.getElementById('modalMathKeyboard').classList.remove('hidden'); setTimeout(() => { mf.focus(); }, 100); };
         window.tutupModalMath = () => { document.getElementById('modalMathKeyboard').classList.add('hidden'); targetEditorMath = null; };
@@ -774,6 +769,7 @@
 </body>
 
 </html>
+
 
 
 
