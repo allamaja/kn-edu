@@ -223,7 +223,7 @@
             renderGridNavigasi(); tampilkanSoal(0); mulaiTimer(); simpanStateLokal();
         });
 
-        // MESIN RENDER SOAL V2.0
+        // MESIN RENDER SOAL V2.0 (SUDAH DIPERBAIKI UNTUK QUILL & KATEX)
         window.tampilkanSoal = function(indeks) {
             indeksSekarang = indeks; 
             const soal = daftarSoal[indeks];
@@ -237,20 +237,15 @@
             else if(tipe === 'pg_kompleks') { bTipe.innerText = 'PG KOMPLEKS'; bTipe.className = "bg-indigo-50 text-indigo-600 border border-indigo-200 text-[10px] font-black px-2 py-1 rounded uppercase shadow-sm"; }
             else { bTipe.innerText = 'PG'; bTipe.className = "bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-black px-2 py-1 rounded uppercase shadow-sm"; }
 
+            // 1. RENDER PERTANYAAN
             let qlEditor = document.getElementById('teksPertanyaan');
             if(soal.pertanyaan && !soal.pertanyaan.startsWith('<')) qlEditor.innerHTML = `<p>${soal.pertanyaan}</p>`;
             else qlEditor.innerHTML = soal.pertanyaan || "";
 
-            setTimeout(() => {
-                document.querySelectorAll('.ql-formula').forEach(el => {
-                    let latex = el.getAttribute('data-value');
-                    if(latex) { try { katex.render(latex, el, {throwOnError: false}); } catch(e){} }
-                });
-            }, 10);
-
             let kontainerOpsi = document.getElementById('kontainerOpsi');
             let tips = document.getElementById('tipsSoal');
             
+            // 2. RENDER OPSI JAWABAN
             if (tipe === 'essay') {
                 tips.style.display = 'none'; 
                 let valEssay = jawabanSiswa[indeksSekarang] || "";
@@ -282,17 +277,27 @@
                     let iconKelas = isChecked ? 'bg-blue-600 text-white border-blue-600' : (isEliminated ? 'border-gray-200 text-gray-300' : 'text-gray-500 border-gray-300');
                     let isiIkon = (tipe === 'pg_kompleks' && isChecked) ? '✓' : op.label;
 
+                    // PERBAIKAN: Menggunakan div dengan class ql-editor agar gambar dan teks format kaya dari Quill tidak rusak
                     htmlOpsi += `
                     <div class="flex items-center p-3 md:p-4 border rounded-2xl cursor-pointer transition select-none ${bgKelas}" 
                          onclick="window.pilihJawaban('${op.label}')" 
                          oncontextmenu="window.toggleEliminasi(event, '${op.label}')">
                         <span class="w-8 h-8 ${shape} border-2 flex shrink-0 items-center justify-center font-bold mr-4 transition-colors ${iconKelas}">${isiIkon}</span>
-                        <span class="font-medium flex-1 ${textTercoret}">${op.teks}</span>
+                        <div class="flex-1 ${textTercoret} ql-editor" style="padding: 0; min-height: auto;">${op.teks}</div>
                     </div>`;
                 });
                 kontainerOpsi.innerHTML = htmlOpsi;
             }
 
+            // 3. RENDER RUMUS MATEMATIKA (Dipindah ke bawah agar mengeksekusi rumus di dalam opsi jawaban juga)
+            setTimeout(() => {
+                document.querySelectorAll('.ql-formula').forEach(el => {
+                    let latex = el.getAttribute('data-value');
+                    if(latex) { try { katex.render(latex, el, {throwOnError: false}); } catch(e){} }
+                });
+            }, 10);
+
+            // 4. ATUR TOMBOL BAWAH
             const btnRagu = document.getElementById('btnRagu'), btnSeb = document.getElementById('btnSebelumnya'), btnSel = document.getElementById('btnSelanjutnya');
             if(raguRagu[indeksSekarang]) { btnRagu.classList.replace('bg-yellow-50', 'bg-yellow-400'); btnRagu.classList.replace('text-yellow-700', 'text-yellow-900'); btnRagu.classList.replace('border-yellow-200', 'border-yellow-500'); } 
             else { btnRagu.classList.replace('bg-yellow-400', 'bg-yellow-50'); btnRagu.classList.replace('text-yellow-900', 'text-yellow-700'); btnRagu.classList.replace('border-yellow-500', 'border-yellow-200'); }
