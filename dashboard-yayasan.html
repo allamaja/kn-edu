@@ -2150,7 +2150,8 @@
             let tb = document.getElementById('tabelUserYayasan');
             if(tb) tb.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-rose-600 animate-pulse">Menarik data admin pusat...</td></tr>';
             try {
-                const q = query(collection(db, "users"), where("sekolah_id", "==", "YAYASAN"));
+                // SINKRON: Cari berdasarkan ROLE = admin_yayasan
+                const q = query(collection(db, "users"), where("role", "==", "admin_yayasan"));
                 const s = await getDocs(q);
                 dataUserYayasan = [];
                 s.forEach(d => { dataUserYayasan.push({id: d.id, ...d.data()}); });
@@ -2215,8 +2216,16 @@
                     let emailLengkap = cleanUser.includes('@') ? cleanUser : cleanUser + '@smartkhairunnas.com';
 
                     await createUserWithEmailAndPassword(authBayangan, emailLengkap, f.pass);
+                    
+                    // SINKRON: Pastikan role ditulis admin_yayasan
                     await addDoc(collection(db, "users"), {
-                        nama: f.nama, email: emailLengkap, password_info: f.pass, role: 'admin_yayasan', sekolah_id: 'YAYASAN', status: 'aktif', dibuat_pada: new Date()
+                        nama: f.nama, 
+                        email: emailLengkap, 
+                        password_info: f.pass, 
+                        role: 'admin_yayasan', 
+                        sekolah_id: 'YAYASAN', 
+                        status: 'aktif', 
+                        dibuat_pada: new Date()
                     });
                     
                     window.muatUserYayasan();
