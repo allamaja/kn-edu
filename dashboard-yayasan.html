@@ -1749,63 +1749,52 @@
         window.downloadTemplateSoal = () => {
             if(typeof XLSX === 'undefined') return Swal.fire('Error', 'Library Excel belum dimuat.', 'error');
             
-            // ==========================================
-            // SHEET 1: TEMPLATE DATA (Disesuaikan dengan Format Word)
-            // ==========================================
+            // SHEET 1: TEMPLATE DATA (PRAKTIS & OPERASIONAL)
             const headerRow = [
-                "Pertanyaan", "Jenis Soal", "Opsi A", "Opsi B", "Opsi C", "Opsi D", "Opsi E", "Kunci Jawaban", "Header Matriks", "Pembahasan", 
-                "Mapel", "Bab", "Elemen", "Konteks", "Indikator Soal", "Jenjang", "Kelas", "Target", "Kesulitan"
+                "Pertanyaan", "Jenis Soal", "Jumlah Pilihan", "Opsi A", "Opsi B", "Opsi C", "Opsi D", "Opsi E", "Kunci Jawaban", "Header Matriks", "Pembahasan", 
+                "Mapel", "Bab", "Jenjang", "Kelas", "Target", "Kesulitan"
             ];
             
             const contohPG = [
-                "Ibukota negara Indonesia saat ini adalah?", "pg", "Surabaya", "Jakarta", "Bandung", "Medan", "Semarang", "B", "", "Jakarta adalah ibukota negara.", 
-                "Geografi", "Wilayah", "Pengetahuan Dasar", "Sosial", "Siswa dapat menyebutkan ibukota.", "SMA", "10", "Global", "Mudah"
+                "Ibukota negara Indonesia adalah?", "pg", 5, "Surabaya", "Jakarta", "Bandung", "Medan", "Semarang", "B", "", "Jakarta adalah ibukota negara.", 
+                "Geografi", "Wilayah", "SMA", "10", "Global", "Mudah"
             ];
             
             const contohMatriks = [
-                "Tentukan pernyataan berikut Benar atau Salah!", "pgk_matriks", "Bumi itu bulat.", "Matahari mengelilingi bumi.", "Air mendidih di 100 derajat.", "", "", "Kiri, Kanan, Kiri", "Benar|Salah", "Pernyataan 2 salah.", 
-                "Fisika", "Tata Surya", "Pemahaman Alam", "Sains", "Siswa mampu mengevaluasi fakta.", "SMA", "10", "Global", "Sulit"
+                "Tentukan pernyataan berikut Benar atau Salah!", "pgk_matriks", 3, "Bumi itu bulat.", "Matahari mengelilingi bumi.", "Air mendidih di 100 derajat.", "", "", "Kiri, Kanan, Kiri", "Benar|Salah", "Pernyataan 2 salah.", 
+                "Fisika", "Tata Surya", "SMA", "10", "Global", "Sulit"
             ];
 
             const dataTemplate = [headerRow, contohPG, contohMatriks]; 
             const sheetTemplate = XLSX.utils.aoa_to_sheet(dataTemplate); 
-            
-            // Perlebar kolom agar rapi saat dibuka
             sheetTemplate['!cols'] = [
-                { wch: 40 }, { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 35 }, 
-                { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 35 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 15 }
+                { wch: 40 }, { wch: 15 }, { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 35 }, 
+                { wch: 15 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 15 }
             ];
 
-            // ==========================================
-            // SHEET 2: BUKU PANDUAN (SANGAT DETAIL)
-            // ==========================================
+            // SHEET 2: BUKU PANDUAN
             const dataPetunjuk = [
                 ["KOLOM", "ATURAN PENGISIAN & CONTOH"],
-                ["Pertanyaan", "Ketik teks soal di sini. \n• RUMUS: Apit dengan tanda dolar ganda (Contoh: $$x^2 + y$$). \n• GAMBAR: Gunakan format [IMG: link_gambar.jpg] \n• CARA CEPAT (HYBRID): Kosongkan kolom ini jika ingin copas (Snipping Tool) gambar/rumus langsung dari Word ke Web Editor nanti."],
-                ["Jenis Soal", "WAJIB DIISI! Ketik salah satu kode ini (huruf kecil):\n1. pg (Untuk Pilihan Ganda biasa)\n2. pg_kompleks (Jawaban benar bisa lebih dari satu)\n3. pgk_matriks (Untuk soal model Benar/Salah atau Sesuai/Tidak Sesuai)\n4. essay (Untuk Uraian)"],
-                ["Opsi A - E", "• Jika tipe 'pg' atau 'pg_kompleks': Isi dengan teks pilihan jawaban.\n• Jika tipe 'pgk_matriks': Opsi A adalah Pernyataan 1, Opsi B Pernyataan 2, Opsi C Pernyataan 3, dst.\n• Biarkan kosong jika tidak digunakan (misal hanya butuh sampai D, biarkan E kosong)."],
-                ["Kunci Jawaban", "CARA MENGISI KUNCI:\n• Tipe 'pg' 👉 Isi 1 huruf saja (Contoh: C)\n• Tipe 'pg_kompleks' 👉 Pisahkan dengan koma (Contoh: A, C, D)\n• Tipe 'pgk_matriks' 👉 Ketik 'Kiri' atau 'Kanan' untuk tiap baris pernyataan, pisah dengan koma (Contoh: Kiri, Kanan, Kiri)"],
-                ["Header Matriks", "HANYA DIISI JIKA JENIS SOAL = pgk_matriks.\nFormat: TeksKiri|TeksKanan (Gunakan garis lurus vertikal di atas tombol Enter).\nContoh 1: Benar|Salah\nContoh 2: Sesuai|Tidak Sesuai"],
-                ["Pembahasan", "Isi dengan kunci rubrik / penjelasan dari jawaban yang benar."],
-                ["Elemen, Konteks, Indikator Soal", "Diambil dari format tabel Word Kurikulum Nasional. (Boleh dikosongkan jika tidak ada)."],
-                ["Mapel, Bab, Jenjang, Kelas", "Data identitas soal. Jenjang harus: SD / SMP / SMA. Kelas diisi angka (Contoh: 10)."],
+                ["Pertanyaan", "Ketik teks soal di sini. \n• RUMUS: Apit dengan tanda dolar ganda (Contoh: $$x^2 + y$$). \n• GAMBAR: Gunakan format [IMG: link_gambar.jpg] \n• HYBRID: Kosongkan kolom ini jika ingin copas (Snipping Tool) gambar/rumus langsung dari Word ke Web Editor."],
+                ["Jenis Soal", "WAJIB DIISI! Ketik huruf kecil:\n1. pg (Pilihan Ganda biasa)\n2. pg_kompleks (Jawaban benar > 1)\n3. pgk_matriks (Benar/Salah)\n4. essay (Uraian)"],
+                ["Jumlah Pilihan", "Ketik angka 3, 4, atau 5. \nJika 'pgk_matriks', ini menentukan jumlah baris pernyataan yang akan muncul."],
+                ["Opsi A - E", "Isi teks pilihan jawaban. Jika 'pgk_matriks', Opsi A adalah Pernyataan 1, Opsi B Pernyataan 2, dst."],
+                ["Kunci Jawaban", "• pg 👉 Isi 1 huruf (Cth: B)\n• pg_kompleks 👉 Pisah koma (Cth: A, C)\n• pgk_matriks 👉 Ketik Kiri/Kanan tiap baris, pisah koma (Cth: Kiri, Kanan, Kiri)"],
+                ["Header Matriks", "HANYA JIKA JENIS SOAL = pgk_matriks. Format: TeksKiri|TeksKanan (Cth: Benar|Salah, Sesuai|Tidak Sesuai)."],
+                ["Pembahasan", "Isi dengan penjelasan dari jawaban yang benar."],
+                ["Mapel, Bab, Jenjang, Kelas", "Data identitas soal. Jenjang harus: SD / SMP / SMA. Kelas diisi angka."],
                 ["Target & Kesulitan", "Target: Global (Pusat) atau Lokal (Sekolah). Kesulitan: Mudah / Sedang / Sulit."],
-                ["", ""],
-                ["⚠️ PENTING!", "Hapus baris 2 dan 3 (data contoh) sebelum mengunggah file ini ke sistem! JANGAN MENGUBAH nama kolom di baris ke-1."]
+                ["⚠️ PENTING!", "Hapus baris data contoh sebelum mengunggah! JANGAN MENGUBAH nama kolom di baris 1."]
             ];
             
             const sheetPetunjuk = XLSX.utils.aoa_to_sheet(dataPetunjuk);
-            // Styling kolom petunjuk agar teks panjang otomatis turun ke bawah (Wrap Text)
-            sheetPetunjuk['!cols'] = [ { wch: 25 }, { wch: 110 } ];
-            
-            // Loop untuk mengaktifkan Wrap Text di Sheet Panduan
+            sheetPetunjuk['!cols'] = [ { wch: 20 }, { wch: 110 } ];
             for (let i = 1; i < dataPetunjuk.length; i++) {
                 let cellRef = XLSX.utils.encode_cell({c: 1, r: i});
                 if(!sheetPetunjuk[cellRef]) continue;
                 sheetPetunjuk[cellRef].s = { alignment: { wrapText: true, vertical: 'top' } };
             }
 
-            // Gabungkan menjadi 1 file Excel
             const wb = XLSX.utils.book_new(); 
             XLSX.utils.book_append_sheet(wb, sheetTemplate, "Template Soal");
             XLSX.utils.book_append_sheet(wb, sheetPetunjuk, "Buku Panduan"); 
@@ -1821,7 +1810,6 @@
             r.onload = async e => {
                 try {
                     let d = new Uint8Array(e.target.result), b = XLSX.read(d, {type: 'array'});
-                    // Mata Pintar: Cari sheet "Template Soal" dulu, kalau tidak ada baru ambil sheet pertama
                     let targetSheet = b.SheetNames.includes("Template Soal") ? "Template Soal" : b.SheetNames[0];
                     let s = b.Sheets[targetSheet];
                     let a = XLSX.utils.sheet_to_json(s);
@@ -1833,10 +1821,15 @@
 
                     for(const [index, rw] of a.entries()){
                         let tTanya = rw["Pertanyaan"];
-                        let jenisSoal = (rw["Jenis Soal"] || "pg").toString().trim().toLowerCase(); // pg / pg_kompleks / pgk_matriks / essay
-                        let k = (rw["Kunci Jawaban"] || rw["Kunci (A/B/C/D)"] || "").toString().trim().toUpperCase();
+                        let jenisSoal = (rw["Jenis Soal"] || "pg").toString().trim().toLowerCase(); 
+                        let k = (rw["Kunci Jawaban"] || "").toString().trim().toUpperCase();
                         
-                        // FUNGSI PARSING AJAIB (RUMUS & GAMBAR)
+                        // BACA JUMLAH PILIHAN (Default 4 jika kosong)
+                        let jmlOpsi = parseInt(rw["Jumlah Pilihan"]) || 4;
+                        if (jmlOpsi < 3) jmlOpsi = 3;
+                        if (jmlOpsi > 5) jmlOpsi = 5;
+                        let hurufAktif = ['A','B','C','D','E'].slice(0, jmlOpsi); // Menghasilkan ['A','B','C'] dll
+                        
                         const konversiRichText = (teksAsli) => {
                             if(!teksAsli) return "";
                             let teks = String(teksAsli);
@@ -1849,57 +1842,55 @@
                         let pesanError = "";
                         let arrayOpsiV2 = [];
 
-                        // VALIDASI BERDASARKAN JENIS SOAL
                         if(!tTanya && jenisSoal !== 'essay' && !rw["Opsi A"]) {
                             pesanError = "Baris kosong / Pertanyaan tidak ada.";
                         } else if(jenisSoal === 'pg') {
-                            if(['A','B','C','D','E'].includes(k)) {
+                            if(hurufAktif.includes(k)) {
                                 isValid = true;
-                                ['A','B','C','D','E'].forEach(hrf => {
-                                    if(rw["Opsi "+hrf]) arrayOpsiV2.push({ label: hrf, teks: konversiRichText(rw["Opsi "+hrf]), benar: k === hrf });
+                                hurufAktif.forEach(hrf => {
+                                    arrayOpsiV2.push({ label: hrf, teks: konversiRichText(rw["Opsi "+hrf]), benar: k === hrf });
                                 });
-                            } else { pesanError = "Kunci PG harus A, B, C, D, atau E."; }
+                            } else { pesanError = `Kunci PG harus salah satu dari: ${hurufAktif.join(', ')}.`; }
                         } else if(jenisSoal === 'pg_kompleks') {
                             let kunciArr = k.split(',').map(x => x.trim());
-                            if(kunciArr.length > 0 && kunciArr.every(x => ['A','B','C','D','E'].includes(x))) {
+                            if(kunciArr.length > 0 && kunciArr.every(x => hurufAktif.includes(x))) {
                                 isValid = true;
-                                ['A','B','C','D','E'].forEach(hrf => {
-                                    if(rw["Opsi "+hrf]) arrayOpsiV2.push({ label: hrf, teks: konversiRichText(rw["Opsi "+hrf]), benar: kunciArr.includes(hrf) });
+                                hurufAktif.forEach(hrf => {
+                                    arrayOpsiV2.push({ label: hrf, teks: konversiRichText(rw["Opsi "+hrf]), benar: kunciArr.includes(hrf) });
                                 });
-                            } else { pesanError = "Kunci PG Kompleks harus pakai koma (Cth: A, C)."; }
+                            } else { pesanError = "Kunci PG Kompleks harus sesuai dengan jumlah pilihan."; }
                         } else if(jenisSoal === 'pgk_matriks') {
-                            isValid = true;
                             let kunciArr = k.split(',').map(x => x.trim()); 
                             let headerMatriks = rw["Header Matriks"] || "Benar|Salah";
-                            
-                            ['A','B','C','D','E'].forEach((hrf, i) => {
-                                if(rw["Opsi "+hrf]) {
-                                    let jwbKiriKanan = kunciArr[i] === 'Kanan' ? 'Kanan' : 'Kiri'; 
+                            if(kunciArr.length === jmlOpsi) {
+                                isValid = true;
+                                hurufAktif.forEach((hrf, i) => {
+                                    let jwbKiriKanan = (kunciArr[i] === 'Kanan') ? 'Kanan' : 'Kiri'; 
                                     arrayOpsiV2.push({ label: (i+1).toString(), teks: konversiRichText(rw["Opsi "+hrf]), benar: jwbKiriKanan, header: headerMatriks });
-                                }
-                            });
+                                });
+                            } else { pesanError = `Jumlah kunci (${kunciArr.length}) tidak sama dengan Jumlah Baris (${jmlOpsi}).`; }
                         } else if(jenisSoal === 'essay') {
                             isValid = true; arrayOpsiV2 = []; 
                         } else {
                             pesanError = "Jenis Soal tidak dikenali.";
                         }
 
-                        // RENDER PREVIEW UI
                         if(isValid) {
+                            // METADATA BERSIH DARI ATRIBUT KURIKULUM WORD
+                            let jenjangFallback = typeof jenjangSekolahGlobal !== 'undefined' ? jenjangSekolahGlobal : "SMA";
                             let py = { 
                                 tipe_soal: jenisSoal, pertanyaan: konversiRichText(tTanya), opsi: arrayOpsiV2, pembahasan: konversiRichText(rw["Pembahasan"]), 
-                                kuadran: rw["Target"] || rw["Target (Global/Lokal/Latihan)"] || rw["Target (Lokal/Latihan)"] || "Lokal", 
+                                kuadran: rw["Target"] || rw["Target (Global/Lokal/Latihan)"] || "Global", 
                                 kesulitan: rw["Kesulitan"] || rw["Kesulitan (Mudah/Sedang/Sulit)"] || "Sedang",
                                 metadata: { 
                                     mapel: rw["Mapel"] || "", sub_bab: rw["Bab"] || "-", 
-                                    jenjang: (rw["Jenjang"] || jenjangSekolahGlobal || "SMA").toString().toUpperCase(), 
-                                    kelas: (rw["Kelas"] || "10").toString(),
-                                    elemen: rw["Elemen"] || "", konteks: rw["Konteks"] || "", indikator: rw["Indikator Soal"] || ""
+                                    jenjang: (rw["Jenjang"] || jenjangFallback).toString().toUpperCase(), 
+                                    kelas: (rw["Kelas"] || "10").toString() 
                                 } 
                             };
                             
                             window.dataPreviewImport.push({ id_temp: index, data: py, valid: true });
-                            h += `<label class="flex items-start p-3 border border-indigo-100 bg-indigo-50/30 rounded-xl cursor-pointer hover:bg-indigo-50 transition"><input type="checkbox" value="${index}" class="cek-import-soal w-5 h-5 mt-1 text-indigo-600 rounded" checked><div class="ml-3"><p class="text-sm font-bold text-gray-800 line-clamp-2">${tTanya || '(Soal Gambar/Hybrid)'}</p><p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">MAPEL: ${rw["Mapel"]||'-'} | TIPE: ${jenisSoal.replace('_', ' ')} | KUNCI: ${k || 'ESSAY'}</p></div></label>`;
+                            h += `<label class="flex items-start p-3 border border-indigo-100 bg-indigo-50/30 rounded-xl cursor-pointer hover:bg-indigo-50 transition"><input type="checkbox" value="${index}" class="cek-import-soal w-5 h-5 mt-1 text-indigo-600 rounded" checked><div class="ml-3"><p class="text-sm font-bold text-gray-800 line-clamp-2">${tTanya || '(Soal Gambar/Hybrid)'}</p><p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">MAPEL: ${rw["Mapel"]||'-'} | OPSI: ${jmlOpsi} | TIPE: ${jenisSoal.replace('_', ' ')} | KUNCI: ${k || 'ESSAY'}</p></div></label>`;
                             validCount++;
                         } else {
                             window.dataPreviewImport.push({ id_temp: index, data: null, valid: false });
