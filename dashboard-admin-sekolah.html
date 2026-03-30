@@ -1051,7 +1051,12 @@
             let r = new FileReader();
             r.onload = async e => {
                 try {
-                    let d = new Uint8Array(e.target.result), b = XLSX.read(d, {type: 'array'}), s = b.Sheets[b.SheetNames[0]], a = XLSX.utils.sheet_to_json(s);
+                    let d = new Uint8Array(e.target.result);
+                    let b = XLSX.read(d, {type: 'array'});
+                    // Cari sheet bernama "Template Data", kalau tidak ada, baru ambil sheet urutan pertama [0] sebagai cadangan
+                    let targetSheet = b.SheetNames.includes("Template Data") ? "Template Data" : b.SheetNames[0];
+                    let s = b.Sheets[targetSheet];
+                    let a = XLSX.utils.sheet_to_json(s);
                     if(a.length === 0) return Swal.fire('Kosong', 'Tidak ada data di Excel.', 'info');
                     
                     Swal.fire({title: 'Sidak Data...', html: 'Mengecek duplikasi email...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
