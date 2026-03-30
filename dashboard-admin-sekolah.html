@@ -1326,8 +1326,16 @@
         };
 
         window.bukaModalEditor = (i, a) => {
-            let s = a === 'review' ? dataAntreanReview.find(x => x.id === i) : dataSoalSeluruhnya.find(x => x.id === i); 
-            if(!s) return;
+            // PERBAIKAN: Cari di dataSoalLokal terlebih dahulu
+            let s = a === 'review' ? dataAntreanReview.find(x => x.id === i) : dataSoalLokal.find(x => x.id === i); 
+            
+            // Fallback: Jika tidak ada di dataSoalLokal, cari di dataSoalSeluruhnya (berguna jika dipanggil dari tab lain)
+            if(!s) s = dataSoalSeluruhnya.find(x => x.id === i);
+            
+            if(!s) {
+                console.error("Soal tidak ditemukan dengan ID:", i);
+                return Swal.fire('Error', 'Data soal tidak ditemukan di memori.', 'error');
+            }
             
             document.getElementById('editIdSoal').value = s.id; 
             document.getElementById('editAsalTab').value = a; 
@@ -1337,13 +1345,13 @@
             quillPembahasan.root.innerHTML = s.pembahasan || ""; 
             
             document.getElementById('editTipeSoal').value = s.tipe_soal || "pg"; 
-            if(document.getElementById('editKesulitan')) document.getElementById('editKesulitan').value = s.kesulitan || "Aplikasi";
+            // PERBAIKAN: Fallback kesulitan di Admin Sekolah menggunakan "Sedang", bukan "Aplikasi"
+            if(document.getElementById('editKesulitan')) document.getElementById('editKesulitan').value = s.kesulitan || "Sedang";
             
-            // Membaca Jumlah Opsi & Header Matriks dari Database
             let jumlahOpsi = 4;
             if(s.opsi && Array.isArray(s.opsi)) {
                 jumlahOpsi = s.opsi.length;
-                if(jumlahOpsi < 3) jumlahOpsi = 3; if(jumlahOpsi > 5) jumlahOpsi = 5; // Batasan aman 3-5
+                if(jumlahOpsi < 3) jumlahOpsi = 3; if(jumlahOpsi > 5) jumlahOpsi = 5; 
             }
             document.getElementById('editJumlahOpsi').value = jumlahOpsi.toString();
             
@@ -1351,34 +1359,30 @@
                 document.getElementById('editHeaderMatriks').value = s.opsi[0].header;
             }
 
-            // Panggil fungsi UI agar layar menyesuaikan
-            window.ubahUIJenisSoalAdmin();
+            if(typeof window.ubahUIJenisSoalAdmin === 'function') window.ubahUIJenisSoalAdmin();
 
-            // Ekstrak Opsi / Pernyataan ke dalam Editor
             let huruf = ['A','B','C','D','E'];
             if (s.opsi && Array.isArray(s.opsi)) {
                 s.opsi.forEach((op, index) => {
-                    if(index >= 5) return; // Maksimal 5
+                    if(index >= 5) return; 
                     let hrf = huruf[index];
-                    mapQuillOpsi[hrf].root.innerHTML = op.teks;
+                    if(mapQuillOpsi[hrf]) mapQuillOpsi[hrf].root.innerHTML = op.teks;
                     
                     if (s.tipe_soal === 'pgk_matriks') {
                         let radioKiri = document.querySelector(`.baris-opsi[data-idx="${index}"] .input-matriks-kiri`);
                         let radioKanan = document.querySelector(`.baris-opsi[data-idx="${index}"] .input-matriks-kanan`);
-                        radioKiri.checked = (op.benar === 'Kiri');
-                        radioKanan.checked = (op.benar === 'Kanan');
+                        if(radioKiri) radioKiri.checked = (op.benar === 'Kiri');
+                        if(radioKanan) radioKanan.checked = (op.benar === 'Kanan');
                     } else {
                         let chk = document.querySelector(`.baris-opsi[data-idx="${index}"] .input-kunci-dinamis`);
-                        chk.checked = op.benar;
+                        if(chk) chk.checked = op.benar;
                     }
                 });
             } else {
-                // Skema Backward Compatibility (Jika soal lama cuma punya opsi_a, opsi_b)
                 ['A','B','C','D'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = s['opsi_'+h.toLowerCase()] || ""; });
                 document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = (el.value === s.kunci));
             }
 
-            // Isi Metadata
             document.getElementById('editMapel').value = s.metadata?.mapel || ""; 
             let eb = document.getElementById('editBab'); 
             if(eb) {
@@ -1387,15 +1391,11 @@
                 if(o?.sub_bab) o.sub_bab.forEach(b => eb.innerHTML += `<option value="${b}">${b}</option>`); 
                 eb.value = s.metadata?.sub_bab || "-"; 
             }
-            if(document.getElementById('editJenjang')) document.getElementById('editJenjang').value = s.metadata?.jenjang || "SMA"; 
             if(document.getElementById('editKelas')) document.getElementById('editKelas').value = s.metadata?.kelas || "12"; 
-            if(document.getElementById('editKuadran')) document.getElementById('editKuadran').value = s.kuadran || "Global"; 
+            if(document.getElementById('editKuadran')) document.getElementById('editKuadran').value = s.kuadran || "Lokal"; 
             
-            // Ekstrak Metadata Kurikulum Nasional (Jika Ada)
-            if(document.getElementById('editElemen')) document.getElementById('editElemen').value = s.metadata?.elemen || "";
-            if(document.getElementById('editKonteks')) document.getElementById('editKonteks').value = s.metadata?.konteks || "";
-            if(document.getElementById('editIndikator')) document.getElementById('editIndikator').value = s.metadata?.indikator || "";
-
+            // PERBAIKAN: Hapus baris yang memanggil id editJenjang karena input tersebut tidak ada di HTML Admin Sekolah
+            
             let btn = document.getElementById('btnHijauModal'); if(btn) btn.innerText = a === 'review' ? "✅ Simpan & ACC" : "💾 Simpan Perubahan"; 
             let btnTolak = document.getElementById('btnTolakModal'); if(btnTolak) { if(a === 'review') btnTolak.classList.remove('hidden'); else btnTolak.classList.add('hidden'); }
             document.getElementById('modalEditor').classList.remove('hidden');
@@ -1997,8 +1997,6 @@
             Swal.close();
         };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 </body>
 
 </html>
