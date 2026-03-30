@@ -12,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script src="https://unpkg.com/quill-blot-formatter@1.0.5/dist/quill-blot-formatter.min.js"></script>
     <script defer src="https://unpkg.com/mathlive"></script>
 
     <style>
@@ -235,13 +236,50 @@
                         </div>
                     </div>
 
-                    <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200 mb-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 items-end">
-                        <div class="col-span-2"><label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Pencarian</label><input type="text" id="filterCari" placeholder="Cari pertanyaan..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-sm"></div>
-                        <div><label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Mapel</label><select id="filterMapel" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-sm dinamis-mapel"></select></div>
-                        <div><label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Sub Bab</label><select id="filterBab" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-sm" disabled><option value="">Semua Bab</option></select></div>
-                        <div><label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Kelas</label><select id="filterKelas" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-sm"><option value="">Semua</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div>
-                        <div><label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Kuadran</label><select id="filterKuadran" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-sm"><option value="">Semua</option><option value="Global">Global</option><option value="Lokal">Lokal</option><option value="Latihan">Latihan</option></select></div>
-                        <div><label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Status</label><select id="filterStatus" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-sm"><option value="">Semua</option><option value="aktif">Aktif</option><option value="pending_review">Pending</option><option value="ditolak">Ditolak</option></select></div>
+                    <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200 mb-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end shadow-inner">
+                        <div class="col-span-2 lg:col-span-2">
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">🔍 Pencarian Teks</label>
+                            <input type="text" id="filterCari" placeholder="Cari pertanyaan atau kata kunci..." class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Jenjang</label>
+                            <select id="filterJenjang" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white shadow-sm">
+                                <option value="">Semua</option><option value="SMA">SMA</option><option value="SMP">SMP</option><option value="SD">SD</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Mapel</label>
+                            <select id="filterMapel" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-sm dinamis-mapel bg-white shadow-sm"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Sub Bab</label>
+                            <select id="filterBab" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white shadow-sm" disabled><option value="">Semua Bab</option></select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Kelas</label>
+                            <select id="filterKelas" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white shadow-sm">
+                                <option value="">Semua</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-blue-600 mb-1 uppercase">Kuadran</label>
+                            <select id="filterKuadran" class="w-full px-4 py-2.5 border border-blue-300 bg-blue-50 text-blue-800 font-bold rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm shadow-sm">
+                                <option value="">Semua Target</option><option value="Global">Global</option><option value="Lokal">Lokal</option><option value="Latihan">Latihan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-purple-600 mb-1 uppercase">Kesulitan</label>
+                            <select id="filterKesulitan" class="w-full px-4 py-2.5 border border-purple-300 bg-purple-50 text-purple-800 font-bold rounded-xl outline-none focus:ring-2 focus:ring-purple-500 text-sm shadow-sm">
+                                <option value="">Semua Level</option><option value="Mudah">Mudah</option><option value="Sedang">Sedang</option><option value="Sulit">Sulit</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Status</label>
+                            <select id="filterStatus" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white shadow-sm">
+                                <option value="">Semua Status</option><option value="aktif">Aktif</option><option value="pending_review">Pending</option><option value="ditolak">Ditolak</option>
+                            </select>
+                        </div>
                     </div>
                     
                     <div class="overflow-x-auto rounded-2xl border border-gray-200">
@@ -262,14 +300,80 @@
             </div>
 
             <div id="tabKurikulum" class="space-y-6 hidden"><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100"><div class="flex justify-between items-center mb-6 pb-4 border-b"><div><h2 class="text-xl font-bold text-gray-800">Master Mata Pelajaran</h2></div><button onclick="tambahMapelBaru()" class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-xl font-bold shadow-sm text-sm">➕ Tambah Mapel</button></div><div class="space-y-4" id="kontainerKurikulum"></div></div><div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100"><div class="flex justify-between items-center mb-6 pb-4 border-b"><div><h2 class="text-xl font-bold text-gray-800">Master Jenis Ujian</h2></div><button onclick="tambahJenisUjian()" class="bg-purple-100 text-purple-700 px-4 py-2 rounded-xl font-bold shadow-sm text-sm hover:bg-purple-200">➕ Tambah Ujian</button></div><div class="space-y-4" id="kontainerJenisUjian"></div></div></div></div>
-            <div id="tabSekolah" class="space-y-6 hidden"><div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100"><div class="flex flex-col md:flex-row justify-between items-center mb-6 pb-4 border-b"><div><h2 class="text-2xl font-bold text-gray-800">Daftar Cabang Sekolah</h2><p class="text-gray-500 text-sm mt-1">Mendaftarkan cabang otomatis membuatkan 1 Akun Admin Sekolah.</p></div><button onclick="tambahSekolahBaru()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm hover:bg-blue-700">➕ Daftarkan Cabang Baru</button></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="kontainerSekolah"></div></div></div>
-            <div id="tabPaket" class="space-y-6 hidden"><div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100"><div class="flex justify-between items-center mb-6 pb-4 border-b"><div><h2 class="text-2xl font-bold text-gray-800">Manajemen Paket Soal</h2><p class="text-gray-500 text-sm mt-1">Rakit soal-soal dari Bank Soal menjadi sebuah paket ujian.</p></div><button onclick="bukaModalBuatPaket()" class="bg-blue-600 text-white hover:bg-blue-700 px-5 py-2.5 rounded-xl font-bold transition shadow-sm">➕ Buat Paket Baru</button></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="kontainerPaket"></div></div></div>
+            <div id="tabSekolah" class="space-y-6 hidden">
+                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 pb-4 border-b gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Manajemen Cabang</h2>
+                            <p class="text-gray-500 text-sm mt-1">Kelola data sekolah cabang dan akun admin lokal.</p>
+                        </div>
+                        <button onclick="tambahSekolahBaru()" class="w-full md:w-auto bg-teal-600 text-white hover:bg-teal-700 px-6 py-3 rounded-xl font-bold transition shadow-sm transform hover:-translate-y-1">
+                            ➕ Daftarkan Cabang Baru
+                        </button>
+                    </div>
+
+                    <div class="mb-4 bg-gray-50 p-2 rounded-xl border border-gray-200 flex items-center">
+                        <span class="pl-4 pr-2 text-gray-400">🔍</span>
+                        <input type="text" id="filterCariSekolah" oninput="applyFilterSekolah()" placeholder="Cari nama cabang, ID, atau jenjang (Ketik di sini...)" class="w-full bg-transparent px-2 py-2 outline-none text-sm font-medium text-gray-700">
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-6 py-4 w-10 text-center">No</th>
+                                    <th class="px-6 py-4">Profil Cabang</th>
+                                    <th class="px-6 py-4 text-center">Status</th> <th class="px-6 py-4 text-center">Data Pengguna</th>
+                                    <th class="px-6 py-4 text-center">Aksi Dasar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelDaftarSekolah" class="divide-y divide-gray-100">
+                                <tr><td colspan="4" class="text-center py-10 text-gray-400">Memuat data cabang...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>            
+            <div id="tabPaket" class="space-y-6 hidden">
+                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 pb-4 border-b gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Manajemen Paket Soal</h2>
+                            <p class="text-gray-500 text-sm mt-1">Rakit soal-soal dari Bank Soal menjadi sebuah paket ujian terpadu.</p>
+                        </div>
+                        <button onclick="bukaModalBuatPaket()" class="w-full md:w-auto bg-blue-600 text-white hover:bg-blue-700 px-6 py-3 rounded-xl font-bold transition shadow-sm transform hover:-translate-y-1">
+                            ➕ Buat Paket Baru
+                        </button>
+                    </div>
+
+                    <div class="mb-4 bg-gray-50 p-2 rounded-xl border border-gray-200 flex items-center shadow-inner">
+                        <span class="pl-4 pr-2 text-gray-400">🔍</span>
+                        <input type="text" id="filterCariDaftarPaket" oninput="applyFilterDaftarPaket()" placeholder="Cari nama paket ujian (Cth: Tryout SMA)..." class="w-full bg-transparent px-2 py-2 outline-none text-sm font-medium text-gray-700">
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-6 py-4 w-10 text-center">No</th>
+                                    <th class="px-6 py-4">Informasi Paket Ujian</th>
+                                    <th class="px-6 py-4 text-center">Status</th> <th class="px-6 py-4 text-center">Jumlah Soal</th>
+                                    <th class="px-6 py-4 text-center">Aksi Dasar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelDaftarPaket" class="divide-y divide-gray-100">
+                                <tr><td colspan="4" class="text-center py-10 text-gray-400">Memuat data paket...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             <div id="tabJadwal" class="space-y-6 hidden"><div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100"><div class="mb-8 border-b pb-4"><h2 class="text-2xl font-bold text-gray-800" id="judulFormJadwal">Buat Jadwal Ujian Serentak</h2><p class="text-gray-500 text-sm mt-1">Tentukan target spesifik audiens ujian Anda di sini.</p></div><form id="formJadwal" class="space-y-6"><input type="hidden" id="editIdJadwal"> <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100"><h3 class="text-indigo-800 font-bold mb-4 border-b border-indigo-200 pb-2">1. Penargetan Peserta & Ujian</h3><div class="grid grid-cols-1 md:grid-cols-4 gap-4"><div class="md:col-span-2"><label class="block text-sm font-bold text-indigo-700 mb-2">Nama Kegiatan</label><input type="text" id="inputNamaUjian" placeholder="Cth: Try Out Matematika" required class="w-full px-4 py-2 border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></div><div><label class="block text-sm font-bold text-indigo-700 mb-2">Jenis Ujian</label><select id="inputJenisUjian" required class="w-full px-4 py-2 border border-indigo-200 rounded-xl outline-none dinamis-jenis"></select></div><div><label class="block text-sm font-bold text-indigo-700 mb-2">Mapel</label><select id="inputMapelJadwal" required class="w-full px-4 py-2 border border-indigo-200 rounded-xl outline-none dinamis-mapel"><option value="Campuran">Campuran</option></select></div><div><label class="block text-sm font-bold text-indigo-700 mb-2">Jenjang</label><select id="inputJenjang" required class="w-full px-4 py-2 border border-indigo-200 rounded-xl outline-none"><option value="SMA">SMA</option><option value="SMP">SMP</option><option value="SD">SD</option></select></div><div><label class="block text-sm font-bold text-indigo-700 mb-2">Kelas Target</label><select id="inputKelasJadwal" required class="w-full px-4 py-2 border border-indigo-200 rounded-xl outline-none"><option value="Semua">Semua Kelas</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div><div class="md:col-span-2"><label class="block text-sm font-bold text-blue-700 mb-2">📦 Pilih Paket Soal</label><select id="inputPaketUjian" required class="w-full px-4 py-2 border border-blue-300 bg-blue-50 rounded-xl outline-none font-bold focus:ring-2 focus:ring-blue-500"></select></div></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-blue-50 p-6 rounded-2xl border border-blue-100"><div><label class="block text-sm font-bold mb-2">Waktu Mulai</label><input type="datetime-local" id="inputWaktuMulai" required class="w-full px-4 py-2 border border-blue-200 rounded-xl outline-none"></div><div><label class="block text-sm font-bold mb-2">Batas Akhir</label><input type="datetime-local" id="inputWaktuSelesai" required class="w-full px-4 py-2 border border-blue-200 rounded-xl outline-none"></div><div><label class="block text-sm font-bold mb-2">Durasi (Menit)</label><input type="number" id="inputDurasi" min="10" value="90" required class="w-full px-4 py-2 border border-blue-200 rounded-xl font-bold outline-none"></div></div><div class="bg-yellow-50 p-6 rounded-2xl border border-yellow-200 flex items-center gap-6"><div class="flex-1"><label class="block text-sm font-bold text-yellow-800 mb-1">Rilis Pembahasan di Rapor Siswa</label><select id="inputRilisBahas" class="w-full md:w-1/2 px-4 py-2 border border-yellow-300 rounded-xl outline-none bg-white"><option value="otomatis_selesai">Otomatis Terbuka</option><option value="setelah_ujian_tutup" selected>Aman (Setelah Batas Akhir Ditutup)</option><option value="jangan_rilis">Rahasiakan</option></select></div></div><div class="flex space-x-4"><button type="button" onclick="batalEditJadwal()" id="btnBatalJadwal" class="hidden px-6 py-4 bg-gray-200 text-gray-700 rounded-2xl font-bold transition">Batal Edit</button><button type="submit" id="btnSubmitJadwal" class="flex-1 bg-teal-600 text-white px-6 py-4 rounded-2xl font-black text-lg shadow-md hover:bg-teal-700 transition">📢 Terbitkan Jadwal Ujian</button></div></form><div class="mt-12 pt-8 border-t border-gray-200"><h3 class="text-xl font-bold text-gray-800 mb-4">Daftar Jadwal Yayasan (Global)</h3><div class="overflow-x-auto rounded-2xl border border-gray-200"><table class="w-full text-sm text-left text-gray-600"><thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b"><tr><th class="px-6 py-4">Status</th><th class="px-6 py-4">Nama & Paket</th><th class="px-6 py-4">Waktu Ujian</th><th class="px-6 py-4 text-center">Aksi</th></tr></thead><tbody id="tabelDaftarJadwal" class="divide-y"></tbody></table></div></div></div></div>
 
         </div>
     </main>
 
-    <div id="modalEditor" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center z-[100] p-4 overflow-y-auto">
+    <div id="modalEditor" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center z-[100] p-4 overflow-y-auto backdrop-blur-sm">
         <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl my-8 flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-6 border-b border-gray-100 shrink-0">
                 <div class="flex items-center space-x-3">
@@ -278,16 +382,18 @@
                 </div>
                 <button onclick="tutupModalEditor()" class="text-gray-400 hover:text-red-500 text-3xl font-bold focus:outline-none">&times;</button>
             </div>
+            
             <div class="p-6 md:p-8 overflow-y-auto flex-1 space-y-4">
                 <input type="hidden" id="editIdSoal"><input type="hidden" id="editAsalTab">
                 
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 bg-teal-50 p-4 rounded-xl border border-teal-200">
-                    <div><label class="block text-xs font-bold mb-1 text-teal-800">Mata Pelajaran</label><select id="editMapel" class="w-full p-2 border border-teal-300 rounded-lg dinamis-mapel text-sm outline-none focus:ring-2 focus:ring-teal-500"></select></div>
-                    <div><label class="block text-xs font-bold mb-1 text-teal-800">Sub Bab</label><select id="editBab" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500"><option value="-">-</option></select></div>
-                    <div><label class="block text-xs font-bold mb-1 text-teal-800">Jenjang</label><select id="editJenjang" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500"><option value="SMA">SMA</option><option value="SMP">SMP</option><option value="SD">SD</option></select></div>
-                    <div><label class="block text-xs font-bold mb-1 text-teal-800">Kelas</label><select id="editKelas" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12" selected>12</option></select></div>
-                    <div><label class="block text-xs font-bold mb-1 text-blue-800">🔥 Jenis Soal</label><select id="editTipeSoal" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-blue-400 bg-blue-50 font-bold text-blue-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"><option value="pg">Pilihan Ganda</option><option value="pg_kompleks">PG Kompleks (Checkbox)</option><option value="essay">Uraian / Essay</option></select></div>
-                    <div class="col-span-2 md:col-span-5"><label class="block text-xs font-bold mb-1 text-teal-800">Kuadran (Hak Akses)</label><select id="editKuadran" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none"><option value="Global">Global (Untuk Ujian Pusat)</option><option value="Lokal">Lokal (Untuk Sekolah Tertentu)</option><option value="Latihan">Latihan (Siswa bisa akses bebas)</option></select></div>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4 bg-teal-50 p-4 rounded-xl border border-teal-200">
+                    <div><label class="block text-xs font-bold mb-1 text-teal-800">Mata Pelajaran</label><select id="editMapel" class="w-full p-2 border border-teal-300 rounded-lg dinamis-mapel text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white"></select></div>
+                    <div><label class="block text-xs font-bold mb-1 text-teal-800">Sub Bab</label><select id="editBab" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white"><option value="-">-</option></select></div>
+                    <div><label class="block text-xs font-bold mb-1 text-teal-800">Jenjang</label><select id="editJenjang" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white"><option value="SMA">SMA</option><option value="SMP">SMP</option><option value="SD">SD</option></select></div>
+                    <div><label class="block text-xs font-bold mb-1 text-teal-800">Kelas</label><select id="editKelas" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12" selected>12</option></select></div>
+                    <div><label class="block text-xs font-bold mb-1 text-blue-800">🔥 Jenis Soal</label><select id="editTipeSoal" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-blue-400 bg-blue-50 font-bold text-blue-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"><option value="pg">Pilihan Ganda</option><option value="pg_kompleks">PG Kompleks</option><option value="essay">Uraian / Essay</option></select></div>
+                    <div><label class="block text-xs font-bold mb-1 text-purple-700">⭐ Kesulitan</label><select id="editKesulitan" class="w-full p-2 border border-purple-300 bg-purple-50 font-bold text-purple-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-purple-500"><option value="Mudah">Mudah</option><option value="Sedang" selected>Sedang</option><option value="Sulit">Sulit</option></select></div>
+                    <div class="col-span-2 md:col-span-3 lg:col-span-6"><label class="block text-xs font-bold mb-1 text-teal-800">Kuadran (Hak Akses)</label><select id="editKuadran" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none bg-white"><option value="Global">Global (Untuk Ujian Pusat)</option><option value="Lokal">Lokal (Untuk Sekolah Tertentu)</option><option value="Latihan">Latihan (Siswa bisa akses bebas)</option></select></div>
                 </div>
 
                 <div>
@@ -295,12 +401,13 @@
                     <div id="editorPertanyaan" class="editor-soal"></div>
                 </div>
                 
-                <div id="areaOpsiJawaban" class="space-y-3 bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                <div id="areaOpsiJawaban" class="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
                     <div class="flex justify-between items-center border-b pb-2 mb-2"><label class="block text-sm font-bold text-gray-700">Pilihan Jawaban & Kunci</label><span class="text-xs text-gray-500 font-medium" id="petunjukOpsi">Pilih 1 bulatan biru sebagai kunci.</span></div>
-                    <div class="flex items-start space-x-3"><div class="pt-2"><input type="radio" name="editKunci" value="A" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-lg pt-1">A</span><input type="text" id="editOpsiA" class="flex-1 px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-teal-500"></div>
-                    <div class="flex items-start space-x-3"><div class="pt-2"><input type="radio" name="editKunci" value="B" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-lg pt-1">B</span><input type="text" id="editOpsiB" class="flex-1 px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-teal-500"></div>
-                    <div class="flex items-start space-x-3"><div class="pt-2"><input type="radio" name="editKunci" value="C" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-lg pt-1">C</span><input type="text" id="editOpsiC" class="flex-1 px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-teal-500"></div>
-                    <div class="flex items-start space-x-3"><div class="pt-2"><input type="radio" name="editKunci" value="D" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-lg pt-1">D</span><input type="text" id="editOpsiD" class="flex-1 px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-teal-500"></div>
+                    
+                    <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="editKunci" value="A" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">A</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiA" class="min-h-[60px]"></div></div></div>
+                    <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="editKunci" value="B" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">B</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiB" class="min-h-[60px]"></div></div></div>
+                    <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="editKunci" value="C" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">C</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiC" class="min-h-[60px]"></div></div></div>
+                    <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="editKunci" value="D" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">D</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiD" class="min-h-[60px]"></div></div></div>
                 </div>
 
                 <div class="mt-2 pt-4 border-t border-gray-100">
@@ -308,7 +415,8 @@
                     <div id="editorPembahasan" class="editor-bahas border-yellow-300 bg-yellow-50"></div>
                 </div>
             </div>
-            <div class="p-6 border-t flex justify-between bg-gray-50 rounded-b-3xl">
+            
+            <div class="p-6 border-t flex justify-between bg-gray-50 rounded-b-3xl shrink-0">
                 <div>
                     <button onclick="aksiHapusTolakDariModal()" id="btnTolakModal" class="hidden px-6 py-3 text-white bg-red-500 rounded-xl font-bold hover:bg-red-600 transition shadow-sm mr-2">❌ Tolak Soal</button>
                     <button onclick="tutupModalEditor()" id="btnMerahModal" class="px-6 py-3 text-gray-600 bg-gray-200 rounded-xl font-bold hover:bg-gray-300 transition">Batal</button>
@@ -362,6 +470,7 @@
             <button onclick="tutupModalPaket()" class="text-3xl font-bold hover:text-red-500 transition">&times;</button>
         </div>        
         <div class="p-6 overflow-y-auto flex-1 bg-white">
+            <input type="hidden" id="editIdPaket">
             <div class="mb-4">
                 <input type="text" id="namaPaketBaru" placeholder="Nama Paket (Misal: Ujian Akhir Semester Genap 2026)" class="w-full px-4 py-3 border rounded-xl font-bold focus:ring-2 focus:ring-teal-500 outline-none">
             </div>            
@@ -393,15 +502,47 @@
                     <option value="Global">Global</option>
                     <option value="Lokal">Lokal</option>
                 </select>
+                <select id="filterKesulitanPaket" onchange="renderPilihanSoal()" class="w-full px-3 py-2.5 border border-purple-300 rounded-lg text-sm bg-purple-50 text-purple-800 font-bold outline-none focus:ring-2 focus:ring-purple-500">
+                    <option value="">Semua Level</option>
+                    <option value="Mudah">Mudah</option>
+                    <option value="Sedang">Sedang</option>
+                    <option value="Sulit">Sulit</option>
+                </select>
             </div>            
             <div id="listPilihanSoal" class="space-y-2 h-72 overflow-y-auto pr-2"></div>
         </div>        
-        <div class="p-6 border-t flex justify-between items-center bg-gray-50 rounded-b-3xl shrink-0">
-            <span id="counterSoalPaket" class="font-black text-teal-600 bg-teal-100 px-4 py-2 rounded-lg">0 TERPILIH</span>
-            <button onclick="simpanPaketBaru()" class="bg-teal-600 text-white font-bold px-8 py-3 rounded-xl shadow-md hover:bg-teal-700 transition">Simpan Paket</button>
-        </div>        
+            <div class="p-6 border-t flex justify-between items-center bg-gray-50 rounded-b-3xl shrink-0">
+                <span id="counterSoalPaket" class="font-black text-teal-600 bg-teal-100 px-4 py-2 rounded-lg">0 TERPILIH</span>
+                <button onclick="simpanPaketBaru()" class="bg-teal-600 text-white font-bold px-8 py-3 rounded-xl shadow-md hover:bg-teal-700 transition">Simpan Paket</button>
+            </div>        
+        </div>
     </div>
-</div>
+    <div id="modalUserCabang" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center p-6 border-b border-gray-100 shrink-0">
+                <div>
+                    <h3 class="text-xl font-bold text-teal-800" id="judulModalUserCabang">👥 Kelola User Cabang</h3>
+                    <p class="text-xs text-gray-500 mt-1 font-medium" id="subJudulModalUserCabang">Data pengguna</p>
+                </div>
+                <button onclick="document.getElementById('modalUserCabang').classList.add('hidden')" class="text-gray-400 hover:text-red-500 text-3xl font-bold focus:outline-none">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 bg-gray-50">
+                <div class="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
+                    <table class="w-full text-sm text-left text-gray-600">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b">
+                            <tr>
+                                <th class="px-6 py-4">Nama & Role</th>
+                                <th class="px-6 py-4">Kredensial</th>
+                                <th class="px-6 py-4 text-center">Manajemen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelUserCabang" class="divide-y">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
@@ -438,45 +579,59 @@
         let dataJadwalTabel = [];
 
         // ==========================================
-        // 2. INIT SUPER EDITOR V2 (QUILL & MATHLIVE)
+        // 2. INIT SUPER EDITOR V2 (QUILL, MATHLIVE & AUTO-COMPRESSOR)
         // ==========================================
-        const toolbarOpsi = [
-            ['bold', 'italic', 'underline', 'strike'], 
-            [{ 'script': 'sub'}, { 'script': 'super' }], 
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }], 
-            ['formula', 'image'], 
-            ['clean']
-        ];
-        
-        let quillPertanyaan = new Quill('#editorPertanyaan', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Ketik teks pertanyaan atau rumus di sini...' });
-        let quillPembahasan = new Quill('#editorPembahasan', { modules: { formula: true, toolbar: toolbarOpsi }, theme: 'snow', placeholder: 'Ketik penjelasan di sini...' });
-        
-        let targetEditorMath = null;
+        Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
+        const toolbarOpsi = [['bold', 'italic', 'underline', 'strike'], [{ 'script': 'sub'}, { 'script': 'super' }], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['formula', 'image'], ['clean']];
 
-        // Membajak tombol 'fx' untuk memunculkan Papan Ketik Visual (MathLive)
-        quillPertanyaan.getModule('toolbar').addHandler('formula', () => { targetEditorMath = quillPertanyaan; bukaModalMath(); });
-        quillPembahasan.getModule('toolbar').addHandler('formula', () => { targetEditorMath = quillPembahasan; bukaModalMath(); });
-        
-        window.bukaModalMath = () => { 
-            let mf = document.getElementById('mathFieldVirtual'); 
-            mf.value = ''; 
-            document.getElementById('modalMathKeyboard').classList.remove('hidden'); 
-            setTimeout(() => { mf.focus(); }, 100); 
+        let quillPertanyaan = new Quill('#editorPertanyaan', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Ketik teks pertanyaan atau rumus di sini...' });
+        let quillPembahasan = new Quill('#editorPembahasan', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Ketik kunci rubrik / penjelasan di sini...' });
+
+        let quillOpsiA = new Quill('#editorOpsiA', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan A' });
+        let quillOpsiB = new Quill('#editorOpsiB', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan B' });
+        let quillOpsiC = new Quill('#editorOpsiC', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan C' });
+        let quillOpsiD = new Quill('#editorOpsiD', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan D' });
+
+        const mapQuillOpsi = { 'A': quillOpsiA, 'B': quillOpsiB, 'C': quillOpsiC, 'D': quillOpsiD };
+
+        // --- SISTEM KOMPRESI SILUMAN (MAX 1 MB + CANVAS COMPRESSION) ---
+        const prosesKompresiGambar = (quillObj) => {
+            const input = document.createElement('input'); input.setAttribute('type', 'file'); input.setAttribute('accept', 'image/png, image/jpeg, image/jpg, image/webp'); input.click();
+            input.onchange = async () => {
+                const file = input.files[0]; if (!file) return;
+                if (file.size > 1 * 1024 * 1024) { Swal.fire({icon: 'warning', title: 'Gambar Terlalu Besar!', text: 'Maksimal ukuran foto asli adalah 1 MB.', confirmButtonColor: '#0d9488'}); input.value = ''; return; }
+
+                Swal.fire({ title: 'Memampatkan Gambar...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas'); let width = img.width; let height = img.height;
+                        const MAX_WIDTH = 800; if (width > MAX_WIDTH) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; }
+                        canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, width, height); ctx.drawImage(img, 0, 0, width, height);
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                        const range = quillObj.getSelection(true) || { index: quillObj.getLength() };
+                        quillObj.insertEmbed(range.index, 'image', compressedBase64); quillObj.setSelection(range.index + 1);
+                        Swal.close();
+                    }; img.src = e.target.result;
+                }; reader.readAsDataURL(file);
+            };
         };
-        
-        window.tutupModalMath = () => { 
-            document.getElementById('modalMathKeyboard').classList.add('hidden'); 
-            targetEditorMath = null; 
+
+        let targetEditorMath = null;
+        const pasangFiturCustom = (quillObj) => {
+            quillObj.getModule('toolbar').addHandler('formula', () => { targetEditorMath = quillObj; bukaModalMath(); });
+            quillObj.getModule('toolbar').addHandler('image', () => { prosesKompresiGambar(quillObj); });
         };
-        
+        pasangFiturCustom(quillPertanyaan); pasangFiturCustom(quillPembahasan);
+        pasangFiturCustom(quillOpsiA); pasangFiturCustom(quillOpsiB); pasangFiturCustom(quillOpsiC); pasangFiturCustom(quillOpsiD);
+
+        window.bukaModalMath = () => { let mf = document.getElementById('mathFieldVirtual'); mf.value = ''; document.getElementById('modalMathKeyboard').classList.remove('hidden'); setTimeout(() => { mf.focus(); }, 100); };
+        window.tutupModalMath = () => { document.getElementById('modalMathKeyboard').classList.add('hidden'); targetEditorMath = null; };
         window.sisipkanRumus = () => {
-            if(!targetEditorMath) return; 
-            let latexCode = document.getElementById('mathFieldVirtual').value;
-            if(latexCode && latexCode.trim() !== '') {
-                let range = targetEditorMath.getSelection(true);
-                targetEditorMath.insertEmbed(range.index, 'formula', latexCode, Quill.sources.USER);
-                targetEditorMath.setSelection(range.index + 1, Quill.sources.SILENT);
-            }
+            if(!targetEditorMath) return; let latexCode = document.getElementById('mathFieldVirtual').value;
+            if(latexCode && latexCode.trim() !== '') { let range = targetEditorMath.getSelection(true); targetEditorMath.insertEmbed(range.index, 'formula', latexCode, Quill.sources.USER); targetEditorMath.setSelection(range.index + 1, Quill.sources.SILENT); }
             window.tutupModalMath();
         };
 
@@ -486,16 +641,16 @@
             let petunjuk = document.getElementById('petunjukOpsi');
             let inputDinamis = document.querySelectorAll('.input-kunci-dinamis');
 
-            if (tipe === 'essay') { 
-                areaOpsi.style.display = 'none'; 
+            if (tipe === 'essay') {
+                areaOpsi.style.display = 'none';
             } else {
                 areaOpsi.style.display = 'block';
-                if (tipe === 'pg') { 
-                    petunjuk.innerText = 'Pilih 1 bulatan untuk kunci.'; 
-                    inputDinamis.forEach(el => { el.type = 'radio'; el.name = 'editKunci'; }); 
-                } else if (tipe === 'pg_kompleks') { 
-                    petunjuk.innerText = 'Centang jawaban benar (Bisa lebih dari 1).'; 
-                    inputDinamis.forEach(el => { el.type = 'checkbox'; el.name = 'editKunciKompleks'; }); 
+                if (tipe === 'pg') {
+                    petunjuk.innerText = 'Pilih 1 bulatan biru sebagai kunci.';
+                    inputDinamis.forEach(el => { el.type = 'radio'; el.name = 'editKunci'; });
+                } else if (tipe === 'pg_kompleks') {
+                    petunjuk.innerText = 'Centang jawaban benar (Bisa lebih dari 1).';
+                    inputDinamis.forEach(el => { el.type = 'checkbox'; el.name = 'editKunciKompleks'; });
                 }
             }
         };
@@ -768,16 +923,86 @@
         };
 
         // ==========================================
-        // 5. MANAJEMEN SEKOLAH (CABANG)
+        // 5. MANAJEMEN SEKOLAH (CABANG) V3 (TABLE UX + SUSPEND SYSTEM)
         // ==========================================
+        let dataSekolahYayasan = []; 
+
         window.muatDaftarSekolah = async () => {
-            const s = await getDocs(collection(db, "sekolah"));
+            let tb = document.getElementById('tabelDaftarSekolah');
+            if(tb) tb.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-teal-600 animate-pulse">Menarik data dari server...</td></tr>';
+            
+            try {
+                const s = await getDocs(collection(db, "sekolah"));
+                dataSekolahYayasan = [];
+                s.forEach(d => {
+                    let c = d.data();
+                    c.id = d.id;
+                    dataSekolahYayasan.push(c);
+                });
+                window.applyFilterSekolah(); 
+            } catch (e) {
+                // Tambahan console.error agar jika ada masalah, kita bisa melacaknya dengan mudah di F12
+                console.error("Error Muat Sekolah:", e); 
+                if(tb) tb.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-red-500 font-bold">Gagal memuat data. Cek Console (F12) untuk detail error.</td></tr>';
+            }
+        };
+
+        window.applyFilterSekolah = () => {
+            // Pengaman Tipe Data Pencarian
+            let kw = String(document.getElementById('filterCariSekolah')?.value || "").toLowerCase();
+            
+            let f = dataSekolahYayasan.filter(c => 
+                String(c.nama || "").toLowerCase().includes(kw) || 
+                String(c.id || "").toLowerCase().includes(kw) ||
+                String(c.jenjang || "").toLowerCase().includes(kw)
+            );
+
             let h = '';
-            s.forEach(d => {
-                let c = d.data();
-                h += `<div class="bg-white border border-gray-200 p-6 rounded-3xl hover:shadow-md transition"><span class="bg-blue-100 text-blue-700 text-[10px] font-black px-3 py-1 rounded-full uppercase">${c.jenjang}</span><h3 class="text-xl font-bold mt-3 text-gray-800">${c.nama}</h3><p class="text-xs text-gray-400 font-mono mt-1 mb-5">ID: ${d.id}</p><button onclick="lihatPenghuniSekolah('${d.id}')" class="w-full bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition">👥 Lihat User Cabang</button></div>`;
+            f.forEach((c, index) => {
+                let isAktif = c.status !== 'nonaktif';
+                let wBadge = isAktif ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+                let tBadge = isAktif ? 'AKTIF' : 'NONAKTIF';
+                let tRowClass = isAktif ? 'hover:bg-teal-50/50' : 'bg-gray-50 opacity-75';
+                
+                // 🛡️ PENGAMAN TANDA KUTIP: Mencegah nama sekolah seperti "SMA Ma'arif" merusak tombol HTML
+                let safeNama = String(c.nama || "Tanpa Nama").replace(/'/g, "\\'");
+                let safeJenjang = String(c.jenjang || "");
+
+                let btnAksi = isAktif ? 
+                    `<button onclick="toggleStatusSekolah('${c.id}', 'nonaktif')" class="bg-red-50 text-red-600 hover:bg-red-100 p-2 rounded-lg transition border border-transparent hover:border-red-200" title="Nonaktifkan / Suspend Cabang">🛑 Suspend</button>` : 
+                    `<button onclick="toggleStatusSekolah('${c.id}', 'aktif')" class="bg-green-50 text-green-600 hover:bg-green-100 p-2 rounded-lg transition border border-transparent hover:border-green-200" title="Aktifkan Kembali Cabang">✅ Aktifkan</button>`;
+
+                h += `
+                <tr class="border-b transition ${tRowClass}">
+                    <td class="px-6 py-4 text-center font-bold text-gray-400">${index + 1}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-3">
+                            <span class="bg-teal-100 text-teal-800 text-[10px] font-black px-2 py-1 rounded-md uppercase w-12 text-center shadow-sm">${c.jenjang || 'N/A'}</span>
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">${c.nama || 'Tanpa Nama'}</h3>
+                                <p class="text-[10px] text-gray-500 font-mono mt-0.5">ID: ${c.id}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${wBadge}">${tBadge}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center relative z-10">
+                        <button onclick="lihatPenghuniSekolah('${c.id}', '${safeNama}')" class="bg-white border border-teal-200 text-teal-700 hover:bg-teal-50 hover:border-teal-300 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer relative z-20">
+                            👥 Kelola User
+                        </button>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex justify-center space-x-2 relative z-10">
+                            <button onclick="editSekolah('${c.id}', '${safeNama}', '${safeJenjang}')" class="bg-blue-50 text-blue-600 hover:bg-blue-100 p-2 rounded-lg transition border border-transparent hover:border-blue-200 cursor-pointer relative z-20" title="Edit Data Cabang">✏️</button>
+                            ${btnAksi}
+                        </div>
+                    </td>
+                </tr>`;
             });
-            let k = document.getElementById('kontainerSekolah'); if(k) k.innerHTML = h || '<div class="col-span-3 text-center py-10 text-gray-400 border-2 border-dashed rounded-3xl">Belum ada cabang terdaftar.</div>';
+
+            let tb = document.getElementById('tabelDaftarSekolah'); 
+            if(tb) tb.innerHTML = h || '<tr><td colspan="5" class="text-center py-10 text-gray-500 font-medium">Tidak ada cabang yang ditemukan.</td></tr>';
         };
 
         window.tambahSekolahBaru = async () => {
@@ -796,9 +1021,7 @@
                         <input id="swal-pass" type="text" class="w-full px-4 py-2 border rounded-xl text-sm border-blue-200 focus:ring-2 focus:ring-blue-500 bg-blue-50" placeholder="Password (Min. 6 huruf)">
                     </div>
                 `, 
-                focusConfirm: false, 
-                confirmButtonColor: '#2563eb', 
-                confirmButtonText: 'Simpan & Buat Akun',
+                focusConfirm: false, confirmButtonColor: '#0d9488', confirmButtonText: 'Simpan & Buat Akun',
                 preConfirm: () => ({
                     id: document.getElementById('swal-id').value.toUpperCase().replace(/\s+/g, '_'), 
                     nama: document.getElementById('swal-nama').value, 
@@ -813,44 +1036,173 @@
                 try {
                     let cleanUser = f.userRaw.trim().toLowerCase();
                     let emailAdminLengkap = cleanUser.includes('@') ? cleanUser : cleanUser + '@smartkhairunnas.com';
-
-                    // Daftar via App Bayangan agar Admin Yayasan tidak Auto-Logout
                     await createUserWithEmailAndPassword(authBayangan, emailAdminLengkap, f.pass);
-
-                    await setDoc(doc(db, "sekolah", f.id), { nama: f.nama, jenjang: f.j, dibuat_pada: new Date() }); 
+                    // Tambahkan status aktif secara default
+                    await setDoc(doc(db, "sekolah", f.id), { nama: f.nama, jenjang: f.j, status: 'aktif', dibuat_pada: new Date() }); 
                     await addDoc(collection(db, "users"), { nama: `Admin ${f.nama}`, email: emailAdminLengkap, password_info: f.pass, role: 'admin_sekolah', sekolah_id: f.id, dibuat_pada: new Date() });
-                    
-                    window.muatDaftarSekolah(); 
-                    window.muatDashboard(); 
-                    Swal.fire('Berhasil Terdaftar!', `Cabang <b>${f.nama}</b> dan akun adminnya telah siap digunakan.`, 'success');
-                } catch(error) { 
-                    console.error(error);
-                    let pesanError = 'Gagal mendaftar cabang ke server.';
-                    if (error.code === 'auth/email-already-in-use') pesanError = 'Username tersebut sudah dipakai. Silakan gunakan username lain.';
-                    if (error.code === 'auth/weak-password') pesanError = 'Password terlalu lemah. Minimal 6 karakter.';
-                    Swal.fire('Terjadi Kesalahan', pesanError, 'error'); 
+                    window.muatDaftarSekolah(); window.muatDashboard(); 
+                    Swal.fire('Berhasil Terdaftar!', `Cabang <b>${f.nama}</b> siap digunakan.`, 'success');
+                } catch(error) { Swal.fire('Error', 'Gagal mendaftar. Username mungkin sudah terpakai.', 'error'); }
+            }
+        };
+
+        window.editSekolah = async (id, namaLama, jenjangLama) => {
+            const {value: f} = await Swal.fire({
+                title: '✏️ Edit Cabang',
+                html: `
+                    <div class="space-y-3 text-left mt-4">
+                        <label class="block text-xs font-bold text-gray-600">ID Cabang (Permanen)</label>
+                        <input value="${id}" disabled class="w-full px-4 py-3 border border-gray-200 bg-gray-100 rounded-xl text-sm font-mono text-gray-500 cursor-not-allowed">
+                        <label class="block text-xs font-bold text-gray-600 mt-3">Nama Resmi Cabang</label>
+                        <input id="swal-edit-nama" value="${namaLama}" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                        <label class="block text-xs font-bold text-gray-600 mt-3">Jenjang Pendidikan</label>
+                        <select id="swal-edit-jenjang" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                            <option value="SMA" ${jenjangLama === 'SMA' ? 'selected' : ''}>SMA</option>
+                            <option value="SMP" ${jenjangLama === 'SMP' ? 'selected' : ''}>SMP</option>
+                            <option value="SD" ${jenjangLama === 'SD' ? 'selected' : ''}>SD</option>
+                        </select>
+                    </div>
+                `,
+                focusConfirm: false, showCancelButton: true, confirmButtonColor: '#0d9488', confirmButtonText: '💾 Simpan Perubahan',
+                preConfirm: () => {
+                    let n = document.getElementById('swal-edit-nama').value;
+                    if(!n) { Swal.showValidationMessage('Nama tidak boleh kosong!'); return false; }
+                    return { nama: n, jenjang: document.getElementById('swal-edit-jenjang').value };
+                }
+            });
+
+            if(f) {
+                Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
+                try {
+                    await updateDoc(doc(db, "sekolah", id), { nama: f.nama, jenjang: f.jenjang });
+                    window.muatDaftarSekolah();
+                    Swal.fire('Berhasil!', 'Data cabang telah diperbarui.', 'success');
+                } catch(e) { Swal.fire('Error', 'Gagal memperbarui.', 'error'); }
+            }
+        };
+
+        // FITUR BARU PENGGANTI HAPUS PERMANEN (Toggle Status)
+        window.toggleStatusUserPusat = async (idUser, statusBaru, idSekolah, namaSekolah) => {
+            let teksJudul = statusBaru === 'nonaktif' ? 'Suspend Akun Ini?' : 'Aktifkan Akun?';
+            let teksHtml = statusBaru === 'nonaktif' ? 
+                'Akun akan dibekukan. <b>Siswa/Guru ini tidak akan bisa login ke dalam sistem</b>, namun data mereka tetap aman di server.' : 
+                'Akses login akun ini akan dipulihkan.';
+            let btnWarna = statusBaru === 'nonaktif' ? '#d33' : '#10b981';
+
+            const konfirmasi = await Swal.fire({
+                title: teksJudul, html: teksHtml, icon: 'warning', 
+                showCancelButton: true, confirmButtonColor: btnWarna, confirmButtonText: 'Ya, Proses!'
+            });
+
+            if(konfirmasi.isConfirmed) {
+                Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
+                try {
+                    await updateDoc(doc(db, "users", idUser), { status: statusBaru });
+                    Swal.fire('Berhasil', `Status akun diubah menjadi ${statusBaru.toUpperCase()}.`, 'success');
+                    // Muat ulang daftar penghuni TANPA menutup modal
+                    window.lihatPenghuniSekolah(idSekolah, namaSekolah); 
+                } catch(e) {
+                    Swal.fire('Error', 'Gagal mengubah status pengguna.', 'error');
                 }
             }
         };
 
-        window.lihatPenghuniSekolah = async (idSekolah) => {
-            Swal.fire({title: 'Mencari User...', didOpen: () => Swal.showLoading()});
-            let q = query(collection(db, "users"), where("sekolah_id", "==", idSekolah));
-            let snap = await getDocs(q);
-            let listHtml = '';
-            let total = 0;
-            
-            snap.forEach(d => {
-                total++;
-                let u = d.data();
-                let warn = u.role === 'admin_sekolah' ? 'bg-red-100 text-red-700' : (u.role === 'guru' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700');
-                listHtml += `<li class="border-b border-gray-100 py-3 text-sm flex justify-between items-center"><div class="text-left"><b class="text-gray-800">${u.nama}</b><br><span class="text-xs text-gray-500">${u.email}</span></div><span class="text-[10px] font-black uppercase px-2 py-1 rounded-md ${warn}">${u.role.replace('_',' ')}</span></li>`;
+        // MANAJEMEN USER CABANG VIA MODAL INTERAKTIF (SAFEGUARD V2)
+        window.lihatPenghuniSekolah = async (idSekolah, namaSekolah) => {
+            Swal.fire({title: 'Mencari User...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                let snap = await getDocs(query(collection(db, "users"), where("sekolah_id", "==", idSekolah)));
+                let html = ''; let total = 0;
+                
+                snap.forEach(d => {
+                    total++; 
+                    let u = d.data();
+                    
+                    let roleAsli = u.role || 'siswa'; 
+                    let namaTampil = u.nama || 'Tanpa Nama';
+                    let emailTampil = u.email || 'Tanpa Email';
+                    let passTampil = u.password_info || '***';
+                    
+                    // 🛡️ LOGIKA AKTIF/NONAKTIF
+                    let isAktif = u.status !== 'nonaktif'; // Default aktif jika belum ada parameter
+                    
+                    let warn = roleAsli === 'admin_sekolah' ? 'bg-red-100 text-red-700' : (roleAsli === 'guru' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700');
+                    let opacityClass = isAktif ? '' : 'opacity-60 bg-gray-100'; // Redupkan jika suspend
+                    let badgeSuspend = isAktif ? '' : '<span class="text-[9px] bg-red-500 text-white px-2 py-0.5 rounded ml-2 uppercase font-black tracking-wider shadow-sm">Suspended</span>';
+                    
+                    let safeNamaUser = namaTampil.replace(/'/g, "\\'");
+                    let safeNamaSekolah = namaSekolah.replace(/'/g, "\\'");
+
+                    // TOMBOL DINAMIS (Suspend vs Aktifkan)
+                    let btnAksi = isAktif ? 
+                        `<button onclick="toggleStatusUserPusat('${d.id}', 'nonaktif', '${idSekolah}', '${safeNamaSekolah}')" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-xl font-bold text-xs transition" title="Nonaktifkan Akun">🛑 Suspend</button>` :
+                        `<button onclick="toggleStatusUserPusat('${d.id}', 'aktif', '${idSekolah}', '${safeNamaSekolah}')" class="bg-green-50 text-green-600 hover:bg-green-100 px-3 py-2 rounded-xl font-bold text-xs transition" title="Aktifkan Kembali">✅ Aktifkan</button>`;
+
+                    // Matikan tombol edit password jika akun sedang disuspend
+                    let btnSandi = isAktif ? 
+                        `<button onclick="editPasswordUserPusat('${d.id}', '${safeNamaUser}')" class="bg-orange-50 text-orange-600 hover:bg-orange-100 px-3 py-2 rounded-xl font-bold text-xs transition" title="Ganti Catatan Sandi">🔑 Sandi</button>` : '';
+
+                    html += `
+                    <tr class="border-b hover:bg-gray-50 transition ${opacityClass}">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <b class="text-gray-800 text-base">${namaTampil}</b> ${badgeSuspend}
+                            </div>
+                            <span class="text-[10px] font-black uppercase px-2 py-0.5 mt-1 inline-block rounded-md ${warn}">${roleAsli.replace('_',' ')}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-sm text-gray-600 font-medium">${emailTampil}</span><br>
+                            <span class="text-[10px] text-gray-400 font-mono bg-white border border-gray-200 shadow-sm px-2 py-0.5 rounded mt-1 inline-block">Pass: ${passTampil}</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex justify-center space-x-2">
+                                ${btnSandi}
+                                ${btnAksi}
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+
+                let elJudul = document.getElementById('judulModalUserCabang');
+                let elSub = document.getElementById('subJudulModalUserCabang');
+                let elTabel = document.getElementById('tabelUserCabang');
+                let modalUser = document.getElementById('modalUserCabang');
+
+                if(elJudul) elJudul.innerText = `👥 Kelola User: ${namaSekolah}`;
+                if(elSub) elSub.innerText = `Total: ${total} Pengguna di Cabang Ini`;
+                if(elTabel) elTabel.innerHTML = html || '<tr><td colspan="3" class="text-center py-10 text-gray-500 font-medium border-2 border-dashed m-4 rounded-xl">Belum ada pengguna terdaftar di cabang ini.</td></tr>';
+                
+                Swal.close();
+                
+                if(modalUser) {
+                    modalUser.classList.remove('hidden');
+                    modalUser.classList.add('flex');
+                }
+            } catch (e) { 
+                console.error("Gagal menarik data dari Firebase:", e);
+                Swal.fire('Error', 'Gagal memuat pengguna.', 'error'); 
+            }
+        };
+
+        window.editPasswordUserPusat = async (idUser, namaUser) => {
+            const {value: p} = await Swal.fire({
+                title: `🔑 Edit Info Sandi`, text: `Perbarui catatan sandi untuk ${namaUser}.`, input: 'text', inputPlaceholder: 'Ketik sandi baru...',
+                showCancelButton: true, confirmButtonColor: '#ea580c'
             });
-            
-            Swal.fire({
-                title: 'Data Pengguna Cabang',
-                html: `<div class="mb-4 bg-blue-50 text-blue-800 p-3 rounded-xl text-sm font-bold text-left">Total: ${total} Orang</div><ul class="max-h-72 overflow-y-auto">${listHtml || '<li class="text-gray-400 py-4">Belum ada pengguna terdaftar</li>'}</ul>`
-            });
+            if(p) {
+                Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
+                await updateDoc(doc(db, "users", idUser), { password_info: p });
+                Swal.fire('Tersimpan', 'Info sandi berhasil diperbarui di database.', 'success');
+            }
+        };
+
+        window.hapusUserPusat = async (idUser, idSekolah, namaSekolah) => {
+            if((await Swal.fire({title: 'Hapus Akun Ini?', html: 'Akses login pengguna akan dicabut permanen.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33'})).isConfirmed) {
+                Swal.fire({title: 'Menghapus...', didOpen:()=>Swal.showLoading()});
+                await deleteDoc(doc(db, "users", idUser));
+                Swal.fire('Terhapus', '', 'success');
+                window.lihatPenghuniSekolah(idSekolah, namaSekolah); 
+            }
         };
 
         // ==========================================
@@ -866,39 +1218,81 @@
         };
 
         window.applyFilterSoal = () => {
+            // Tangkap semua variabel filter
             let s = (document.getElementById('filterCari')?.value || "").toLowerCase();
+            let j = (document.getElementById('filterJenjang')?.value || "").toLowerCase();
             let m = (document.getElementById('filterMapel')?.value || "").toLowerCase();
             let b = (document.getElementById('filterBab')?.value || "").toLowerCase();
             let k = document.getElementById('filterKelas')?.value || "";
             let q = (document.getElementById('filterKuadran')?.value || "").toLowerCase();
+            let tk = (document.getElementById('filterKesulitan')?.value || "").toLowerCase();
             let st = (document.getElementById('filterStatus')?.value || "").toLowerCase();
             
             let f = dataSoalSeluruhnya.filter(d => {
-                let dm = (d.metadata?.mapel || "").toLowerCase(), dbb = (d.metadata?.sub_bab || "").toLowerCase(), dk = d.metadata?.kelas || "", dq = (d.kuadran || "").toLowerCase(), ds = (d.status || "").toLowerCase();
-                return ((d.pertanyaan || "").toLowerCase().includes(s)) && (m === "" || dm === m) && (b === "" || dbb === b) && (k === "" || dk == k) && (q === "" || dq === q) && (st === "" || ds === st);
+                // 🛡️ PENGAMAN TIPE DATA: Konversi paksa ke String agar .toLowerCase() tidak crash
+                let dj = String(d.metadata?.jenjang || "").toLowerCase();
+                let dm = String(d.metadata?.mapel || "").toLowerCase();
+                let dbb = String(d.metadata?.sub_bab || "").toLowerCase();
+                let dk = String(d.metadata?.kelas || "");
+                let dq = String(d.kuadran || "").toLowerCase();
+                let dtk = String(d.kesulitan || "sedang").toLowerCase(); 
+                let ds = String(d.status || "").toLowerCase();
+                let dPertanyaan = String(d.pertanyaan || "").toLowerCase();
+                
+                return (dPertanyaan.includes(s)) 
+                    && (j === "" || dj === j)
+                    && (m === "" || dm === m) 
+                    && (b === "" || dbb === b) 
+                    && (k === "" || dk === k) 
+                    && (q === "" || dq === q) 
+                    && (tk === "" || dtk === tk)
+                    && (st === "" || ds === st);
             });
             
             let tb = document.getElementById('tabelSemuaSoal');
             let h = '';
             
             f.forEach(d => {
-                let w = d.status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+                let w = d.status === 'aktif' ? 'bg-green-100 text-green-700' : (d.status === 'ditolak' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700');
                 let badgeTipe = d.tipe_soal === 'essay' ? '📝 ESSAY' : (d.tipe_soal === 'pg_kompleks' ? '☑️ PG KOMPLEKS' : '🔘 PG');
+                let badgeLevel = (d.kesulitan || 'Sedang') === 'Mudah' ? 'bg-green-100 text-green-700 border-green-200' : ((d.kesulitan || 'Sedang') === 'Sulit' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200');
+                let badgeKuadran = d.kuadran === 'Global' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-gray-100 text-gray-600 border-gray-200';
                 
                 // Ambil text murni dari HTML soal untuk preview di tabel
                 let divTemp = document.createElement("div"); divTemp.innerHTML = d.pertanyaan; 
                 let teksPreview = divTemp.textContent || divTemp.innerText || "";
                 
-                h += `<tr class="border-b hover:bg-gray-50 transition">
-                        <td class="px-6 py-4 text-center"><input type="checkbox" value="${d.id}" class="cb-soal-item w-4 h-4 text-blue-600 rounded cursor-pointer" onchange="updateBulkDeleteBtn()"></td>
-                        <td class="px-6 py-4"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase block mb-1 w-max ${w}">${d.status}</span><span class="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded uppercase tracking-widest block w-max mb-1">${badgeTipe}</span><span class="text-xs font-bold text-gray-500">${d.kuadran||'-'}</span></td>
-                        <td class="px-6 py-4"><p class="line-clamp-2 text-sm text-gray-700 italic">"${teksPreview}"</p></td>
-                        <td class="px-6 py-4 text-xs font-bold text-gray-600">${d.metadata?.mapel||'-'}<br><span class="font-normal text-teal-600">Bab: ${d.metadata?.sub_bab||'-'} | Kls: ${d.metadata?.kelas||'-'}</span></td>
-                        <td class="px-6 py-4 text-center"><button onclick="bukaModalEditor('${d.id}','semua')" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-bold text-xs mr-1">✏️</button><button onclick="hapusSoalPermanen('${d.id}')" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg font-bold text-xs">🗑️</button></td>
-                      </tr>`;
+                h += `
+                <tr class="border-b hover:bg-teal-50/50 transition">
+                    <td class="px-6 py-4 text-center">
+                        <input type="checkbox" value="${d.id}" class="cb-soal-item w-4 h-4 text-teal-600 rounded cursor-pointer" onchange="updateBulkDeleteBtn()">
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded text-[10px] font-bold uppercase block mb-1.5 w-max ${w}">${d.status}</span>
+                        <span class="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded uppercase tracking-widest block w-max mb-1.5">${badgeTipe}</span>
+                        <div class="flex space-x-1">
+                            <span class="px-2 py-0.5 rounded text-[9px] font-bold border shadow-sm uppercase ${badgeKuadran}">${d.kuadran||'-'}</span>
+                            <span class="px-2 py-0.5 rounded text-[9px] font-black border shadow-sm uppercase ${badgeLevel}">${d.kesulitan || 'SEDANG'}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="line-clamp-2 text-sm text-gray-700 italic bg-white p-2 rounded border border-gray-100 shadow-sm">"${teksPreview}"</p>
+                    </td>
+                    <td class="px-6 py-4 text-xs font-bold text-gray-600">
+                        ${d.metadata?.mapel||'-'} <span class="text-teal-600 font-black tracking-wide">(${d.metadata?.jenjang||'-'})</span><br>
+                        <span class="font-medium text-gray-500 mt-1 block">Kls ${d.metadata?.kelas||'-'} | Bab: ${d.metadata?.sub_bab||'-'}</span>
+                        <span class="text-[9px] text-gray-400 font-normal mt-1 block uppercase tracking-widest">Oleh: ${d.pembuat_id || 'Anonim'}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex justify-center space-x-2">
+                            <button onclick="bukaModalEditor('${d.id}','semua')" class="bg-blue-50 text-blue-600 hover:bg-blue-100 p-2 rounded-xl transition border border-transparent hover:border-blue-200" title="Edit Soal">✏️</button>
+                            <button onclick="hapusSoalPermanen('${d.id}')" class="bg-red-50 text-red-600 hover:bg-red-100 p-2 rounded-xl transition border border-transparent hover:border-red-200" title="Hapus Soal">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
             });
             
-            if(tb) tb.innerHTML = h || '<tr><td colspan="5" class="text-center py-10 text-gray-500 font-medium">Tidak ada soal yang sesuai dengan filter pencarian.</td></tr>';
+            if(tb) tb.innerHTML = h || '<tr><td colspan="5" class="text-center py-12 text-gray-400 font-bold border-2 border-dashed m-4 rounded-xl bg-white">Tidak ada soal yang sesuai dengan filter pencarian.</td></tr>';
             
             let ca = document.getElementById('cbSelectAllSoal'); if(ca) ca.checked = false; 
             window.updateBulkDeleteBtn();
@@ -975,17 +1369,22 @@
         };
 
         // Modal Editor Super V2
-        window.tutupModalEditor = () => { document.getElementById('modalEditor').classList.add('hidden'); };
+        window.tutupModalEditor = () => { 
+            document.getElementById('editIdSoal').value = ""; document.getElementById('editAsalTab').value = "";
+            quillPertanyaan.root.innerHTML = ""; quillPembahasan.root.innerHTML = "";
+            ['A','B','C','D'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; });
+            document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = false);
+            document.getElementById('modalEditor').classList.add('hidden'); 
+        };
         
         window.bukaModalTambahSoal = () => {
             document.getElementById('editIdSoal').value = ""; 
             document.getElementById('editAsalTab').value = "tambah"; 
             document.getElementById('judulModalEditor').innerText = "✨ Buat Soal Pusat V2"; 
-            quillPertanyaan.root.innerHTML = ""; 
-            quillPembahasan.root.innerHTML = ""; 
             
-            ['A','B','C','D'].forEach(h => document.getElementById('editOpsi'+h).value = ""); 
-            document.getElementsByName('editKunci').forEach(r => r.checked = false); 
+            quillPertanyaan.root.innerHTML = ""; quillPembahasan.root.innerHTML = "";
+            ['A','B','C','D'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; });
+            document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = false); 
             
             document.getElementById('editMapel').value = ""; 
             let eb = document.getElementById('editBab'); if(eb) eb.innerHTML = '<option value="-">-</option>'; 
@@ -994,9 +1393,11 @@
             let eq = document.getElementById('editKuadran'); if(eq) eq.value = "Global"; 
             
             document.getElementById('editTipeSoal').value = "pg"; 
+            let ekes = document.getElementById('editKesulitan'); if(ekes) ekes.value = "Sedang"; // FITUR KESULITAN
             window.ubahUIJenisSoalAdmin();
 
             let btn = document.getElementById('btnHijauModal'); if(btn) btn.innerText = "➕ Simpan Soal"; 
+            let btnTolak = document.getElementById('btnTolakModal'); if(btnTolak) btnTolak.classList.add('hidden');
             document.getElementById('modalEditor').classList.remove('hidden');
         };
 
@@ -1012,16 +1413,17 @@
             quillPembahasan.root.innerHTML = s.pembahasan || ""; 
             
             document.getElementById('editTipeSoal').value = s.tipe_soal || "pg"; 
+            let ekes = document.getElementById('editKesulitan'); if(ekes) ekes.value = s.kesulitan || "Sedang"; // BACA KESULITAN
             window.ubahUIJenisSoalAdmin();
 
-            // Format Mapping V1 ke V2
+            // PIPA DATA BARU V2
             if (s.opsi && Array.isArray(s.opsi)) {
                 s.opsi.forEach(op => {
-                    let inputTeks = document.getElementById('editOpsi' + op.label); if(inputTeks) inputTeks.value = op.teks;
+                    if(mapQuillOpsi[op.label]) mapQuillOpsi[op.label].root.innerHTML = op.teks;
                     document.querySelectorAll('.input-kunci-dinamis').forEach(el => { if (el.value === op.label) el.checked = op.benar; });
                 });
             } else {
-                ['A','B','C','D'].forEach(h => document.getElementById('editOpsi'+h).value = s['opsi_'+h.toLowerCase()] || "");
+                ['A','B','C','D'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = s['opsi_'+h.toLowerCase()] || ""; });
                 document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = (el.value === s.kunci));
             }
 
@@ -1039,11 +1441,13 @@
             let eq = document.getElementById('editKuadran'); if(eq) eq.value = s.kuadran || "Global"; 
             
             let btn = document.getElementById('btnHijauModal'); if(btn) btn.innerText = a === 'review' ? "✅ Simpan & ACC" : "💾 Simpan Perubahan"; 
+            let btnTolak = document.getElementById('btnTolakModal'); if(btnTolak) { if(a === 'review') btnTolak.classList.remove('hidden'); else btnTolak.classList.add('hidden'); }
             document.getElementById('modalEditor').classList.remove('hidden');
         };
 
         window.aksiSimpanDariModal = async () => {
             let tipe = document.getElementById('editTipeSoal').value;
+            let tk = document.getElementById('editKesulitan') ? document.getElementById('editKesulitan').value : "Sedang";
             let kontenTanya = quillPertanyaan.root.innerHTML;
             let kontenBahas = quillPembahasan.root.innerHTML;
 
@@ -1051,17 +1455,15 @@
 
             let arrayOpsi = []; let isValid = false;
             if (tipe === 'pg' || tipe === 'pg_kompleks') {
-                let listDinamis = document.querySelectorAll('.input-kunci-dinamis');
-                let huruf = ['A', 'B', 'C', 'D'];
-                listDinamis.forEach((el, index) => {
-                    let hrf = huruf[index], teksOpsi = document.getElementById('editOpsi' + hrf).value, isBenar = el.checked;
+                document.querySelectorAll('.input-kunci-dinamis').forEach((el, index) => {
+                    let hrf = ['A', 'B', 'C', 'D'][index];
+                    let teksOpsi = mapQuillOpsi[hrf].root.innerHTML; // PIPA DATA V2
+                    let isBenar = el.checked;
                     if (isBenar) isValid = true;
                     arrayOpsi.push({ label: hrf, teks: teksOpsi, benar: isBenar });
                 });
                 if (!isValid) return Swal.fire('Oops', 'Anda harus memilih minimal 1 kunci jawaban!', 'warning');
             } else if (tipe === 'essay') { isValid = true; }
-
-            if (kontenTanya.length > 500000) return Swal.fire('Gambar Terlalu Besar!', 'Maksimal 500KB per soal.', 'error');
 
             let i = document.getElementById('editIdSoal').value, a = document.getElementById('editAsalTab').value;
             Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
@@ -1071,7 +1473,12 @@
                 let eq = document.getElementById('editKuadran') ? document.getElementById('editKuadran').value : "Global";
                 
                 let py = { 
-                    tipe_soal: tipe, pertanyaan: kontenTanya, opsi: arrayOpsi, pembahasan: kontenBahas, kuadran: eq, 
+                    tipe_soal: tipe, 
+                    kesulitan: tk,
+                    pertanyaan: kontenTanya, 
+                    opsi: arrayOpsi, 
+                    pembahasan: kontenBahas, 
+                    kuadran: eq, 
                     metadata: { mapel: document.getElementById('editMapel').value, sub_bab: document.getElementById('editBab').value, jenjang: ej, kelas: document.getElementById('editKelas').value } 
                 };
                 
@@ -1192,52 +1599,226 @@
         // 8. MANAJEMEN PAKET & JADWAL
         // ==========================================
         window.muatDaftarPaket = async () => {
-            const s = await getDocs(collection(db, "paket_soal")); dataPaketSeluruhnya = []; let h = '';
-            s.forEach(d => {
-                let p = d.data(); p.id = d.id; dataPaketSeluruhnya.push(p);
-                h += `<div class="bg-white border border-blue-200 p-6 rounded-3xl shadow-sm relative group hover:shadow-md transition"><button onclick="hapusPaket('${p.id}')" class="absolute top-4 right-4 text-red-400 hover:text-red-600 hidden group-hover:block focus:outline-none text-xl">&times;</button><span class="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full tracking-widest uppercase mb-3 inline-block shadow-sm">PAKET UJIAN</span><h3 class="text-xl font-bold text-gray-800 line-clamp-1">${p.nama_paket}</h3><p class="text-sm text-gray-500 mt-2 bg-gray-50 inline-block px-3 py-1 rounded-lg border border-gray-100"><b>${p.soal_ids?.length || 0}</b> Soal</p></div>`;
-            });
-            let k = document.getElementById('kontainerPaket'); if(k) k.innerHTML = h || '<div class="col-span-3 text-center py-10 text-gray-500 border-2 border-dashed rounded-3xl">Kosong.</div>';
+            let tb = document.getElementById('tabelDaftarPaket'); 
+            if(tb) tb.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-blue-600 animate-pulse">Menarik data paket dari server...</td></tr>';
             
-            let sl = document.getElementById('inputPaketUjian');
-            if(sl) {
-                sl.innerHTML = '<option value="">-- Pilih Paket --</option>';
-                dataPaketSeluruhnya.forEach(p => sl.innerHTML += `<option value="${p.id}">${p.nama_paket} (${p.soal_ids?.length || 0} Soal)</option>`);
+            try {
+                const s = await getDocs(collection(db, "paket_soal")); 
+                dataPaketSeluruhnya = []; 
+                s.forEach(d => {
+                    let p = d.data(); p.id = d.id; dataPaketSeluruhnya.push(p);
+                });
+                
+                window.applyFilterDaftarPaket();
+                
+                // Dropdown Jadwal: HANYA TAMPILKAN PAKET YANG AKTIF
+                let sl = document.getElementById('inputPaketUjian');
+                if(sl) {
+                    sl.innerHTML = '<option value="">-- Pilih Paket --</option>';
+                    dataPaketSeluruhnya.filter(p => p.status !== 'nonaktif').forEach(p => {
+                        sl.innerHTML += `<option value="${p.id}">${p.nama_paket} (${p.soal_ids?.length || 0} Soal)</option>`;
+                    });
+                }
+            } catch (e) {
+                if(tb) tb.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-red-500">Gagal memuat data paket.</td></tr>';
             }
         };
 
-        window.bukaModalBuatPaket = async () => {
-            if(dataSoalSeluruhnya.length === 0) { Swal.fire({title:'Memuat...',didOpen:()=>Swal.showLoading()}); await window.muatSemuaSoal(); Swal.close(); }
-            document.getElementById('namaPaketBaru').value = ""; document.getElementById('filterCariPaket').value = ""; document.getElementById('filterJenjangPaket').value = ""; document.getElementById('filterKelasPaket').value = ""; document.getElementById('filterMapelPaket').value = ""; 
-            let f = document.getElementById('filterBabPaket'); if(f) { f.value = ""; f.disabled = true; }
-            pilihanSoalSementara.clear(); window.renderPilihanSoal(); document.getElementById('modalPaket').classList.remove('hidden');
+        window.applyFilterDaftarPaket = () => {
+            let kw = (document.getElementById('filterCariDaftarPaket')?.value || "").toLowerCase();
+            
+            let f = dataPaketSeluruhnya.filter(p => 
+                String(p.nama_paket || "").toLowerCase().includes(kw) ||
+                String(p.id || "").toLowerCase().includes(kw)
+            );
+            
+            let h = '';
+            f.forEach((p, index) => {
+                let tglBuat = p.dibuat_pada && p.dibuat_pada.toDate ? p.dibuat_pada.toDate().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'}) : '-';
+                
+                // Logika Aktif/Nonaktif
+                let isAktif = p.status !== 'nonaktif';
+                let wBadge = isAktif ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+                let tBadge = isAktif ? 'AKTIF' : 'NONAKTIF';
+                let opacityClass = isAktif ? 'hover:bg-blue-50/50' : 'bg-gray-50 opacity-70';
+                
+                let btnAksi = isAktif ? 
+                    `<button onclick="toggleStatusPaket('${p.id}', 'nonaktif')" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-xl font-bold text-xs transition border border-transparent hover:border-red-200 shadow-sm" title="Nonaktifkan Paket">🛑 Suspend</button>` :
+                    `<button onclick="toggleStatusPaket('${p.id}', 'aktif')" class="bg-green-50 text-green-600 hover:bg-green-100 px-3 py-2 rounded-xl font-bold text-xs transition border border-transparent hover:border-green-200 shadow-sm" title="Aktifkan Kembali">✅ Aktifkan</button>`;
+
+                h += `
+                <tr class="border-b transition ${opacityClass}">
+                    <td class="px-6 py-4 text-center font-bold text-gray-400">${index + 1}</td>
+                    <td class="px-6 py-4">
+                        <h3 class="text-base font-bold text-gray-800 tracking-wide">${p.nama_paket}</h3>
+                        <p class="text-[10px] text-gray-500 font-mono mt-1">Dibuat: ${tglBuat} | ID: ${p.id}</p>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${wBadge}">${tBadge}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg font-black text-sm border border-blue-200 shadow-sm">${p.soal_ids?.length || 0} Soal</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex justify-center space-x-2">
+                            <button onclick="editPaket('${p.id}')" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-2 rounded-xl font-bold text-xs transition border border-transparent hover:border-blue-200 shadow-sm" title="Edit Isi Paket">✏️ Edit</button>
+                            ${btnAksi}
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            
+            let tb = document.getElementById('tabelDaftarPaket'); 
+            if(tb) tb.innerHTML = h || '<tr><td colspan="5" class="text-center py-12 text-gray-400 font-bold border-2 border-dashed m-4 rounded-xl bg-white">Tidak ada paket yang ditemukan.</td></tr>';
+        };
+
+        // FITUR BARU: Edit Paket Soal
+        window.editPaket = (id) => {
+            let p = dataPaketSeluruhnya.find(x => x.id === id);
+            if(!p) return;
+            
+            // Isi form dengan data paket lama
+            let inputId = document.getElementById('editIdPaket'); if(inputId) inputId.value = p.id;
+            document.getElementById('namaPaketBaru').value = p.nama_paket;
+            
+            // Centang soal-soal yang sudah ada di dalam paket ini
+            pilihanSoalSementara.clear();
+            if(p.soal_ids && Array.isArray(p.soal_ids)) {
+                p.soal_ids.forEach(sid => pilihanSoalSementara.add(sid));
+            }
+            
+            window.renderPilihanSoal(); // Render ulang daftar soal agar kotak centangnya ter-update
+            document.getElementById('modalPaket').classList.remove('hidden');
+        };
+
+        window.bukaModalBuatPaket = () => { 
+            let inputId = document.getElementById('editIdPaket'); if(inputId) inputId.value = "";
+            document.getElementById('namaPaketBaru').value = ""; 
+            pilihanSoalSementara.clear(); 
+            window.renderPilihanSoal(); 
+            document.getElementById('modalPaket').classList.remove('hidden'); 
         };
 
         window.tutupModalPaket = () => { document.getElementById('modalPaket').classList.add('hidden'); };
 
         window.renderPilihanSoal = () => {
-            let kw = (document.getElementById('filterCariPaket')?.value || "").toLowerCase(), j = document.getElementById('filterJenjangPaket')?.value || "", k = document.getElementById('filterKelasPaket')?.value || "", m = (document.getElementById('filterMapelPaket')?.value || "").toLowerCase(), b = (document.getElementById('filterBabPaket')?.value || "").toLowerCase(), h = '';
+            // Tangkap semua nilai dari filter
+            let kw = (document.getElementById('filterCariPaket')?.value || "").toLowerCase();
+            let j = document.getElementById('filterJenjangPaket')?.value || "";
+            let k = document.getElementById('filterKelasPaket')?.value || "";
+            let m = (document.getElementById('filterMapelPaket')?.value || "").toLowerCase();
+            let sm = document.getElementById('filterSumberPaket')?.value || "";
+            let tk = document.getElementById('filterKesulitanPaket')?.value || "";
             
-            dataSoalSeluruhnya.filter(s => s.status === 'aktif').forEach(s => {
-                let dm = (s.metadata?.mapel || "").toLowerCase(), db = (s.metadata?.sub_bab || "").toLowerCase(), sj = s.metadata?.jenjang || "", sk = s.metadata?.kelas || "";
-                let divT = document.createElement('div'); divT.innerHTML = s.pertanyaan; let dp = (divT.innerText || "").toLowerCase(); 
+            let h = '';
+            
+            dataSoalSeluruhnya.filter(s => {
+                if (s.status !== 'aktif') return false; // Hanya tampilkan soal yang sudah ACC/Aktif
                 
-                if((dm.includes(kw) || dp.includes(kw)) && (j === "" || sj === j) && (k === "" || sk == k) && (m === "" || dm === m) && (b === "" || db === b)){
+                let matchSumber = (sm === "") ? true : (s.kuadran === sm);
+                let kesulitanSoal = s.kesulitan || "Sedang"; // Default sistem lama
+                let matchKesulitan = (tk === "") ? true : (kesulitanSoal === tk);
+                
+                return matchSumber && matchKesulitan;
+            }).forEach(s => {
+                let dm = (s.metadata?.mapel || "").toLowerCase();
+                let sj = s.metadata?.jenjang || "";
+                let sk = s.metadata?.kelas || "";
+                
+                // Ambil teks murni dari HTML Quill
+                let divT = document.createElement('div'); divT.innerHTML = s.pertanyaan; 
+                let dp = (divT.innerText || "").toLowerCase();
+                
+                if((dm.includes(kw) || dp.includes(kw)) && (j === "" || sj === j) && (k === "" || sk == k) && (m === "" || dm === m)){
                     let c = pilihanSoalSementara.has(s.id) ? 'checked' : '';
-                    h += `<label class="flex items-start p-4 border rounded-2xl cursor-pointer hover:bg-blue-50 transition ${c ? 'bg-blue-50 border-blue-400 ring-1 ring-blue-400' : 'bg-white'}"><input type="checkbox" value="${s.id}" class="mt-1 w-5 h-5 text-blue-600 rounded" onchange="toggleSoalPaket(this)" ${c}><div class="ml-4"><p class="text-xs font-black text-blue-700 tracking-wider uppercase mb-1">${s.metadata?.mapel||'-'} <span class="text-gray-400 font-medium">| Kelas ${sk} | ${s.metadata?.sub_bab||''}</span></p><p class="text-sm text-gray-800 line-clamp-2 italic">"${divT.innerText}"</p></div></label>`;
+                    
+                    // Pewarnaan Badge yang Elegan
+                    let level = s.kesulitan || 'Sedang';
+                    let bgLevel = level === 'Mudah' ? 'bg-green-100 text-green-700' : (level === 'Sulit' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700');
+                    let bgSumber = s.kuadran === 'Global' ? 'bg-purple-100 text-purple-700 border-purple-200' : (s.kuadran === 'Lokal' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-600 border-gray-200');
+                    
+                    h += `
+                    <label class="flex items-start p-4 border rounded-2xl cursor-pointer mb-2 hover:bg-teal-50 transition ${c ? 'bg-teal-50 border-teal-500 ring-2 ring-teal-200 shadow-sm' : 'bg-white'}">
+                        <input type="checkbox" value="${s.id}" class="mt-1 w-5 h-5 text-teal-600 rounded focus:ring-teal-500 cursor-pointer" onchange="toggleSoalPaket(this)" ${c}>
+                        <div class="ml-4 w-full">
+                            <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-2 gap-2">
+                                <div>
+                                    <p class="text-xs font-black text-teal-800 uppercase tracking-wider">${s.metadata?.mapel || '-'} <span class="text-gray-400 font-medium">| ${sj} KLS ${sk}</span></p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">Oleh: ${s.pembuat_id || 'Anonim'}</p>
+                                </div>
+                                <div class="flex space-x-1 shrink-0">
+                                    <span class="px-2 py-1 rounded text-[9px] font-bold border ${bgSumber}">${s.kuadran || 'Global'}</span>
+                                    <span class="px-2 py-1 rounded text-[9px] font-black uppercase border border-transparent ${bgLevel}">${level}</span>
+                                </div>
+                            </div>
+                            <p class="text-sm line-clamp-2 italic text-gray-800 bg-gray-50 p-2 rounded-lg border border-gray-100">"${divT.innerText}"</p>
+                        </div>
+                    </label>`;
                 }
             });
-            let l = document.getElementById('listPilihanSoal'); if(l) l.innerHTML = h || '<div class="text-center py-10 text-gray-400 font-bold border-2 border-dashed rounded-2xl">Kosong.</div>';
-            let c = document.getElementById('counterSoalPaket'); if(c) c.innerText = `${pilihanSoalSementara.size} TERPILIH`;
+            
+            let elList = document.getElementById('listPilihanSoal');
+            if(elList) elList.innerHTML = h || '<div class="text-center py-12 text-gray-400 font-bold border-2 border-dashed rounded-2xl m-2 bg-gray-50">Tidak ada soal yang sesuai dengan kriteria filter.</div>';
+            
+            let elCount = document.getElementById('counterSoalPaket');
+            if(elCount) elCount.innerText = `${pilihanSoalSementara.size} TERPILIH`;
         };
 
         window.toggleSoalPaket = c => { if(c.checked) pilihanSoalSementara.add(c.value); else pilihanSoalSementara.delete(c.value); document.getElementById('counterSoalPaket').innerText = `${pilihanSoalSementara.size} TERPILIH`; };
         
-        window.simpanPaketBaru = async () => {
-            let n = document.getElementById('namaPaketBaru').value; if(!n || pilihanSoalSementara.size === 0) return Swal.fire('Oops', 'Isi nama & pilih soal!', 'warning');
-            Swal.fire({title: 'Merakit...', didOpen: () => Swal.showLoading()});
-            await addDoc(collection(db, "paket_soal"), { nama_paket: n, soal_ids: Array.from(pilihanSoalSementara), dibuat_pada: new Date() });
-            window.tutupModalPaket(); Swal.fire({title: 'Berhasil!', icon: 'success', timer: 1000, showConfirmButton: false}); window.muatDaftarPaket();
+        window.simpanPaketBaru = async () => { 
+            let idPaket = document.getElementById('editIdPaket')?.value || "";
+            let n = document.getElementById('namaPaketBaru').value; 
+            
+            if(!n || pilihanSoalSementara.size === 0) return Swal.fire('Oops', 'Isi nama paket dan centang minimal 1 soal!', 'warning'); 
+            
+            Swal.fire({title: 'Merakit Paket...', didOpen: () => Swal.showLoading()}); 
+            
+            try {
+                let py = { 
+                    nama_paket: n, 
+                    soal_ids: Array.from(pilihanSoalSementara) 
+                };
+                
+                if (idPaket === "") {
+                    // Buat Paket Baru
+                    py.status = 'aktif';
+                    py.dibuat_pada = new Date();
+                    await addDoc(collection(db, "paket_soal"), py); 
+                    Swal.fire({title: 'Paket Tercipta!', icon: 'success', timer: 1000, showConfirmButton: false}); 
+                } else {
+                    // Update Paket Lama
+                    await updateDoc(doc(db, "paket_soal", idPaket), py);
+                    Swal.fire({title: 'Paket Diperbarui!', icon: 'success', timer: 1000, showConfirmButton: false}); 
+                }
+                
+                window.tutupModalPaket(); 
+                window.muatDaftarPaket();
+            } catch(e) {
+                Swal.fire('Error', 'Gagal menyimpan paket soal.', 'error');
+            }
+        };
+
+        window.toggleStatusPaket = async (id, statusBaru) => { 
+            let teksJudul = statusBaru === 'nonaktif' ? 'Suspend Paket?' : 'Aktifkan Paket?';
+            let teksHtml = statusBaru === 'nonaktif' ? 
+                'Paket akan disembunyikan dan <b>tidak bisa dipilih saat membuat Jadwal Ujian</b>. Data paket tetap aman di server.' : 
+                'Paket ini akan kembali tersedia untuk digunakan dalam Jadwal Ujian.';
+            let btnWarna = statusBaru === 'nonaktif' ? '#d33' : '#10b981';
+
+            const konfirmasi = await Swal.fire({
+                title: teksJudul, html: teksHtml, icon: 'warning', 
+                showCancelButton: true, confirmButtonColor: btnWarna, confirmButtonText: 'Ya, Proses!'
+            });
+
+            if(konfirmasi.isConfirmed) {
+                Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
+                try {
+                    await updateDoc(doc(db, "paket_soal", id), { status: statusBaru });
+                    window.muatDaftarPaket(); 
+                    Swal.fire('Berhasil!', `Status paket diubah menjadi ${statusBaru.toUpperCase()}.`, 'success');
+                } catch(e) { Swal.fire('Error', 'Gagal memproses status.', 'error'); }
+            }
         };
         
         window.hapusPaket = async (i) => { if((await Swal.fire({title: 'Hapus Paket?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33'})).isConfirmed) { await deleteDoc(doc(db, "paket_soal", i)); window.muatDaftarPaket(); } };
@@ -1531,14 +2112,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
