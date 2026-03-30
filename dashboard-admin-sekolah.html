@@ -172,6 +172,9 @@
                             <div class="flex space-x-3">
                                 <select id="pilihUjianAnalisis" class="flex-1 px-4 py-3 border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-gray-700 shadow-sm"></select>
                                 <button onclick="jalankanAnalisisSoal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-md transition">Jalankan Mesin ⚙️</button>
+                                <button onclick="eksporLaporanExcel()" class="bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold shadow-md hover:bg-emerald-700 transition flex items-center transform hover:-translate-y-1">
+                                    <span class="mr-2">📥</span> Unduh Laporan Excel
+                                </button>
                             </div>
                         </div>
 
@@ -497,7 +500,55 @@
         </div>
     </div>
     <div id="modalImportUser" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center z-50 p-4"><div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl flex flex-col relative overflow-hidden"><div class="bg-indigo-600 p-6 flex justify-between items-center text-white"><h3 class="text-xl font-bold">📥 Import Pengguna via Excel</h3><button onclick="tutupModalImportUser()" class="hover:text-indigo-200 text-3xl font-bold focus:outline-none">&times;</button></div><div class="p-6 space-y-4 bg-gray-50"><div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl"><button onclick="downloadTemplateExcel()" class="mt-2 text-xs font-bold bg-white text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg shadow-sm">⬇️ Download Template Excel</button></div><div><label class="block text-sm font-bold text-gray-700 mb-2">Upload File Excel (.xlsx)</label><input type="file" id="fileImportUser" accept=".xlsx, .xls" class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none"></div></div><div class="p-6 bg-white border-t flex justify-end"><button onclick="prosesImportExcel()" class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold w-full">🚀 Eksekusi Import</button></div></div></div>
-    <div id="modalPaket" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center z-50 p-4"><div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl flex flex-col h-[90vh]"><div class="flex justify-between items-center p-6 border-b shrink-0"><h3 class="text-xl font-bold">📦 Rakit Paket Lokal</h3><button onclick="tutupModalPaket()" class="text-3xl font-bold">&times;</button></div><div class="p-6 overflow-y-auto flex-1 flex flex-col space-y-4 bg-gray-50"><div class="bg-white p-4 rounded-xl border grid grid-cols-2 md:grid-cols-4 gap-3 items-end"><div class="col-span-2 md:col-span-4"><input type="text" id="namaPaketBaru" placeholder="Nama Paket" class="w-full px-4 py-2 border rounded-xl font-bold"></div><div><select id="filterKelasPaket" onchange="renderPilihanSoal()" class="w-full px-3 py-2 border rounded-lg text-sm"></select></div><div><select id="filterMapelPaket" class="w-full px-3 py-2 border rounded-lg text-sm dinamis-mapel"></select></div><div><select id="filterSumberPaket" onchange="renderPilihanSoal()" class="w-full px-3 py-2 border rounded-lg text-sm bg-yellow-50"><option value="Lokal">Lokal</option><option value="Global">Global</option></select></div><div><input type="text" id="filterCariPaket" placeholder="Cari..." oninput="renderPilihanSoal()" class="w-full px-3 py-2 border rounded-lg text-sm"></div></div><div class="bg-white border rounded-2xl p-4 flex-1 flex flex-col"><div class="flex justify-between border-b pb-2 mb-2"><span class="font-bold text-sm">Pilih Soal:</span><span id="counterSoalPaket" class="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-black">0 TERPILIH</span></div><div id="listPilihanSoal" class="flex-1 overflow-y-auto space-y-2 p-1"></div></div></div><div class="p-6 border-t flex justify-end shrink-0"><button onclick="simpanPaketBaru()" class="px-8 py-3 text-white bg-emerald-600 rounded-xl font-bold">💾 Simpan Paket</button></div></div></div>
+    <div id="modalPaket" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl flex flex-col h-[90vh]">
+            <div class="flex justify-between items-center p-6 border-b shrink-0">
+                <h3 class="text-xl font-bold">📦 Rakit Paket Lokal</h3>
+                <button onclick="tutupModalPaket()" class="text-3xl font-bold">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 flex flex-col space-y-4 bg-gray-50">
+                <div class="bg-white p-4 rounded-xl border grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
+                    <div class="col-span-2 md:col-span-5">
+                        <input type="text" id="namaPaketBaru" placeholder="Nama Paket" class="w-full px-4 py-2 border rounded-xl font-bold">
+                    </div>
+                    <div>
+                        <select id="filterKelasPaket" onchange="renderPilihanSoal()" class="w-full px-3 py-2 border rounded-lg text-sm"></select>
+                    </div>
+                    <div>
+                        <select id="filterMapelPaket" onchange="renderPilihanSoal()" class="w-full px-3 py-2 border rounded-lg text-sm dinamis-mapel"></select>
+                    </div>
+                    <div>
+                        <select id="filterSumberPaket" onchange="renderPilihanSoal()" class="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-blue-50 text-blue-800 font-bold">
+                            <option value="">Semua Sumber</option>
+                            <option value="Lokal">Lokal</option>
+                            <option value="Global">Global</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="filterKesulitanPaket" onchange="renderPilihanSoal()" class="w-full px-3 py-2 border border-purple-200 rounded-lg text-sm bg-purple-50 text-purple-800 font-bold">
+                            <option value="">Semua Level</option>
+                            <option value="Mudah">Mudah</option>
+                            <option value="Sedang">Sedang</option>
+                            <option value="Sulit">Sulit</option>
+                        </select>
+                    </div>
+                    <div>
+                        <input type="text" id="filterCariPaket" placeholder="Cari..." oninput="renderPilihanSoal()" class="w-full px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                </div>
+                <div class="bg-white border rounded-2xl p-4 flex-1 flex flex-col">
+                    <div class="flex justify-between border-b pb-2 mb-2">
+                        <span class="font-bold text-sm">Pilih Soal:</span>
+                        <span id="counterSoalPaket" class="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-black">0 TERPILIH</span>
+                    </div>
+                    <div id="listPilihanSoal" class="flex-1 overflow-y-auto space-y-2 p-1"></div>
+                </div>
+            </div>
+            <div class="p-6 border-t flex justify-end shrink-0">
+                <button onclick="simpanPaketBaru()" class="px-8 py-3 text-white bg-emerald-600 rounded-xl font-bold">💾 Simpan Paket</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
@@ -1104,12 +1155,69 @@
         // ==========================================
         // 5. PAKET UJIAN & JADWAL
         // ==========================================
-        window.muatBankSoalGlobalLokal = async () => { const sg = await getDocs(query(collection(db, "bank_soal"), where("kuadran", "==", "Global"), where("status", "==", "aktif"))); const sl = await getDocs(query(collection(db, "bank_soal"), where("sekolah_id", "==", idSekolahGlobal), where("status", "==", "aktif"))); dataSoalSeluruhnya = []; sg.forEach(d => dataSoalSeluruhnya.push({id: d.id, ...d.data()})); sl.forEach(d => dataSoalSeluruhnya.push({id: d.id, ...d.data()})); };
+        window.muatBankSoalGlobalLokal = async () => { 
+            // KHUSUS GLOBAL: Kita saring otomatis agar hanya menarik soal dari jenjang sekolah ini saja (Misal: SMA tidak melihat soal SD)
+            const sg = await getDocs(query(collection(db, "bank_soal"), where("kuadran", "==", "Global"), where("status", "==", "aktif"), where("metadata.jenjang", "==", jenjangSekolahGlobal))); 
+            
+            const sl = await getDocs(query(collection(db, "bank_soal"), where("sekolah_id", "==", idSekolahGlobal), where("status", "==", "aktif"))); 
+            
+            dataSoalSeluruhnya = []; 
+            sg.forEach(d => dataSoalSeluruhnya.push({id: d.id, ...d.data()})); 
+            sl.forEach(d => dataSoalSeluruhnya.push({id: d.id, ...d.data()})); 
+        };
         window.muatDaftarPaketLokal = async () => { const s = await getDocs(query(collection(db, "paket_soal"), where("sekolah_id", "==", idSekolahGlobal))); dataPaketLokal = []; let h = ''; s.forEach(d => { let p = d.data(); p.id = d.id; dataPaketLokal.push(p); h += `<div class="bg-white border p-6 rounded-3xl relative group"><button onclick="hapusPaket('${p.id}')" class="absolute top-4 right-4 text-red-400 hover:text-red-600 hidden group-hover:block">&times;</button><h3 class="text-lg font-bold">${p.nama_paket}</h3><p class="text-sm mt-2"><b>${p.soal_ids?.length || 0}</b> Soal</p></div>`; }); document.getElementById('kontainerPaket').innerHTML = h || '<p class="col-span-3 text-center text-gray-400">Kosong.</p>'; window.muatDropdownPaketLokal(); };
         window.muatDropdownPaketLokal = () => { let s = document.getElementById('inputPaketUjian'); if(s) { s.innerHTML = '<option value="">-- Pilih Paket --</option>'; dataPaketLokal.forEach(p => s.innerHTML += `<option value="${p.id}">${p.nama_paket}</option>`); } };
         window.bukaModalBuatPaket = () => { document.getElementById('namaPaketBaru').value = ""; pilihanSoalSementara.clear(); window.renderPilihanSoal(); document.getElementById('modalPaket').classList.remove('hidden'); };
         window.tutupModalPaket = () => { document.getElementById('modalPaket').classList.add('hidden'); };
-        window.renderPilihanSoal = () => { let kw = (document.getElementById('filterCariPaket')?.value || "").toLowerCase(), k = document.getElementById('filterKelasPaket')?.value || "", m = (document.getElementById('filterMapelPaket')?.value || "").toLowerCase(), sm = document.getElementById('filterSumberPaket')?.value || "Lokal", h = ''; dataSoalSeluruhnya.filter(s => sm === "Global" ? s.kuadran === "Global" : s.kuadran === "Lokal").forEach(s => { let dm = (s.metadata?.mapel || "").toLowerCase(), sk = s.metadata?.kelas || ""; let divT = document.createElement('div'); divT.innerHTML = s.pertanyaan; let dp = (divT.innerText || "").toLowerCase(); if((dm.includes(kw) || dp.includes(kw)) && (k === "" || sk == k) && (m === "" || dm === m)){ let c = pilihanSoalSementara.has(s.id) ? 'checked' : ''; h += `<label class="flex items-start p-4 border rounded-2xl cursor-pointer mb-2 ${c ? 'bg-emerald-50 border-emerald-300' : 'bg-white'}"><input type="checkbox" value="${s.id}" class="mt-1 w-5 h-5 text-emerald-600 rounded" onchange="toggleSoalPaket(this)" ${c}><div class="ml-4"><p class="text-xs font-black text-emerald-700">${(s.metadata?.mapel || '-').toUpperCase()} | Kls ${sk} <span class="text-gray-400 font-normal">(${s.kuadran})</span></p><p class="text-sm line-clamp-1 italic">${divT.innerText}</p></div></label>`; } }); document.getElementById('listPilihanSoal').innerHTML = h || '<p class="text-center text-sm py-4">Kosong.</p>'; document.getElementById('counterSoalPaket').innerText = `${pilihanSoalSementara.size} TERPILIH`; };
+        window.renderPilihanSoal = () => { 
+            let kw = (document.getElementById('filterCariPaket')?.value || "").toLowerCase();
+            let k = document.getElementById('filterKelasPaket')?.value || ""; 
+            let m = (document.getElementById('filterMapelPaket')?.value || "").toLowerCase(); 
+            
+            // Tangkap nilai filter baru
+            let sm = document.getElementById('filterSumberPaket')?.value || ""; 
+            let tk = document.getElementById('filterKesulitanPaket')?.value || ""; 
+            
+            let h = ''; 
+            
+            dataSoalSeluruhnya.filter(s => {
+                // Logika Filter Sumber & Kesulitan (Jika kosong, tampilkan semua)
+                let matchSumber = (sm === "") ? true : (s.kuadran === sm);
+                let kesulitanSoal = s.kesulitan || "Sedang"; // Default jika ada soal lama yang belum punya status
+                let matchKesulitan = (tk === "") ? true : (kesulitanSoal === tk);
+                
+                return matchSumber && matchKesulitan;
+            }).forEach(s => { 
+                let dm = (s.metadata?.mapel || "").toLowerCase(), sk = s.metadata?.kelas || ""; 
+                let divT = document.createElement('div'); divT.innerHTML = s.pertanyaan; let dp = (divT.innerText || "").toLowerCase(); 
+                
+                if((dm.includes(kw) || dp.includes(kw)) && (k === "" || sk == k) && (m === "" || dm === m)){ 
+                    let c = pilihanSoalSementara.has(s.id) ? 'checked' : ''; 
+                    
+                    // UI Badge Indah
+                    let level = s.kesulitan || 'Sedang';
+                    let bgLevel = level === 'Mudah' ? 'bg-green-100 text-green-700' : (level === 'Sulit' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700');
+                    let bgSumber = s.kuadran === 'Global' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600';
+
+                    h += `
+                    <label class="flex items-start p-4 border rounded-2xl cursor-pointer mb-2 hover:bg-emerald-50 transition ${c ? 'bg-emerald-50 border-emerald-400 ring-2' : 'bg-white'}">
+                        <input type="checkbox" value="${s.id}" class="mt-1 w-5 h-5 text-emerald-600 rounded" onchange="toggleSoalPaket(this)" ${c}>
+                        <div class="ml-4 w-full">
+                            <div class="flex justify-between items-start mb-1">
+                                <p class="text-xs font-black text-emerald-700 uppercase">${(s.metadata?.mapel || '-')} | Kls ${sk}</p>
+                                <div class="flex space-x-1 shrink-0">
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold border border-transparent shadow-sm ${bgSumber}">${s.kuadran}</span>
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase border border-transparent shadow-sm ${bgLevel}">${level}</span>
+                                </div>
+                            </div>
+                            <p class="text-sm line-clamp-2 italic text-gray-800">"${divT.innerText}"</p>
+                        </div>
+                    </label>`; 
+                } 
+            }); 
+            document.getElementById('listPilihanSoal').innerHTML = h || '<p class="text-center text-sm py-8 text-gray-400 font-bold">Tidak ada soal yang sesuai filter.</p>'; 
+            document.getElementById('counterSoalPaket').innerText = `${pilihanSoalSementara.size} TERPILIH`; 
+        };
         window.toggleSoalPaket = c => { if(c.checked) pilihanSoalSementara.add(c.value); else pilihanSoalSementara.delete(c.value); document.getElementById('counterSoalPaket').innerText = `${pilihanSoalSementara.size} TERPILIH`; };
         window.simpanPaketBaru = async () => { let n = document.getElementById('namaPaketBaru').value; if(!n || pilihanSoalSementara.size === 0) return Swal.fire('Oops', 'Isi nama dan pilih soal!', 'warning'); Swal.fire({title: 'Merakit...', didOpen: () => Swal.showLoading()}); await addDoc(collection(db, "paket_soal"), {nama_paket: n, soal_ids: Array.from(pilihanSoalSementara), sekolah_id: idSekolahGlobal, dibuat_pada: new Date()}); window.tutupModalPaket(); Swal.fire({title: 'Berhasil!', icon: 'success', timer: 1000, showConfirmButton: false}); window.muatDaftarPaketLokal(); };
         window.hapusPaket = async (i) => { if((await Swal.fire({title: 'Hapus Paket?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33'})).isConfirmed) { await deleteDoc(doc(db, "paket_soal", i)); window.muatDaftarPaketLokal(); } };
@@ -1366,10 +1474,17 @@
             if(totalPartisipan === 0) return Swal.fire('Kosong', 'Belum ada siswa yang mengerjakan ujian ini.', 'info');
 
             let acuanSoal = dataUjianIni[0].rekam_soal;
-            if(!acuanSoal) return Swal.fire('Error', 'Data ujian ini tidak memiliki rekam soal (Versi Lama).', 'error');
+            if(!acuanSoal) return Swal.fire('Error', 'Data ujian ini tidak memiliki rekam soal.', 'error');
 
             let analisis = [];
-            for(let i=0; i<acuanSoal.length; i++) { analisis.push({ no: i+1, tipe: acuanSoal[i].tipe_soal || 'pg', benar: 0, salah: 0, kosong: 0 }); }
+            for(let i=0; i<acuanSoal.length; i++) { 
+                analisis.push({ 
+                    no: i+1, 
+                    tipe: acuanSoal[i].tipe_soal || 'pg', 
+                    targetKesulitan: acuanSoal[i].kesulitan || 'Sedang', // 🎯 BACA LEVEL TARGET DARI DB
+                    benar: 0, salah: 0, kosong: 0 
+                }); 
+            }
 
             dataUjianIni.forEach(siswa => {
                 let jwbArr = siswa.rekam_jawaban || {};
@@ -1397,14 +1512,28 @@
             let htmlTable = ''; let countSulit = 0, countMudah = 0;
             analisis.forEach(res => {
                 let persenSalah = Math.round((res.salah / totalPartisipan) * 100) || 0, persenBenar = Math.round((res.benar / totalPartisipan) * 100) || 0, persenKosong = Math.round((res.kosong / totalPartisipan) * 100) || 0;
-                let statusKesulitan = '<span class="px-3 py-1 bg-blue-100 text-blue-700 font-bold rounded-full text-xs">Normal</span>', barColor = 'bg-blue-500';
-
+                
+                // Fakta Aktual Lapangan
+                let faktaLevel = '<span class="text-blue-600 font-bold">Normal</span>', barColor = 'bg-blue-500';
                 if(res.tipe !== 'essay') {
-                    if(persenSalah >= 70) { statusKesulitan = '<span class="px-3 py-1 bg-red-100 text-red-700 font-bold rounded-full text-xs">⚠️ Sulit / Killer</span>'; barColor = 'bg-red-500'; countSulit++; }
-                    else if(persenBenar >= 80) { statusKesulitan = '<span class="px-3 py-1 bg-green-100 text-green-700 font-bold rounded-full text-xs">Mudah</span>'; barColor = 'bg-green-500'; countMudah++; }
-                } else { statusKesulitan = '<span class="px-3 py-1 bg-purple-100 text-purple-700 font-bold rounded-full text-xs">Esai (Manual)</span>'; barColor = 'bg-purple-500'; }
+                    if(persenSalah >= 70) { faktaLevel = '<span class="text-red-600 font-bold">⚠️ Killer / Terlalu Sulit</span>'; barColor = 'bg-red-500'; countSulit++; }
+                    else if(persenBenar >= 80) { faktaLevel = '<span class="text-green-600 font-bold">Terlalu Mudah</span>'; barColor = 'bg-green-500'; countMudah++; }
+                } else { faktaLevel = '<span class="text-purple-600 font-bold">Esai (Nilai Manual)</span>'; barColor = 'bg-purple-500'; }
 
-                htmlTable += `<tr class="hover:bg-gray-50 border-b transition"><td class="px-6 py-4 text-center font-black text-lg text-gray-500">${res.no}</td><td class="px-6 py-4"><div class="flex justify-between text-xs font-bold text-gray-500 mb-1"><span>✅ Benar: ${persenBenar}%</span><span>❌ Salah: ${persenSalah}%</span><span>⬜ Kosong: ${persenKosong}%</span></div><div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden flex"><div class="${barColor} h-2.5" style="width: ${persenBenar}%"></div><div class="bg-gray-400 h-2.5" style="width: ${persenSalah}%"></div><div class="bg-gray-200 h-2.5" style="width: ${persenKosong}%"></div></div></td><td class="px-6 py-4 text-center">${statusKesulitan}</td></tr>`;
+                // Target Desain Guru
+                let warnaTarget = res.targetKesulitan === 'Sulit' ? 'bg-red-100 text-red-700 border-red-200' : (res.targetKesulitan === 'Mudah' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200');
+
+                htmlTable += `<tr class="hover:bg-gray-50 border-b transition">
+                    <td class="px-6 py-4 text-center font-black text-lg text-gray-500">${res.no}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-between text-xs font-bold text-gray-500 mb-1"><span>✅ Benar: ${persenBenar}%</span><span>❌ Salah: ${persenSalah}%</span><span>⬜ Kosong: ${persenKosong}%</span></div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden flex shadow-inner"><div class="${barColor} h-2.5" style="width: ${persenBenar}%"></div><div class="bg-gray-400 h-2.5" style="width: ${persenSalah}%"></div><div class="bg-gray-200 h-2.5" style="width: ${persenKosong}%"></div></div>
+                    </td>
+                    <td class="px-6 py-4 text-left">
+                        <div class="text-[10px] text-gray-400 uppercase font-black mb-1 tracking-widest border-b pb-1">Desain Guru: <span class="px-2 py-0.5 rounded border ${warnaTarget} ml-1">${res.targetKesulitan}</span></div>
+                        <div class="text-sm font-medium mt-1">Fakta Siswa: ${faktaLevel}</div>
+                    </td>
+                </tr>`;
             });
 
             document.getElementById('tabelAnalisisButir').innerHTML = htmlTable;
@@ -1433,6 +1562,96 @@
                 }
             }
         });
+        // ==========================================
+        // FITUR EXPORT EXCEL (ADMIN SEKOLAH)
+        // ==========================================
+        window.eksporLaporanExcel = () => {
+            let idJadwal = document.getElementById('pilihUjianAnalisis').value;
+            let teksJudul = document.getElementById('pilihUjianAnalisis').options[document.getElementById('pilihUjianAnalisis').selectedIndex].text;
+            
+            if(!idJadwal) return Swal.fire('Oops', 'Pilih ujian yang ingin di-ekspor terlebih dahulu!', 'warning');
+
+            let dataUjianIni = dataHasilUjianLokal.filter(x => x.id_jadwal === idJadwal);
+            if(dataUjianIni.length === 0) return Swal.fire('Kosong', 'Belum ada data nilai untuk ujian ini.', 'info');
+
+            Swal.fire({title: 'Meracik File Excel...', didOpen: () => Swal.showLoading()});
+
+            // 1. Siapkan Struktur Data untuk Excel (Sheet 1: Rekap Nilai)
+            let dataRekap = [];
+            dataUjianIni.forEach((siswa, index) => {
+                dataRekap.push({
+                    "No": index + 1,
+                    "Nama Siswa": siswa.nama_siswa || "Tanpa Nama",
+                    "Username": siswa.username || "-",
+                    "Kelas": siswa.kelas || "-",
+                    "Mapel": siswa.mapel || "-",
+                    "Total Benar": siswa.detail?.benar || 0,
+                    "Total Salah": siswa.detail?.salah || 0,
+                    "Total Kosong": siswa.detail?.kosong || 0,
+                    "Skor Akhir": siswa.nilai_akhir || 0,
+                    "Waktu Selesai": siswa.waktu_selesai ? siswa.waktu_selesai.toDate().toLocaleString('id-ID') : "-"
+                });
+            });
+
+            // 2. Siapkan Struktur Data (Sheet 2: Analisis Butir Soal)
+            let dataAnalisis = [];
+            let acuanSoal = dataUjianIni[0].rekam_soal || [];
+            let totalPartisipan = dataUjianIni.length;
+
+            if(acuanSoal.length > 0) {
+                // Kalkulasi ulang matriks analisis (seperti di layar)
+                for(let i=0; i<acuanSoal.length; i++) { 
+                    let b = 0, s = 0, k = 0;
+                    dataUjianIni.forEach(siswa => {
+                        let jwbArr = siswa.rekam_jawaban || {};
+                        let jwb = jwbArr[i]; let tipe = acuanSoal[i].tipe_soal || 'pg';
+                        if(tipe === 'pg_kompleks') {
+                            if (!jwb || jwb.length === 0) k++;
+                            else {
+                                let kunciBenarArr = acuanSoal[i].opsi.filter(o => o.benar).map(o => o.label).sort();
+                                let jwbSiswaArr = [...jwb].sort();
+                                if(JSON.stringify(kunciBenarArr) === JSON.stringify(jwbSiswaArr)) b++; else s++;
+                            }
+                        } else if (tipe === 'essay') {
+                            if (!jwb || jwb.trim() === "") k++; else b++;
+                        } else {
+                            if (!jwb) k++;
+                            else {
+                                let kunciMurni = acuanSoal[i].kunci; 
+                                if(acuanSoal[i].opsi && Array.isArray(acuanSoal[i].opsi)) kunciMurni = (acuanSoal[i].opsi.find(o => o.benar) || {}).label;
+                                if (jwb === kunciMurni) b++; else s++;
+                            }
+                        }
+                    });
+                    
+                    dataAnalisis.push({
+                        "No Soal": i + 1,
+                        "Tipe": acuanSoal[i].tipe_soal || 'PG',
+                        "Kesulitan (Target)": acuanSoal[i].kesulitan || 'Sedang',
+                        "Persentase Benar": Math.round((b / totalPartisipan) * 100) + "%",
+                        "Persentase Salah": Math.round((s / totalPartisipan) * 100) + "%",
+                        "Persentase Kosong": Math.round((k / totalPartisipan) * 100) + "%"
+                    });
+                }
+            }
+
+            // 3. Konversi ke Excel WorkBook
+            const wb = XLSX.utils.book_new();
+            
+            const wsRekap = XLSX.utils.json_to_sheet(dataRekap);
+            XLSX.utils.book_append_sheet(wb, wsRekap, "Rekap Nilai Siswa");
+            
+            if(dataAnalisis.length > 0) {
+                const wsAnalisis = XLSX.utils.json_to_sheet(dataAnalisis);
+                XLSX.utils.book_append_sheet(wb, wsAnalisis, "Analisis Butir Soal");
+            }
+
+            // 4. Trigger Download
+            let namaFileClean = teksJudul.replace(/[^a-zA-Z0-9 -]/g, ""); // Buang karakter aneh
+            XLSX.writeFile(wb, `Laporan_Ujian_${namaFileClean}.xlsx`);
+            
+            Swal.close();
+        };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
