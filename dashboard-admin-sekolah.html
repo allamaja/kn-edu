@@ -970,43 +970,118 @@
         };
 
         window.prosesImportExcel = () => {
-            let f = document.getElementById('fileImportUser'); if(!f || !f.files.length) return Swal.fire('Oops', 'Pilih file terlebih dahulu!', 'warning');
+            let f = document.getElementById('fileImportUser'); 
+            if(!f || !f.files.length) return Swal.fire('Oops', 'Pilih file terlebih dahulu!', 'warning');
+            
             let r = new FileReader();
             r.onload = async e => {
                 try {
                     let d = new Uint8Array(e.target.result), b = XLSX.read(d, {type: 'array'}), s = b.Sheets[b.SheetNames[0]], a = XLSX.utils.sheet_to_json(s);
                     if(a.length === 0) return Swal.fire('Kosong', 'Tidak ada data di Excel.', 'info');
-                    Swal.fire({title: `Mendaftarkan ${a.length} Akun...`, allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-                    let js = 0, jg = 0;
                     
-                    for(const rw of a){
+                    Swal.fire({title: 'Sidak Data...', html: 'Mengecek duplikasi email...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+                    
+                    let js = 0, jg = 0;
+                    let arrayGagal = [];
+                    let dataSiapUpload = [];
+                    let emailInternalSet = new Set();
+                    
+                    // ====================================================
+                    // 1. FASE SIDAK DATA (FILTERING)
+                    // ====================================================
+                    for(const rw of a) {
                         let n = rw["Nama Lengkap"] || rw["Nama"] || rw["nama"];
                         let ru = (rw["Username"] || rw["Email"] || rw["email"] || "").toString().trim().toLowerCase();
                         let p = rw["Password"] || rw["password"];
                         let ro = rw["Role"] ? rw["Role"].toString().toLowerCase().trim() : 'siswa';
                         let kl = rw["Kelas"] ? rw["Kelas"].toString().trim() : '';
-                        let mapelRaw = rw["Mapel Diampu"] || rw["Mapel"] || ""; // Kolom khusus guru
+                        let mapelRaw = rw["Mapel Diampu"] || rw["Mapel"] || "";
 
-                        if(n && ru && p){
-                            let el = ru.includes('@') ? ru : ru + '@smartkhairunnas.com';
-                            let py = { nama: n, email: el, password_info: p.toString(), role: ro, sekolah_id: idSekolahGlobal, dibuat_pada: new Date() };
-                            
-                            if(ro === 'siswa' && kl) py.kelas = kl;
-                            
-                            // Fitur Pemecah Array Koma untuk Guru
-                            if(ro === 'guru') {
-                                let mapelArr = mapelRaw.toString().split(',').map(x => x.trim()).filter(x => x !== "");
-                                py.mapel_diampu = mapelArr; // Simpan sebagai array
+                        if(!n || !ru || !p) {
+                            arrayGagal.push(`Baris Excel - Ada kolom Nama/Username/Password yang kosong.`);
+                            continue;
+                        }
+
+                        let el = ru.includes('@') ? ru : ru + '@smartkhairunnas.com';
+
+                        // Sidak 1: Cek Duplikat di dalam File Excel yang sedang diupload
+                        if(emailInternalSet.has(el)) {
+                            arrayGagal.push(`${n} (${ru}) - Duplikat di dalam file Excel.`);
+                            continue;
+                        }
+                        emailInternalSet.add(el);
+
+                        // Sidak 2: Cek Duplikat di Database Firebase
+                        const qCek = query(collection(db, "users"), where("email", "==", el));
+                        const snapCek = await getDocs(qCek);
+                        if (!snapCek.empty) {
+                            arrayGagal.push(`${n} (${ru}) - Sudah terdaftar di sistem.`);
+                            continue;
+                        }
+
+                        // Jika Lolos Sidak: Siapkan Payload Database
+                        let py = { nama: n, email: el, password_info: p.toString(), role: ro, sekolah_id: idSekolahGlobal, dibuat_pada: new Date() };
+                        if(ro === 'siswa' && kl) py.kelas = kl;
+                        
+                        // Fitur Pemecah Array Koma untuk Guru
+                        if(ro === 'guru') {
+                            let mapelArr = mapelRaw.toString().split(',').map(x => x.trim()).filter(x => x !== "");
+                            py.mapel_diampu = mapelArr;
+                        }
+
+                        // Masukkan ke antrean eksekusi
+                        dataSiapUpload.push({ email: el, password: p.toString(), payload: py, namaAsli: n });
+                    }
+
+                    // ====================================================
+                    // 2. FASE EKSEKUSI PENDAFTARAN
+                    // ====================================================
+                    if(dataSiapUpload.length > 0) {
+                        Swal.fire({title: `Mendaftarkan ${dataSiapUpload.length} Akun...`, allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+                        
+                        for(const item of dataSiapUpload) {
+                            try { 
+                                // Menggunakan authB (Bayangan) agar Admin tidak ter-logout!
+                                await createUserWithEmailAndPassword(authB, item.email, item.password); 
+                                await addDoc(collection(db, "users"), item.payload); 
+                                js++; 
+                            } catch(er) { 
+                                jg++; 
+                                arrayGagal.push(`${item.namaAsli} (${item.email}) - Error: ${er.message}`);
                             }
-
-                            try { await createUserWithEmailAndPassword(authB, el, p.toString()); await addDoc(collection(db, "users"), py); js++; } 
-                            catch(er) { jg++; }
                         }
                     }
+
+                    // ====================================================
+                    // 3. LAPORAN HASIL AKHIR
+                    // ====================================================
                     window.tutupModalImportUser(); 
-                    Swal.fire('Selesai!', `<b>${js} sukses terdaftar</b>.<br>${jg > 0 ? `<span class="text-red-500">${jg} gagal (Format salah / Username duplikat).</span>` : ''}`, 'success'); 
+                    document.getElementById('fileImportUser').value = ''; // Reset input file
+                    
+                    if (arrayGagal.length > 0) {
+                        let daftarGagalHtml = arrayGagal.map(msg => `<li class="text-left text-xs text-red-600 mb-1 border-b border-red-100 pb-1">${msg}</li>`).join('');
+                        Swal.fire({
+                            title: 'Selesai dengan Catatan!',
+                            html: `
+                                <div class="mb-4 text-left text-sm">
+                                    <p class="text-green-600 font-bold mb-1">✅ Lolos & Terdaftar: ${js} Akun</p>
+                                    <p class="text-red-600 font-bold">❌ Gagal / Ditolak: ${arrayGagal.length} Akun</p>
+                                </div>
+                                <div class="bg-red-50 p-3 rounded-xl border border-red-200 max-h-48 overflow-y-auto">
+                                    <p class="text-[10px] text-red-800 font-bold mb-2 text-left uppercase tracking-widest">Detail Penolakan Sistem:</p>
+                                    <ul class="list-disc pl-4">${daftarGagalHtml}</ul>
+                                </div>
+                            `,
+                            icon: 'warning',
+                            confirmButtonColor: '#3b82f6'
+                        });
+                    } else {
+                        Swal.fire('Sempurna! 🎉', `<b>${js} akun sukses terdaftar</b> tanpa ada bentrok data satupun.`, 'success'); 
+                    }
+                    
                     window.muatDataUserLokal();
-                } catch(er) { Swal.fire('Error', 'Format Excel salah.', 'error'); }
+
+                } catch(er) { Swal.fire('Error', 'Format Excel salah atau gagal dibaca.', 'error'); }
             };
             r.readAsArrayBuffer(f.files[0]);
         };
