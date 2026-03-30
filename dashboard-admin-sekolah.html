@@ -1387,6 +1387,18 @@
             document.getElementById('modalEditor').classList.remove('hidden');
         };
 
+        window.tutupModalEditor = () => { 
+            document.getElementById('editIdSoal').value = ""; document.getElementById('editAsalTab').value = "";
+            quillPertanyaan.root.innerHTML = ""; quillPembahasan.root.innerHTML = "";
+            ['A','B','C','D','E'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; });
+            
+            // Reset semua ceklis & radio
+            document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = false);
+            document.querySelectorAll('.input-matriks-kiri, .input-matriks-kanan').forEach(el => el.checked = false);
+            
+            document.getElementById('modalEditor').classList.add('hidden'); 
+        };
+
         // FUNGSI SIMPAN YANG SUDAH DIBERSIHKAN DARI DUPLIKASI
         window.aksiSimpanDariModal = async () => {
             let tipe = document.getElementById('editTipeSoal').value;
