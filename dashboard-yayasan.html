@@ -97,6 +97,12 @@
                     <span class="w-5 text-center mr-2 text-blue-400">📅</span> Jadwal Aktif
                 </button>
             </div>
+            <div class="flex flex-col gap-0.5 mt-4 border-t border-slate-800 pt-4">
+                <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Sistem Pusat</p>
+                <button onclick="bukaTab('tabUserYayasan')" id="menuUserYayasan" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs">
+                    <span class="w-5 text-center mr-2 text-rose-400">👑</span> Admin Yayasan
+                </button>
+            </div>
         </nav>
         <div class="p-3 border-t border-slate-800 bg-slate-900/50 shrink-0">
             <div class="px-1 mb-3">
@@ -369,7 +375,35 @@
                 </div>
             </div>
             <div id="tabJadwal" class="space-y-6 hidden"><div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100"><div class="mb-8 border-b pb-4"><h2 class="text-2xl font-bold text-gray-800" id="judulFormJadwal">Buat Jadwal Ujian Serentak</h2><p class="text-gray-500 text-sm mt-1">Tentukan target spesifik audiens ujian Anda di sini.</p></div><form id="formJadwal" class="space-y-6"><input type="hidden" id="editIdJadwal"> <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100"><h3 class="text-indigo-800 font-bold mb-4 border-b border-indigo-200 pb-2">1. Penargetan Peserta & Ujian</h3><div class="grid grid-cols-1 md:grid-cols-4 gap-4"><div class="md:col-span-2"><label class="block text-sm font-bold text-indigo-700 mb-2">Nama Kegiatan</label><input type="text" id="inputNamaUjian" placeholder="Cth: Try Out Matematika" required class="w-full px-4 py-2 border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"></div><div><label class="block text-sm font-bold text-indigo-700 mb-2">Jenis Ujian</label><select id="inputJenisUjian" required class="w-full px-4 py-2 border border-indigo-200 rounded-xl outline-none dinamis-jenis"></select></div><div><label class="block text-sm font-bold text-indigo-700 mb-2">Mapel</label><select id="inputMapelJadwal" required class="w-full px-4 py-2 border border-indigo-200 rounded-xl outline-none dinamis-mapel"><option value="Campuran">Campuran</option></select></div><div><label class="block text-sm font-bold text-indigo-700 mb-2">Jenjang</label><select id="inputJenjang" required class="w-full px-4 py-2 border border-indigo-200 rounded-xl outline-none"><option value="SMA">SMA</option><option value="SMP">SMP</option><option value="SD">SD</option></select></div><div><label class="block text-sm font-bold text-indigo-700 mb-2">Kelas Target</label><select id="inputKelasJadwal" required class="w-full px-4 py-2 border border-indigo-200 rounded-xl outline-none"><option value="Semua">Semua Kelas</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div><div class="md:col-span-2"><label class="block text-sm font-bold text-blue-700 mb-2">📦 Pilih Paket Soal</label><select id="inputPaketUjian" required class="w-full px-4 py-2 border border-blue-300 bg-blue-50 rounded-xl outline-none font-bold focus:ring-2 focus:ring-blue-500"></select></div></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-blue-50 p-6 rounded-2xl border border-blue-100"><div><label class="block text-sm font-bold mb-2">Waktu Mulai</label><input type="datetime-local" id="inputWaktuMulai" required class="w-full px-4 py-2 border border-blue-200 rounded-xl outline-none"></div><div><label class="block text-sm font-bold mb-2">Batas Akhir</label><input type="datetime-local" id="inputWaktuSelesai" required class="w-full px-4 py-2 border border-blue-200 rounded-xl outline-none"></div><div><label class="block text-sm font-bold mb-2">Durasi (Menit)</label><input type="number" id="inputDurasi" min="10" value="90" required class="w-full px-4 py-2 border border-blue-200 rounded-xl font-bold outline-none"></div></div><div class="bg-yellow-50 p-6 rounded-2xl border border-yellow-200 flex items-center gap-6"><div class="flex-1"><label class="block text-sm font-bold text-yellow-800 mb-1">Rilis Pembahasan di Rapor Siswa</label><select id="inputRilisBahas" class="w-full md:w-1/2 px-4 py-2 border border-yellow-300 rounded-xl outline-none bg-white"><option value="otomatis_selesai">Otomatis Terbuka</option><option value="setelah_ujian_tutup" selected>Aman (Setelah Batas Akhir Ditutup)</option><option value="jangan_rilis">Rahasiakan</option></select></div></div><div class="flex space-x-4"><button type="button" onclick="batalEditJadwal()" id="btnBatalJadwal" class="hidden px-6 py-4 bg-gray-200 text-gray-700 rounded-2xl font-bold transition">Batal Edit</button><button type="submit" id="btnSubmitJadwal" class="flex-1 bg-teal-600 text-white px-6 py-4 rounded-2xl font-black text-lg shadow-md hover:bg-teal-700 transition">📢 Terbitkan Jadwal Ujian</button></div></form><div class="mt-12 pt-8 border-t border-gray-200"><h3 class="text-xl font-bold text-gray-800 mb-4">Daftar Jadwal Yayasan (Global)</h3><div class="overflow-x-auto rounded-2xl border border-gray-200"><table class="w-full text-sm text-left text-gray-600"><thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b"><tr><th class="px-6 py-4">Status</th><th class="px-6 py-4">Nama & Paket</th><th class="px-6 py-4">Waktu Ujian</th><th class="px-6 py-4 text-center">Aksi</th></tr></thead><tbody id="tabelDaftarJadwal" class="divide-y"></tbody></table></div></div></div></div>
+            <div id="tabUserYayasan" class="space-y-6 hidden">
+                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 pb-4 border-b gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Manajemen Admin Pusat</h2>
+                            <p class="text-gray-500 text-sm mt-1">Kelola akun jenderal yang memiliki hak akses penuh ke Dasbor Yayasan ini.</p>
+                        </div>
+                        <button onclick="tambahUserYayasan()" class="w-full md:w-auto bg-rose-600 text-white hover:bg-rose-700 px-6 py-3 rounded-xl font-bold transition shadow-sm transform hover:-translate-y-1">
+                            ➕ Tambah Admin Pusat
+                        </button>
+                    </div>
 
+                    <div class="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-6 py-4 w-10 text-center">No</th>
+                                    <th class="px-6 py-4">Profil & Kredensial</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-center">Aksi Manajemen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelUserYayasan" class="divide-y divide-gray-100">
+                                <tr><td colspan="4" class="text-center py-10 text-gray-400">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -717,52 +751,50 @@
         };
 
         window.bukaTab = (t) => {
-    let tabs = ['tabDashboard','tabKomparasi','tabReview','tabSemuaSoal','tabKurikulum','tabSekolah','tabJadwal','tabPaket'];
-    let menus = ['menuDashboard','menuKomparasi','menuReview','menuSemuaSoal','menuKurikulum','menuSekolah','menuJadwal','menuPaket'];
-    
-    // 1. Sembunyikan semua tab konten
-    tabs.forEach(x => { let e = document.getElementById(x); if(e) e.classList.add('hidden'); });
-    
-    // 2. Kembalikan semua menu ke ukuran langsing (Tidak Aktif)
-    menus.forEach(x => { 
-        let e = document.getElementById(x); 
-        if(e) {
-            // Base class langsing (Ultra-Compact)
-            let baseClass = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs border border-transparent";
-            // Khusus menu Review V2, tambahkan justify-between agar badge merah tetap di kanan
-            if(x === 'menuReview') baseClass += " justify-between";
+            let tabs = ['tabDashboard','tabKomparasi','tabReview','tabSemuaSoal','tabKurikulum','tabSekolah','tabJadwal','tabPaket', 'tabUserYayasan'];
+            let menus = ['menuDashboard','menuKomparasi','menuReview','menuSemuaSoal','menuKurikulum','menuSekolah','menuJadwal','menuPaket', 'menuUserYayasan'];
             
-            e.className = `${baseClass} text-slate-400 hover:bg-slate-800 hover:text-slate-200`; 
-        }
-    });
-    
-    // 3. Tampilkan tab konten yang dituju
-    let targetTab = document.getElementById(t); 
-    if(targetTab) targetTab.classList.remove('hidden');
-    
-    // 4. Warnai menu yang sedang aktif dengan gaya kaca (Glass) yang langsing
-    let activeStyle = 'bg-teal-500/10 text-teal-400 border-teal-500/20'; // Default Teal
-    if (t === 'tabKurikulum') activeStyle = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'; // Kuning
-    if (t === 'tabPaket') activeStyle = 'bg-blue-500/10 text-blue-400 border-blue-500/20'; // Biru
+            // 1. Sembunyikan semua tab konten
+            tabs.forEach(x => { let e = document.getElementById(x); if(e) e.classList.add('hidden'); });
+            
+            // 2. Kembalikan semua menu ke ukuran langsing (Tidak Aktif)
+            menus.forEach(x => { 
+                let e = document.getElementById(x); 
+                if(e) {
+                    let baseClass = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs border border-transparent";
+                    if(x === 'menuReview') baseClass += " justify-between";
+                    e.className = `${baseClass} text-slate-400 hover:bg-slate-800 hover:text-slate-200`; 
+                }
+            });
+            
+            // 3. Tampilkan tab konten yang dituju
+            let targetTab = document.getElementById(t); 
+            if(targetTab) targetTab.classList.remove('hidden');
+            
+            // 4. Warnai menu yang sedang aktif
+            let activeStyle = 'bg-teal-500/10 text-teal-400 border-teal-500/20'; // Default Teal
+            if (t === 'tabKurikulum') activeStyle = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'; 
+            if (t === 'tabPaket') activeStyle = 'bg-blue-500/10 text-blue-400 border-blue-500/20'; 
+            if (t === 'tabUserYayasan') activeStyle = 'bg-rose-500/10 text-rose-400 border-rose-500/20'; // Khusus Yayasan
 
-    let activeMenu = document.getElementById('menu' + t.substring(3)); 
-    if(activeMenu) {
-        let baseActiveClass = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs font-medium border";
-        if(t === 'tabReview') baseActiveClass += " justify-between";
-        
-        activeMenu.className = `${baseActiveClass} ${activeStyle}`;
-    }
-    
-    // 5. Pemicu Penarikan Data (Data Fetching Triggers) - TIDAK ADA YANG DIUBAH
-    if(t === 'tabDashboard') window.muatDashboard();
-    if(t === 'tabKomparasi') jalankanMesinKomparasi();
-    if(t === 'tabKurikulum') { window.muatKurikulum(); window.muatJenisUjian(); }
-    if(t === 'tabReview') window.muatSoalPending();
-    if(t === 'tabSemuaSoal') window.muatSemuaSoal();
-    if(t === 'tabSekolah') window.muatDaftarSekolah();
-    if(t === 'tabPaket') { window.muatSemuaSoal(); window.muatDaftarPaket(); }
-    if(t === 'tabJadwal') { window.muatDaftarPaket(); window.muatJenisUjian(); window.muatDaftarJadwal(); }
-};
+            let activeMenu = document.getElementById('menu' + t.substring(3)); 
+            if(activeMenu) {
+                let baseActiveClass = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs font-medium border";
+                if(t === 'tabReview') baseActiveClass += " justify-between";
+                activeMenu.className = `${baseActiveClass} ${activeStyle}`;
+            }
+            
+            // 5. Pemicu Penarikan Data 
+            if(t === 'tabDashboard') window.muatDashboard();
+            if(t === 'tabKomparasi') jalankanMesinKomparasi();
+            if(t === 'tabKurikulum') { window.muatKurikulum(); window.muatJenisUjian(); }
+            if(t === 'tabReview') window.muatSoalPending();
+            if(t === 'tabSemuaSoal') window.muatSemuaSoal();
+            if(t === 'tabSekolah') window.muatDaftarSekolah();
+            if(t === 'tabPaket') { window.muatSemuaSoal(); window.muatDaftarPaket(); }
+            if(t === 'tabJadwal') { window.muatDaftarPaket(); window.muatJenisUjian(); window.muatDaftarJadwal(); }
+            if(t === 'tabUserYayasan') window.muatUserYayasan(); // Eksekusi penarikan data admin pusat
+        };
 
         window.muatDashboard = async () => {
             try {
@@ -2108,6 +2140,102 @@
                 }
             }
         });
+
+        // ==========================================
+        // 10. MANAJEMEN ADMIN PUSAT (YAYASAN)
+        // ==========================================
+        let dataUserYayasan = [];
+
+        window.muatUserYayasan = async () => {
+            let tb = document.getElementById('tabelUserYayasan');
+            if(tb) tb.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-rose-600 animate-pulse">Menarik data admin pusat...</td></tr>';
+            try {
+                const q = query(collection(db, "users"), where("sekolah_id", "==", "YAYASAN"));
+                const s = await getDocs(q);
+                dataUserYayasan = [];
+                s.forEach(d => { dataUserYayasan.push({id: d.id, ...d.data()}); });
+
+                let h = '';
+                dataUserYayasan.forEach((u, i) => {
+                    let isAktif = u.status !== 'nonaktif';
+                    let wBadge = isAktif ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+                    let tBadge = isAktif ? 'AKTIF' : 'NONAKTIF';
+                    let opacity = isAktif ? 'hover:bg-rose-50/50' : 'opacity-70 bg-gray-50';
+
+                    let btnAksi = isAktif ?
+                        `<button onclick="toggleStatusUserYayasan('${u.id}', 'nonaktif')" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-xl font-bold text-xs transition" title="Suspend Admin">🛑 Suspend</button>` :
+                        `<button onclick="toggleStatusUserYayasan('${u.id}', 'aktif')" class="bg-green-50 text-green-600 hover:bg-green-100 px-3 py-2 rounded-xl font-bold text-xs transition" title="Aktifkan Kembali">✅ Aktifkan</button>`;
+
+                    let btnSandi = `<button onclick="editPasswordUserPusat('${u.id}', '${u.nama.replace(/'/g, "\\'")}')" class="bg-orange-50 text-orange-600 hover:bg-orange-100 px-3 py-2 rounded-xl font-bold text-xs transition" title="Ganti Sandi">🔑 Sandi</button>`;
+
+                    h += `<tr class="border-b transition ${opacity}">
+                        <td class="px-6 py-4 text-center font-bold text-gray-400">${i+1}</td>
+                        <td class="px-6 py-4">
+                            <h3 class="text-base font-bold text-gray-800 tracking-wide">${u.nama}</h3>
+                            <p class="text-xs text-gray-500 font-medium mt-1">📧 ${u.email}</p>
+                            <span class="text-[10px] text-gray-400 font-mono mt-1 border px-2 py-0.5 rounded shadow-sm inline-block bg-white">Pass: ${u.password_info || '***'}</span>
+                        </td>
+                        <td class="px-6 py-4 text-center"><span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${wBadge}">${tBadge}</span></td>
+                        <td class="px-6 py-4 text-center"><div class="flex justify-center space-x-2">${btnSandi}${btnAksi}</div></td>
+                    </tr>`;
+                });
+                if(tb) tb.innerHTML = h || '<tr><td colspan="4" class="text-center py-10 text-gray-500 font-medium">Belum ada Admin Yayasan terdaftar.</td></tr>';
+            } catch(e) {
+                if(tb) tb.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-red-500 font-bold">Gagal memuat data.</td></tr>';
+            }
+        };
+
+        window.tambahUserYayasan = async () => {
+            const {value: f} = await Swal.fire({
+                title: '👑 Tambah Admin Pusat',
+                html: `
+                    <div class="space-y-3 text-left mt-2">
+                        <label class="block text-xs font-bold text-gray-600">Nama Lengkap</label>
+                        <input id="swal-nama-y" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Cth: Allam (Tim IT)">
+                        <label class="block text-xs font-bold text-gray-600">Username / Email</label>
+                        <input id="swal-user-y" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Cth: pusat.allam">
+                        <label class="block text-xs font-bold text-gray-600">Password</label>
+                        <input id="swal-pass-y" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Minimal 6 karakter">
+                    </div>
+                `,
+                focusConfirm: false, showCancelButton: true, confirmButtonColor: '#e11d48', confirmButtonText: '💾 Daftarkan Admin',
+                preConfirm: () => {
+                    let n = document.getElementById('swal-nama-y').value;
+                    let u = document.getElementById('swal-user-y').value;
+                    let p = document.getElementById('swal-pass-y').value;
+                    if(!n || !u || !p) { Swal.showValidationMessage('Semua kolom wajib diisi!'); return false; }
+                    return { nama: n, userRaw: u, pass: p };
+                }
+            });
+
+            if(f) {
+                Swal.fire({title: 'Menyiapkan Akses...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+                try {
+                    let cleanUser = f.userRaw.trim().toLowerCase();
+                    let emailLengkap = cleanUser.includes('@') ? cleanUser : cleanUser + '@smartkhairunnas.com';
+
+                    await createUserWithEmailAndPassword(authBayangan, emailLengkap, f.pass);
+                    await addDoc(collection(db, "users"), {
+                        nama: f.nama, email: emailLengkap, password_info: f.pass, role: 'admin_yayasan', sekolah_id: 'YAYASAN', status: 'aktif', dibuat_pada: new Date()
+                    });
+                    
+                    window.muatUserYayasan();
+                    Swal.fire('Berhasil Terdaftar!', 'Admin Pusat baru siap bertugas.', 'success');
+                } catch(e) { Swal.fire('Error', 'Gagal mendaftar. Username mungkin sudah terpakai.', 'error'); }
+            }
+        };
+
+        window.toggleStatusUserYayasan = async (id, statusBaru) => {
+            let teksJudul = statusBaru === 'nonaktif' ? 'Suspend Admin Ini?' : 'Aktifkan Admin?';
+            let warna = statusBaru === 'nonaktif' ? '#d33' : '#10b981';
+            
+            if((await Swal.fire({title: teksJudul, icon: 'warning', showCancelButton: true, confirmButtonColor: warna})).isConfirmed) {
+                Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
+                await updateDoc(doc(db, "users", id), { status: statusBaru });
+                window.muatUserYayasan();
+                Swal.close();
+            }
+        };
     </script>
 </body>
 
