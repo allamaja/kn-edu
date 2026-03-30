@@ -499,7 +499,41 @@
             </div>
         </div>
     </div>
-    <div id="modalImportUser" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4"><div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl flex flex-col relative overflow-hidden"><div class="bg-indigo-600 p-6 flex justify-between items-center text-white"><h3 class="text-xl font-bold">📥 Import Pengguna via Excel</h3><button onclick="tutupModalImportUser()" class="hover:text-indigo-200 text-3xl font-bold focus:outline-none">&times;</button></div><div class="p-6 space-y-4 bg-gray-50"><div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl"><button onclick="downloadTemplateExcel()" class="mt-2 text-xs font-bold bg-white text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg shadow-sm">⬇️ Download Template Excel</button></div><div><label class="block text-sm font-bold text-gray-700 mb-2">Upload File Excel (.xlsx)</label><input type="file" id="fileImportUser" accept=".xlsx, .xls" class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none"></div></div><div class="p-6 bg-white border-t flex justify-end"><button onclick="prosesImportExcel()" class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold w-full">🚀 Eksekusi Import</button></div></div></div>
+    <div id="modalImportUser" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl flex flex-col relative overflow-hidden">
+            <div class="bg-indigo-600 p-6 flex justify-between items-center text-white">
+                <h3 class="text-xl font-bold flex items-center"><span class="mr-2">📥</span> Import Pengguna (Excel)</h3>
+                <button onclick="tutupModalImportUser()" class="hover:text-indigo-200 text-3xl font-bold focus:outline-none transition">&times;</button>
+            </div>
+            
+            <div class="p-6 space-y-4 bg-gray-50 flex-1 overflow-y-auto">
+                <div class="bg-indigo-50 border border-indigo-200 p-4 md:p-5 rounded-xl mb-4 shadow-inner">
+                    <h4 class="font-bold text-indigo-800 mb-3">Panduan Import Pengguna:</h4>
+                    <ol class="list-decimal ml-4 text-xs md:text-sm text-indigo-700 space-y-1.5 font-medium mb-5">
+                        <li>Username <b>tidak boleh pakai spasi</b> (contoh: fahad.9a).</li>
+                        <li>Role hanya boleh: <b>siswa, guru,</b> atau <b>admin_sekolah</b>.</li>
+                        <li>Kolom Kelas <b>wajib diisi</b> khusus untuk siswa.</li>
+                        <li>Pastikan menggunakan format Template Resmi di bawah ini.</li>
+                        <li>Pastikan contoh nama di dalam file template dihapus sebelum upload.</li>
+                    </ol>
+                    <button onclick="downloadTemplateExcel()" class="text-xs md:text-sm font-bold bg-white text-indigo-600 border border-indigo-200 px-4 py-2.5 rounded-lg hover:bg-indigo-100 transition shadow-sm flex items-center">
+                        <span class="mr-2">⬇️</span> Download Template Excel
+                    </button>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Upload File Excel (.xlsx)</label>
+                    <input type="file" id="fileImportUser" accept=".xlsx, .xls" class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer transition">
+                </div>
+            </div>
+            
+            <div class="p-6 bg-white border-t">
+                <button onclick="prosesImportExcel()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition shadow-md flex items-center justify-center text-lg">
+                    <span class="mr-2">🚀</span> Eksekusi Import
+                </button>
+            </div>
+        </div>
+    </div>
     <div id="modalPaket" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl flex flex-col h-[90vh]">
             <div class="flex justify-between items-center p-6 border-b shrink-0">
@@ -958,15 +992,56 @@
         window.tutupModalImportUser = () => { document.getElementById('modalImportUser').classList.add('hidden'); };
         window.downloadTemplateExcel = () => { 
             if(typeof XLSX === 'undefined') return Swal.fire('Error', 'Library Excel belum dimuat.', 'error');
-            const d = [
-                ["Nama Lengkap", "Username", "Password", "Role (siswa/guru/admin_sekolah)", "Kelas (Khusus Siswa)", "Mapel Diampu (Khusus Guru)"], 
-                ["Siswa Teladan", "siswa.satu", "pass123", "siswa", "10", ""],
-                ["Budi Santoso", "guru.budi", "pass123", "guru", "", "Matematika SMA, Fisika SMA"], // Contoh multi-mapel
-                ["Siti Aminah", "guru.siti", "pass123", "guru", "", "Bahasa Indonesia SMA"]
+            
+            // ==========================================
+            // SHEET 1: TEMPLATE DATA (Bersih, siap isi)
+            // ==========================================
+            const dataTemplate = [
+                ["Nama Lengkap", "Username", "Password", "Role", "Kelas", "Mapel Diampu"], 
+                ["Fahad Al-Fatih", "siswa.fahad", "siswa123", "siswa", "9", ""],
+                ["Budi Santoso", "guru.budi", "guru123", "guru", "", "Matematika, Fisika"], 
+                ["Ahmad Dahlan", "admin.ahmad", "admin123", "admin_sekolah", "", ""]
             ]; 
-            const s = XLSX.utils.aoa_to_sheet(d), b = XLSX.utils.book_new(); 
-            XLSX.utils.book_append_sheet(b, s, "DataUser"); 
-            XLSX.writeFile(b, "Template_Import_User.xlsx"); 
+            const sheetTemplate = XLSX.utils.aoa_to_sheet(dataTemplate); 
+            
+            // Memperlebar ukuran kolom agar rapi saat dibuka di Excel
+            sheetTemplate['!cols'] = [
+                { wch: 25 }, // Nama Lengkap
+                { wch: 25 }, // Username
+                { wch: 15 }, // Password
+                { wch: 15 }, // Role
+                { wch: 10 }, // Kelas
+                { wch: 35 }  // Mapel Diampu
+            ];
+
+            // ==========================================
+            // SHEET 2: PETUNJUK & ATURAN PENGISIAN
+            // ==========================================
+            const dataPetunjuk = [
+                ["KOLOM", "ATURAN PENGISIAN (WAJIB DIBACA)"],
+                ["Nama Lengkap", "Tulis nama lengkap pengguna."],
+                ["Username", "Ketik tanpa spasi, gunakan huruf kecil (contoh: fahad.smp1). Jika Username sudah pernah dipakai, sistem akan menolak pendaftaran."],
+                ["Password", "Minimal 6 karakter. (Bisa menggunakan password seragam, misal: siswa123)."],
+                ["Role", "KETIK HURUF KECIL SEMUA. Pilih salah satu:\n1. siswa\n2. guru\n3. admin_sekolah"],
+                ["Kelas", "Hanya diisi jika Role = siswa. (Contoh: 7, 8, 9). Jika guru/admin, biarkan KOSONG."],
+                ["Mapel Diampu", "Hanya diisi jika Role = guru. Jika guru mengajar lebih dari 1 mapel, pisahkan dengan tanda KOMA (Contoh: Matematika, Bahasa Inggris)."],
+                ["PENTING", "Pastikan data contoh diatas dihapus sebelum menyimpan dan mengupload file Excel ini. Data contoh hanya sebagai panduan format saja."],
+                ["", ""],
+                ["⚠️ PENTING!", "JANGAN MENGUBAH / MENGHAPUS NAMA KOLOM DI BARIS PERTAMA PADA SHEET 'Template Data'."]
+            ];
+            const sheetPetunjuk = XLSX.utils.aoa_to_sheet(dataPetunjuk);
+            
+            // Styling kolom petunjuk
+            sheetPetunjuk['!cols'] = [ { wch: 20 }, { wch: 90 } ];
+
+            // ==========================================
+            // GABUNGKAN KE DALAM 1 FILE EXCEL
+            // ==========================================
+            const wb = XLSX.utils.book_new(); 
+            XLSX.utils.book_append_sheet(wb, sheetTemplate, "Template Data"); // Sheet 1
+            XLSX.utils.book_append_sheet(wb, sheetPetunjuk, "Petunjuk Pengisian"); // Sheet 2
+            
+            XLSX.writeFile(wb, "Template_Import_Pengguna.xlsx"); 
         };
 
         window.prosesImportExcel = () => {
