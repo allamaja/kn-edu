@@ -7,7 +7,7 @@
     <link href="style.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">    
@@ -57,7 +57,7 @@
                 <button onclick="bukaTab('tabBankSoal')" id="menuBankSoal" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
                     <span class="w-5 text-center mr-2">📚</span> Karya Soal
                 </button>
-                <button onclick="bukaTab('tabPaket')" id="menuPaket" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                                <button onclick="bukaTab('tabPaket')" id="menuPaket" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
                     <span class="w-5 text-center mr-2">📦</span> Rakit Paket
                 </button>
             </div>
@@ -65,6 +65,9 @@
                 <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Evaluasi</p>
                 <button onclick="bukaTab('tabNilai')" id="menuNilai" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
                     <span class="w-5 text-center mr-2">📈</span> Data Nilai
+                </button>
+                <button onclick="bukaTab('tabAnalitik')" id="menuAnalitik" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2">📊</span> Analisis Kelas
                 </button>
             </div>
         </nav>
@@ -124,18 +127,28 @@
                     <form id="formTulisSoal" class="space-y-6">
                         <input type="hidden" id="inputIdSoal"> 
                         
-                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 bg-orange-50 p-5 rounded-2xl border border-orange-100">
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 bg-orange-50 p-5 rounded-2xl border border-orange-100">
                             <div><label class="block text-xs font-bold text-orange-800 mb-1">Mata Pelajaran</label><select id="inputMapel" required class="w-full px-3 py-2 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white dinamis-mapel"></select></div>
                             <div><label class="block text-xs font-bold text-orange-800 mb-1">Sub Bab</label><select id="inputBab" required class="w-full px-3 py-2 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white" disabled><option value="">Pilih Mapel</option></select></div>
                             <div><label class="block text-xs font-bold text-orange-800 mb-1">Kelas</label><select id="inputKelas" required class="w-full px-3 py-2 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white dinamis-kelas"></select></div>
                             <div>
                                 <label class="block text-xs font-bold text-blue-800 mb-1 border-b border-orange-200 pb-0.5">🔥 Jenis Soal</label>
                                 <select id="inputTipeSoal" onchange="ubahUIJenisSoal()" required class="w-full px-3 py-2 border border-blue-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-blue-50 font-bold text-blue-800">
-                                    <option value="pg">Pilihan Ganda (1 Jawaban)</option>
-                                    <option value="pg_kompleks">PG Kompleks (Banyak Jawaban)</option>
+                                    <option value="pg">Pilihan Ganda</option>
+                                    <option value="pg_kompleks">PG Kompleks</option>
                                     <option value="essay">Uraian / Essay</option>
                                 </select>
                             </div>
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-purple-800 mb-1 border-b border-orange-200 pb-0.5">⭐ Kesulitan</label>
+                                <select id="inputKesulitan" required class="w-full px-3 py-2 border border-purple-300 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 text-sm bg-purple-50 font-bold text-purple-800">
+                                    <option value="Mudah">Mudah</option>
+                                    <option value="Sedang" selected>Sedang</option>
+                                    <option value="Sulit">Sulit</option>
+                                </select>
+                            </div>
+
                             <div><label class="block text-xs font-bold text-orange-800 mb-1">Target</label><select id="inputKuadran" required class="w-full px-3 py-2 border border-orange-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white"><option value="Lokal">Lokal (Sekolah)</option><option value="Latihan">Latihan Bebas</option><option value="Global">Global (Pusat)</option></select></div>
                         </div>
 
@@ -198,6 +211,61 @@
                         <button onclick="bukaModalBuatPaket()" class="bg-orange-500 text-white font-bold px-6 py-3 rounded-xl shadow-md transition">+ Buat Paket</button>
                     </div>
                     <div id="kontainerPaket" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+            </div>
+            <div id="tabAnalitik" class="space-y-6 hidden">
+                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-6 pb-4 border-b">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">📊 Analisis Hasil Belajar</h2>
+                            <p class="text-gray-500 text-sm mt-1">Evaluasi performa siswa dan kualitas butir soal yang Anda berikan.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6 flex flex-col md:flex-row gap-4 items-end">
+                        <div class="flex-1 w-full">
+                            <label class="block text-xs font-bold text-blue-800 mb-1">Pilih Ujian / Latihan yang Tersedia</label>
+                            <select id="pilihUjianAnalisisGuru" class="w-full px-4 py-3 border border-blue-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm font-bold text-gray-700"></select>
+                        </div>
+                        <button onclick="jalankanAnalisisGuru()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm w-full md:w-auto shrink-0 transform hover:-translate-y-1">
+                            🚀 Mulai Analisis
+                        </button>
+                    </div>
+
+                    <div id="kontainerHasilAnalisisGuru" class="hidden space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl">👥</div>
+                                <div><p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Partisipan</p><h4 class="text-2xl font-black text-gray-800" id="statPartisipanGuru">0</h4></div>
+                            </div>
+                            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-2xl">🎯</div>
+                                <div><p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Rata-Rata Nilai</p><h4 class="text-2xl font-black text-gray-800" id="statRataRataGuru">0</h4></div>
+                            </div>
+                            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-2xl">⚠️</div>
+                                <div><p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Soal Killer / Sulit</p><h4 class="text-2xl font-black text-gray-800" id="statSoalKillerGuru">0</h4></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+                                <h3 class="text-sm font-bold text-gray-700 mb-4 border-b pb-2">📈 Distribusi Nilai Siswa</h3>
+                                <div class="flex-1 w-full relative min-h-[250px]"><canvas id="grafikDistribusiGuru"></canvas></div>
+                            </div>
+
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+                                <div class="p-5 border-b bg-gray-50 flex justify-between items-center rounded-t-2xl">
+                                    <h3 class="text-sm font-bold text-gray-700">🔍 Evaluasi Butir Soal</h3>
+                                </div>
+                                <div class="overflow-y-auto max-h-[300px] p-2">
+                                    <table class="w-full text-sm text-left text-gray-600">
+                                        <tbody id="tabelAnalisisButirGuru" class="divide-y divide-gray-100"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -467,8 +535,8 @@
         });
 
        window.bukaTab = (t) => {
-    let tabs = ['tabDashboard','tabBuatSoal','tabBankSoal','tabPaket','tabNilai'];
-    let menus = ['menuDashboard','menuBuatSoal','menuBankSoal','menuPaket','menuNilai'];
+    let tabs = ['tabDashboard','tabBuatSoal','tabBankSoal','tabPaket','tabNilai','tabAnalitik'];
+    let menus = ['menuDashboard','menuBuatSoal','menuBankSoal','menuPaket','menuNilai','menuAnalitik'];
 
     tabs.forEach(id => { let e = document.getElementById(id); if(e) e.classList.add('hidden'); });
     
@@ -489,6 +557,7 @@
     if(t === 'tabBankSoal') window.muatBankSoalPribadi();
     if(t === 'tabPaket') { window.muatBankSoalGlobalLokal(); window.muatDaftarPaketLokal(); }
     if(t === 'tabNilai') window.muatDataNilai();
+    if(t === 'tabAnalitik') window.muatDataAnalitikGuru();
 };
 
         // ==========================================
@@ -689,19 +758,19 @@
         document.getElementById('formTulisSoal')?.addEventListener('submit', async e => {
             e.preventDefault();
             let t = document.getElementById('inputTipeSoal').value, kT = quillPertanyaan.root.innerHTML, kB = quillPembahasan.root.innerHTML;
+            let tk = document.getElementById('inputKesulitan').value; // <-- BACA NILAI KESULITAN
             
-            // Validasi kosong
             if (quillPertanyaan.getText().trim().length === 0 && !kT.includes('<img') && !kT.includes('<span class="ql-formula"')) 
                 return Swal.fire('Oops', 'Pertanyaan kosong!', 'warning');
             if (kT.length > 500000) return Swal.fire('Gambar Besar!', 'Maksimal 500KB.', 'error');
-        
+
             let aO = [];
             let vD = false;
             
             if (t === 'pg' || t === 'pg_kompleks') {
                 document.querySelectorAll('.input-kunci-dinamis').forEach((el, i) => {
                     let h = ['A', 'B', 'C', 'D'][i];
-                    let tO = mapQuillOpsi[h].root.innerHTML; // PIPA DATA BARU (Baca dari Quill)
+                    let tO = mapQuillOpsi[h].root.innerHTML; 
                     let iB = el.checked;
                     if (iB) vD = true;
                     aO.push({ label: h, teks: tO, benar: iB });
@@ -710,15 +779,17 @@
             } else if (t === 'essay') {
                 vD = true;
             }
-        
+
             let id = document.getElementById('inputIdSoal').value;
             let py = {
-                tipe_soal: t, pertanyaan: kT, opsi: aO, pembahasan: kB,
+                tipe_soal: t, 
+                kesulitan: tk, // <-- SIMPAN KE FIREBASE
+                pertanyaan: kT, opsi: aO, pembahasan: kB,
                 kuadran: document.getElementById('inputKuadran').value, status: 'pending_review',
                 pembuat_id: profilGuru.nama, pembuat_email: profilGuru.email, sekolah_id: profilGuru.sekolah_id,
                 metadata: { mapel: document.getElementById('inputMapel').value, sub_bab: document.getElementById('inputBab').value, kelas: document.getElementById('inputKelas').value, jenjang: profilGuru.jenjang }
             };
-        
+
             Swal.fire({ title: 'Mengirim...', didOpen: () => Swal.showLoading() });
             try {
                 if (id === "") {
@@ -737,16 +808,18 @@
             document.getElementById('formTulisSoal').reset();
             document.getElementById('inputIdSoal').value = "";
             
-            // Reset semua 6 Editor
             quillPertanyaan.root.innerHTML = "";
             quillPembahasan.root.innerHTML = "";
-            ['A','B','C','D'].forEach(h => mapQuillOpsi[h].root.innerHTML = ""); 
+            ['A','B','C','D'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; }); 
             
             document.getElementById('inputBab').innerHTML = '<option value="">Pilih Mapel</option>';
             document.getElementById('inputBab').disabled = true;
+            
+            document.getElementById('inputKesulitan').value = "Sedang"; // <-- RESET KE DEFAULT
+
             document.getElementById('judulFormSoal').innerText = "✨ Tulis Pertanyaan Baru V2";
             document.getElementById('btnKirimSoal').innerHTML = "🚀 Kirim Soal";
-            document.getElementById('btnBatalEdit').classList.add('hidden');
+            let btnBatal = document.getElementById('btnBatalEdit'); if(btnBatal) btnBatal.classList.add('hidden');
             window.ubahUIJenisSoal();
         };
         window.muatBankSoalPribadi=async()=>{const tb=document.getElementById('tabelSoalSaya');if(tb)tb.innerHTML='<tr><td colspan="4" class="text-center py-8">Menarik arsip...</td></tr>';try{const s=await getDocs(query(collection(db,"bank_soal"),where("sekolah_id","==",profilGuru.sekolah_id),where("pembuat_email","==",profilGuru.email)));soalPribadi=[];s.forEach(d=>soalPribadi.push({id:d.id,...d.data()}));let h='';soalPribadi.forEach(d=>{let w=d.status==='aktif'?'bg-green-100 text-green-700':(d.status==='ditolak'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700');let dt=document.createElement("div");dt.innerHTML=d.pertanyaan;let tp=dt.textContent||dt.innerText||"";let bt=d.tipe_soal==='essay'?'📝 ESSAY':(d.tipe_soal==='pg_kompleks'?'☑️ PG KOMPLEKS':'🔘 PG');h+=`<tr class="border-b hover:bg-orange-50"><td class="px-6 py-4"><span class="px-2 py-1 rounded text-[10px] font-black uppercase block mb-1 w-max ${w}">${d.status.replace('_',' ')}</span><span class="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-2 rounded uppercase tracking-widest block w-max">${bt}</span></td><td class="px-6 py-4 text-xs font-bold text-gray-700">${d.metadata?.mapel||'-'}<br><span class="font-normal text-orange-600">Kls: ${d.metadata?.kelas||'-'}</span></td><td class="px-6 py-4"><div class="line-clamp-2 text-sm text-gray-600 italic">"${tp}"</div></td><td class="px-6 py-4 text-center"><button onclick="editSoalSaya('${d.id}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-1 transition">✏️ Edit</button><button onclick="hapusSoalSaya('${d.id}')" class="text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition">🗑️</button></td></tr>`;});if(tb)tb.innerHTML=h||'<tr><td colspan="4" class="text-center py-8 text-gray-400 border-2 border-dashed rounded-xl m-4">Belum ada karya soal.</td></tr>';window.updateStatistik();}catch(e){}};
@@ -767,12 +840,15 @@
             document.getElementById('inputKelas').value = s.metadata?.kelas || "";
             document.getElementById('inputKuadran').value = s.kuadran || "Lokal";
             document.getElementById('inputTipeSoal').value = s.tipe_soal || "pg";
+            
+            let ekes = document.getElementById('inputKesulitan'); 
+            if(ekes) ekes.value = s.kesulitan || "Sedang"; // <-- TARIK DATA DARI FIREBASE
+            
             window.ubahUIJenisSoal();
             
             quillPertanyaan.root.innerHTML = s.pertanyaan || "";
             quillPembahasan.root.innerHTML = s.pembahasan || "";
             
-            // PIPA DATA BARU (Kirim data Firebase ke Quill Opsi)
             if (s.opsi && Array.isArray(s.opsi)) {
                 s.opsi.forEach(op => {
                     if(mapQuillOpsi[op.label]) mapQuillOpsi[op.label].root.innerHTML = op.teks;
@@ -781,7 +857,6 @@
                     });
                 });
             } else {
-                // Fallback untuk format database versi lama
                 ['A', 'B', 'C', 'D'].forEach(h => {
                     if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = s['opsi_' + h.toLowerCase()] || "";
                 });
@@ -790,7 +865,7 @@
             
             document.getElementById('judulFormSoal').innerText = "✏️ Revisi Karya V2";
             document.getElementById('btnKirimSoal').innerHTML = "💾 Ajukan Ulang";
-            document.getElementById('btnBatalEdit').classList.remove('hidden');
+            let btnBatal = document.getElementById('btnBatalEdit'); if(btnBatal) btnBatal.classList.remove('hidden');
             window.bukaTab('tabBuatSoal');
         };
         window.hapusSoalSaya=id=>{Swal.fire({title:'Hapus Soal?',icon:'warning',showCancelButton:true,confirmButtonColor:'#d33'}).then(async r=>{if(r.isConfirmed){await deleteDoc(doc(db,"bank_soal",id));window.muatBankSoalPribadi();}});};
@@ -830,14 +905,119 @@
                 }
             }
         }); 
+        // ==========================================
+        // MESIN ANALITIK KHUSUS GURU
+        // ==========================================
+        let dataHasilUjianGuru = [];
+        let chartDistribusiGuru = null;
+
+        window.muatDataAnalitikGuru = async () => {
+            let sel = document.getElementById('pilihUjianAnalisisGuru');
+            sel.innerHTML = '<option>Memuat data ujian...</option>';
+            
+            try {
+                // Tarik hasil ujian dari sekolah tempat guru bernaung
+                const snap = await getDocs(query(collection(db, "hasil_ujian"), where("sekolah_id", "==", profilGuru.sekolah_id)));
+                dataHasilUjianGuru = [];
+                snap.forEach(d => dataHasilUjianGuru.push({id: d.id, ...d.data()}));
+                
+                // Ambil daftar ujian yang unik
+                let unikUjian = [...new Set(dataHasilUjianGuru.map(item => item.id_jadwal + "|||" + item.nama_ujian))];
+                let html = '<option value="">-- Pilih Ujian Yang Telah Selesai dikerjakan --</option>';
+                unikUjian.forEach(u => { 
+                    let [id_j, nama] = u.split("|||"); 
+                    html += `<option value="${id_j}">${nama}</option>`; 
+                });
+                sel.innerHTML = html || '<option value="">Belum ada siswa yang mengerjakan ujian</option>';
+            } catch(e) { sel.innerHTML = '<option value="">Gagal memuat data</option>'; }
+        };
+
+        window.jalankanAnalisisGuru = () => {
+            let idJadwal = document.getElementById('pilihUjianAnalisisGuru').value;
+            if(!idJadwal) return Swal.fire('Pilih Ujian', 'Silakan pilih jadwal dari dropdown.', 'warning');
+
+            let dataUjianIni = dataHasilUjianGuru.filter(x => x.id_jadwal === idJadwal);
+            let totalPartisipan = dataUjianIni.length;
+            if(totalPartisipan === 0) return Swal.fire('Kosong', 'Belum ada siswa yang mengerjakan.', 'info');
+
+            let acuanSoal = dataUjianIni[0].rekam_soal;
+            if(!acuanSoal) return Swal.fire('Error', 'Data ujian ini menggunakan sistem lama tanpa rekam soal.', 'error');
+
+            // 1. Hitung Rata-Rata Kelas & Distribusi Histogram
+            let totalNilai = 0;
+            let distribusi = { '0-20':0, '21-40':0, '41-60':0, '61-80':0, '81-100':0 };
+            
+            dataUjianIni.forEach(s => {
+                let n = s.nilai_akhir || 0;
+                totalNilai += n;
+                if(n<=20) distribusi['0-20']++; else if(n<=40) distribusi['21-40']++; else if(n<=60) distribusi['41-60']++; else if(n<=80) distribusi['61-80']++; else distribusi['81-100']++;
+            });
+            document.getElementById('statRataRataGuru').innerText = Math.round(totalNilai/totalPartisipan);
+            document.getElementById('statPartisipanGuru').innerText = totalPartisipan;
+
+            // Render Grafik Chart.js
+            const ctx = document.getElementById('grafikDistribusiGuru').getContext('2d');
+            if(chartDistribusiGuru) chartDistribusiGuru.destroy();
+            chartDistribusiGuru = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: ['0-20', '21-40', '41-60', '61-80', '81-100'], datasets: [{ label: 'Siswa', data: Object.values(distribusi), backgroundColor: '#3b82f6', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+
+            // 2. Analisis Butir Soal (Ekspektasi vs Fakta)
+            let analisis = [];
+            for(let i=0; i<acuanSoal.length; i++) { analisis.push({ no: i+1, tipe: acuanSoal[i].tipe_soal || 'pg', targetKesulitan: acuanSoal[i].kesulitan || 'Sedang', benar: 0, salah: 0, kosong: 0 }); }
+
+            dataUjianIni.forEach(siswa => {
+                let jwbArr = siswa.rekam_jawaban || {};
+                acuanSoal.forEach((soal, i) => {
+                    let jwb = jwbArr[i]; let tipe = soal.tipe_soal || 'pg';
+                    if(tipe === 'pg_kompleks') {
+                        if (!jwb || jwb.length === 0) analisis[i].kosong++;
+                        else {
+                            let kunciBenarArr = soal.opsi.filter(o => o.benar).map(o => o.label).sort(); let jwbSiswaArr = [...jwb].sort();
+                            if(JSON.stringify(kunciBenarArr) === JSON.stringify(jwbSiswaArr)) analisis[i].benar++; else analisis[i].salah++;
+                        }
+                    } else if (tipe === 'essay') {
+                        if (!jwb || jwb.trim() === "") analisis[i].kosong++; else analisis[i].benar++;
+                    } else {
+                        if (!jwb) analisis[i].kosong++; else {
+                            let kunciMurni = soal.kunci; if(soal.opsi && Array.isArray(soal.opsi)) kunciMurni = (soal.opsi.find(o => o.benar) || {}).label;
+                            if (jwb === kunciMurni) analisis[i].benar++; else analisis[i].salah++;
+                        }
+                    }
+                });
+            });
+
+            let htmlTable = ''; let countSulit = 0;
+            analisis.forEach(res => {
+                let persenSalah = Math.round((res.salah / totalPartisipan) * 100) || 0, persenBenar = Math.round((res.benar / totalPartisipan) * 100) || 0, persenKosong = Math.round((res.kosong / totalPartisipan) * 100) || 0;
+                
+                let faktaLevel = '<span class="text-blue-600 font-bold">Normal</span>', barColor = 'bg-blue-500';
+                if(res.tipe !== 'essay') {
+                    if(persenSalah >= 70) { faktaLevel = '<span class="text-red-600 font-bold">⚠️ Killer / Terlalu Sulit</span>'; barColor = 'bg-red-500'; countSulit++; }
+                    else if(persenBenar >= 80) { faktaLevel = '<span class="text-green-600 font-bold">Terlalu Mudah</span>'; barColor = 'bg-green-500'; }
+                } else { faktaLevel = '<span class="text-purple-600 font-bold">Esai (Nilai Manual)</span>'; barColor = 'bg-purple-500'; }
+
+                let warnaTarget = res.targetKesulitan === 'Sulit' ? 'bg-red-100 text-red-700' : (res.targetKesulitan === 'Mudah' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700');
+
+                htmlTable += `<tr class="hover:bg-blue-50 border-b transition">
+                    <td class="px-4 py-3 text-center font-black text-gray-400 w-10">${res.no}</td>
+                    <td class="px-4 py-3 w-1/2">
+                        <div class="flex justify-between text-[10px] font-bold text-gray-500 mb-1"><span>✅ ${persenBenar}%</span><span>❌ ${persenSalah}%</span><span>⬜ ${persenKosong}%</span></div>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden flex"><div class="${barColor} h-1.5" style="width: ${persenBenar}%"></div><div class="bg-gray-400 h-1.5" style="width: ${persenSalah}%"></div><div class="bg-gray-200 h-1.5" style="width: ${persenKosong}%"></div></div>
+                    </td>
+                    <td class="px-4 py-3 text-left">
+                        <div class="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-0.5">Target Desain: <span class="px-1.5 py-0.5 rounded ${warnaTarget}">${res.targetKesulitan}</span></div>
+                        <div class="text-xs font-medium text-gray-700 mt-1">Fakta Kelas: ${faktaLevel}</div>
+                    </td>
+                </tr>`;
+            });
+
+            document.getElementById('tabelAnalisisButirGuru').innerHTML = htmlTable;
+            document.getElementById('statSoalKillerGuru').innerText = countSulit;
+            document.getElementById('kontainerHasilAnalisisGuru').classList.remove('hidden');
+        };
     </script>
 </body>
-
 </html>
-
-
-
-
-
-
-
