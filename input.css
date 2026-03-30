@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@source "./"; /* Ini pengganti config.js, menyuruh Tailwind memindai semua file HTML di folder ini */
+
+/* ========================================== */
+/* CUSTOM CSS SMARTKHAIRUNNAS (QUILL & KATEX) */
+/* ========================================== */
+
+body { user-select: none; -webkit-user-select: none; } 
+input, textarea { user-select: text; -webkit-user-select: text; } 
+
+.grid-nav::-webkit-scrollbar { width: 6px; } 
+.grid-nav::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+#areaSoalOpsi { transition: font-size 0.3s ease-in-out; }
+
+.ql-editor { padding: 0 !important; font-family: inherit !important; font-size: inherit !important; line-height: 1.7; }
+.ql-editor p { margin-bottom: 0.5rem; }
+.ql-formula { display: inline-block; background: #f8fafc; padding: 0.1rem 0.3rem; border-radius: 0.25rem; border: 1px solid #e2e8f0; }
+
+#panelCatatan { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
