@@ -425,7 +425,7 @@
                     <div><label class="block text-xs font-bold mb-1 text-teal-800">Sub Bab</label><select id="editBab" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white"><option value="-">-</option></select></div>
                     <div><label class="block text-xs font-bold mb-1 text-teal-800">Jenjang</label><select id="editJenjang" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white"><option value="SMA">SMA</option><option value="SMP">SMP</option><option value="SD">SD</option></select></div>
                     <div><label class="block text-xs font-bold mb-1 text-teal-800">Kelas</label><select id="editKelas" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12" selected>12</option></select></div>
-                    <div><label class="block text-xs font-bold mb-1 text-blue-800">🔥 Jenis Soal</label><select id="editTipeSoal" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-blue-400 bg-blue-50 font-bold text-blue-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"><option value="pg">Pilihan Ganda</option><option value="pg_kompleks">PG Kompleks</option><option value="essay">Uraian / Essay</option></select></div>
+                    <div><label class="block text-xs font-bold mb-1 text-blue-800">🔥 Jenis Soal</label><select id="editTipeSoal" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-blue-400 bg-blue-50 font-bold text-blue-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"><option value="pg">Pilihan Ganda</option><option value="pg_kompleks">PG Kompleks</option><option value="pgk_matriks">PGK Matriks (B-S / S-TS)</option><option value="essay">Uraian / Essay</option></select></div>
                     <div><label class="block text-xs font-bold mb-1 text-purple-700">⭐ Kesulitan</label><select id="editKesulitan" class="w-full p-2 border border-purple-300 bg-purple-50 font-bold text-purple-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-purple-500"><option value="Mudah">Mudah</option><option value="Sedang" selected>Sedang</option><option value="Sulit">Sulit</option></select></div>
                     <div class="col-span-2 md:col-span-3 lg:col-span-6"><label class="block text-xs font-bold mb-1 text-teal-800">Kuadran (Hak Akses)</label><select id="editKuadran" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none bg-white"><option value="Global">Global (Untuk Ujian Pusat)</option><option value="Lokal">Lokal (Untuk Sekolah Tertentu)</option><option value="Latihan">Latihan (Siswa bisa akses bebas)</option></select></div>
                 </div>
@@ -435,13 +435,77 @@
                     <div id="editorPertanyaan" class="editor-soal"></div>
                 </div>
                 
+                <div class="grid grid-cols-2 gap-4 mb-4 bg-gray-100 p-4 rounded-xl border border-gray-200">
+                    <div>
+                        <label class="block text-xs font-bold mb-1 text-gray-700">Jumlah Pilihan / Pernyataan</label>
+                        <select id="editJumlahOpsi" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm">
+                            <option value="3">3 Baris (A - C)</option>
+                            <option value="4" selected>4 Baris (A - D)</option>
+                            <option value="5">5 Baris (A - E)</option>
+                        </select>
+                    </div>
+                    <div id="wadahHeaderMatriks" class="hidden">
+                        <label class="block text-xs font-bold mb-1 text-gray-700">Teks Pilihan Matriks</label>
+                        <select id="editHeaderMatriks" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm">
+                            <option value="Benar|Salah">Benar / Salah</option>
+                            <option value="Sesuai|Tidak Sesuai">Sesuai / Tidak Sesuai</option>
+                            <option value="Akurat|Tidak Akurat">Akurat / Tidak Akurat</option>
+                            <option value="Fakta|Opini">Fakta / Opini</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div id="areaOpsiJawaban" class="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
-                    <div class="flex justify-between items-center border-b pb-2 mb-2"><label class="block text-sm font-bold text-gray-700">Pilihan Jawaban & Kunci</label><span class="text-xs text-gray-500 font-medium" id="petunjukOpsi">Pilih 1 bulatan biru sebagai kunci.</span></div>
+                    <div class="flex justify-between items-center border-b pb-2 mb-2">
+                        <label class="block text-sm font-bold text-gray-700" id="labelJudulOpsi">Pilihan Jawaban & Kunci</label>
+                        <span class="text-xs text-white bg-blue-500 px-2 py-1 rounded font-bold shadow-sm" id="petunjukOpsi">Pilih 1 bulatan biru sebagai kunci.</span>
+                    </div>
                     
-                    <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="editKunci" value="A" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">A</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiA" class="min-h-[60px]"></div></div></div>
-                    <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="editKunci" value="B" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">B</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiB" class="min-h-[60px]"></div></div></div>
-                    <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="editKunci" value="C" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">C</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiC" class="min-h-[60px]"></div></div></div>
-                    <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="editKunci" value="D" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">D</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiD" class="min-h-[60px]"></div></div></div>
+                    <div class="baris-opsi flex items-start space-x-3" data-idx="0" data-huruf="A">
+                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="A" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
+                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">A</span>
+                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiA" class="min-h-[60px]"></div></div>
+                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_0" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_0" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                        </div>
+                    </div>
+                    <div class="baris-opsi flex items-start space-x-3" data-idx="1" data-huruf="B">
+                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="B" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
+                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">B</span>
+                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiB" class="min-h-[60px]"></div></div>
+                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_1" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_1" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                        </div>
+                    </div>
+                    <div class="baris-opsi flex items-start space-x-3" data-idx="2" data-huruf="C">
+                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="C" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
+                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">C</span>
+                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiC" class="min-h-[60px]"></div></div>
+                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_2" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_2" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                        </div>
+                    </div>
+                    <div class="baris-opsi flex items-start space-x-3" data-idx="3" data-huruf="D">
+                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="D" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
+                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">D</span>
+                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiD" class="min-h-[60px]"></div></div>
+                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_3" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_3" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                        </div>
+                    </div>
+                    <div class="baris-opsi flex items-start space-x-3" data-idx="4" data-huruf="E">
+                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="E" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
+                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">E</span>
+                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiE" class="min-h-[60px]"></div></div>
+                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_4" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_4" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mt-2 pt-4 border-t border-gray-100">
@@ -621,12 +685,13 @@
         let quillPertanyaan = new Quill('#editorPertanyaan', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Ketik teks pertanyaan atau rumus di sini...' });
         let quillPembahasan = new Quill('#editorPembahasan', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Ketik kunci rubrik / penjelasan di sini...' });
 
-        let quillOpsiA = new Quill('#editorOpsiA', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan A' });
-        let quillOpsiB = new Quill('#editorOpsiB', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan B' });
-        let quillOpsiC = new Quill('#editorOpsiC', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan C' });
-        let quillOpsiD = new Quill('#editorOpsiD', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan D' });
+        let quillOpsiA = new Quill('#editorOpsiA', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan A / Pernyataan 1' });
+        let quillOpsiB = new Quill('#editorOpsiB', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan B / Pernyataan 2' });
+        let quillOpsiC = new Quill('#editorOpsiC', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan C / Pernyataan 3' });
+        let quillOpsiD = new Quill('#editorOpsiD', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan D / Pernyataan 4' });
+        let quillOpsiE = new Quill('#editorOpsiE', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan E / Pernyataan 5' });
 
-        const mapQuillOpsi = { 'A': quillOpsiA, 'B': quillOpsiB, 'C': quillOpsiC, 'D': quillOpsiD };
+        const mapQuillOpsi = { 'A': quillOpsiA, 'B': quillOpsiB, 'C': quillOpsiC, 'D': quillOpsiD, 'E': quillOpsiE};
 
         // --- SISTEM KOMPRESI SILUMAN (MAX 1 MB + CANVAS COMPRESSION) ---
         const prosesKompresiGambar = (quillObj) => {
@@ -671,24 +736,65 @@
 
         window.ubahUIJenisSoalAdmin = () => {
             let tipe = document.getElementById('editTipeSoal').value;
+            let jumlahOpsi = parseInt(document.getElementById('editJumlahOpsi').value);
+            let hMatriks = document.getElementById('editHeaderMatriks').value.split('|'); // [0]=Benar, [1]=Salah
+
             let areaOpsi = document.getElementById('areaOpsiJawaban');
+            let wadahHeaderMatriks = document.getElementById('wadahHeaderMatriks');
             let petunjuk = document.getElementById('petunjukOpsi');
-            let inputDinamis = document.querySelectorAll('.input-kunci-dinamis');
+            let judulOpsi = document.getElementById('labelJudulOpsi');
+            
+            let semuaBaris = document.querySelectorAll('.baris-opsi');
 
             if (tipe === 'essay') {
                 areaOpsi.style.display = 'none';
+                wadahHeaderMatriks.style.display = 'none';
             } else {
                 areaOpsi.style.display = 'block';
-                if (tipe === 'pg') {
-                    petunjuk.innerText = 'Pilih 1 bulatan biru sebagai kunci.';
-                    inputDinamis.forEach(el => { el.type = 'radio'; el.name = 'editKunci'; });
-                } else if (tipe === 'pg_kompleks') {
-                    petunjuk.innerText = 'Centang jawaban benar (Bisa lebih dari 1).';
-                    inputDinamis.forEach(el => { el.type = 'checkbox'; el.name = 'editKunciKompleks'; });
+                
+                // 1. Tampilkan baris sesuai jumlah (3, 4, atau 5)
+                semuaBaris.forEach((baris, idx) => {
+                    if(idx < jumlahOpsi) baris.style.display = 'flex';
+                    else baris.style.display = 'none';
+                });
+
+                // 2. Modifikasi Tampilan Berdasarkan Tipe
+                if (tipe === 'pg' || tipe === 'pg_kompleks') {
+                    wadahHeaderMatriks.style.display = 'none';
+                    judulOpsi.innerText = "Pilihan Jawaban & Kunci";
+                    petunjuk.innerText = tipe === 'pg' ? "Pilih 1 bulatan biru sebagai kunci." : "Centang kotak kunci (Bisa > 1).";
+                    petunjuk.className = "text-xs text-white bg-blue-500 px-2 py-1 rounded font-bold shadow-sm";
+
+                    semuaBaris.forEach(baris => {
+                        baris.querySelector('.kontrol-standar').style.display = 'block';
+                        baris.querySelector('.kontrol-matriks').style.display = 'none';
+                        baris.querySelector('.label-huruf').innerText = baris.getAttribute('data-huruf'); // A, B, C...
+                        baris.querySelector('.label-huruf').className = "font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center";
+                        
+                        let inputStandar = baris.querySelector('.input-kunci-dinamis');
+                        inputStandar.type = tipe === 'pg' ? 'radio' : 'checkbox';
+                        inputStandar.name = tipe === 'pg' ? 'editKunci' : 'editKunciKompleks';
+                    });
+                } 
+                else if (tipe === 'pgk_matriks') {
+                    wadahHeaderMatriks.style.display = 'block';
+                    judulOpsi.innerText = "Daftar Pernyataan & Kunci Matriks";
+                    petunjuk.innerText = `Pilih ${hMatriks[0]} / ${hMatriks[1]} tiap baris.`;
+                    petunjuk.className = "text-xs text-white bg-purple-500 px-2 py-1 rounded font-bold shadow-sm";
+
+                    semuaBaris.forEach((baris, idx) => {
+                        baris.querySelector('.kontrol-standar').style.display = 'none';
+                        baris.querySelector('.kontrol-matriks').style.display = 'flex';
+                        baris.querySelector('.label-huruf').innerText = (idx + 1).toString(); // 1, 2, 3...
+                        baris.querySelector('.label-huruf').className = "font-black text-purple-600 text-2xl pt-1.5 label-huruf w-5 text-center";
+                        
+                        // Update teks tombol matriks (Benar/Salah, dll)
+                        baris.querySelector('.label-kiri').innerText = hMatriks[0];
+                        baris.querySelector('.label-kanan').innerText = hMatriks[1];
+                    });
                 }
             }
         };
-
         // ==========================================
         // 3. OTENTIKASI & MANAJEMEN TAB
         // ==========================================
@@ -896,6 +1002,13 @@
                     let mapelPilihan = e.target.value;
                     let elBab = document.getElementById(cfg.target); 
                     
+                    // TAMBAHKAN PELINDUNG INI: Jika targetnya tidak ada di HTML, jangan dilanjutkan
+                    if(!elBab) {
+                        if(cfg.id === 'filterMapel') window.applyFilterSoal(); 
+                        if(cfg.id === 'filterMapelPaket') window.renderPilihanSoal();
+                        return; 
+                    }
+
                     elBab.innerHTML = (cfg.id === 'editMapel') ? '<option value="-">-</option>' : '<option value="">Semua Bab</option>'; 
                     
                     if(!mapelPilihan && cfg.id !== 'editMapel') {
@@ -912,7 +1025,6 @@
                 }); 
             }
         });
-
         window.muatJenisUjian = async () => {
             try {
                 const s = await getDocs(collection(db, "master_ujian"));
@@ -1400,15 +1512,7 @@
             });
         };
 
-        // Modal Editor Super V2
-        window.tutupModalEditor = () => { 
-            document.getElementById('editIdSoal').value = ""; document.getElementById('editAsalTab').value = "";
-            quillPertanyaan.root.innerHTML = ""; quillPembahasan.root.innerHTML = "";
-            ['A','B','C','D'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; });
-            document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = false);
-            document.getElementById('modalEditor').classList.add('hidden'); 
-        };
-        
+        // Modal Editor Super V2        
         window.bukaModalTambahSoal = () => {
             document.getElementById('editIdSoal').value = ""; 
             document.getElementById('editAsalTab').value = "tambah"; 
@@ -1445,73 +1549,146 @@
             quillPembahasan.root.innerHTML = s.pembahasan || ""; 
             
             document.getElementById('editTipeSoal').value = s.tipe_soal || "pg"; 
-            let ekes = document.getElementById('editKesulitan'); if(ekes) ekes.value = s.kesulitan || "Sedang"; // BACA KESULITAN
+            if(document.getElementById('editKesulitan')) document.getElementById('editKesulitan').value = s.kesulitan || "Aplikasi";
+            
+            // Membaca Jumlah Opsi & Header Matriks dari Database
+            let jumlahOpsi = 4;
+            if(s.opsi && Array.isArray(s.opsi)) {
+                jumlahOpsi = s.opsi.length;
+                if(jumlahOpsi < 3) jumlahOpsi = 3; if(jumlahOpsi > 5) jumlahOpsi = 5; // Batasan aman 3-5
+            }
+            document.getElementById('editJumlahOpsi').value = jumlahOpsi.toString();
+            
+            if (s.tipe_soal === 'pgk_matriks' && s.opsi[0]?.header) {
+                document.getElementById('editHeaderMatriks').value = s.opsi[0].header;
+            }
+
+            // Panggil fungsi UI agar layar menyesuaikan
             window.ubahUIJenisSoalAdmin();
 
-            // PIPA DATA BARU V2
+            // Ekstrak Opsi / Pernyataan ke dalam Editor
+            let huruf = ['A','B','C','D','E'];
             if (s.opsi && Array.isArray(s.opsi)) {
-                s.opsi.forEach(op => {
-                    if(mapQuillOpsi[op.label]) mapQuillOpsi[op.label].root.innerHTML = op.teks;
-                    document.querySelectorAll('.input-kunci-dinamis').forEach(el => { if (el.value === op.label) el.checked = op.benar; });
+                s.opsi.forEach((op, index) => {
+                    if(index >= 5) return; // Maksimal 5
+                    let hrf = huruf[index];
+                    mapQuillOpsi[hrf].root.innerHTML = op.teks;
+                    
+                    if (s.tipe_soal === 'pgk_matriks') {
+                        let radioKiri = document.querySelector(`.baris-opsi[data-idx="${index}"] .input-matriks-kiri`);
+                        let radioKanan = document.querySelector(`.baris-opsi[data-idx="${index}"] .input-matriks-kanan`);
+                        radioKiri.checked = (op.benar === 'Kiri');
+                        radioKanan.checked = (op.benar === 'Kanan');
+                    } else {
+                        let chk = document.querySelector(`.baris-opsi[data-idx="${index}"] .input-kunci-dinamis`);
+                        chk.checked = op.benar;
+                    }
                 });
             } else {
+                // Skema Backward Compatibility (Jika soal lama cuma punya opsi_a, opsi_b)
                 ['A','B','C','D'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = s['opsi_'+h.toLowerCase()] || ""; });
                 document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = (el.value === s.kunci));
             }
 
+            // Isi Metadata
             document.getElementById('editMapel').value = s.metadata?.mapel || ""; 
             let eb = document.getElementById('editBab'); 
             if(eb) {
                 eb.innerHTML = '<option value="-">-</option>'; 
                 let o = dataKurikulumGlobal.find(m => m.nama_mapel === s.metadata?.mapel); 
                 if(o?.sub_bab) o.sub_bab.forEach(b => eb.innerHTML += `<option value="${b}">${b}</option>`); 
-                if(eb) eb.value = s.metadata?.sub_bab || "-"; 
+                eb.value = s.metadata?.sub_bab || "-"; 
             }
+            if(document.getElementById('editJenjang')) document.getElementById('editJenjang').value = s.metadata?.jenjang || "SMA"; 
+            if(document.getElementById('editKelas')) document.getElementById('editKelas').value = s.metadata?.kelas || "12"; 
+            if(document.getElementById('editKuadran')) document.getElementById('editKuadran').value = s.kuadran || "Global"; 
             
-            let ej = document.getElementById('editJenjang'); if(ej) ej.value = s.metadata?.jenjang || "SMA"; 
-            let ek = document.getElementById('editKelas'); if(ek) ek.value = s.metadata?.kelas || "12"; 
-            let eq = document.getElementById('editKuadran'); if(eq) eq.value = s.kuadran || "Global"; 
-            
+            // Ekstrak Metadata Kurikulum Nasional (Jika Ada)
+            if(document.getElementById('editElemen')) document.getElementById('editElemen').value = s.metadata?.elemen || "";
+            if(document.getElementById('editKonteks')) document.getElementById('editKonteks').value = s.metadata?.konteks || "";
+            if(document.getElementById('editIndikator')) document.getElementById('editIndikator').value = s.metadata?.indikator || "";
+
             let btn = document.getElementById('btnHijauModal'); if(btn) btn.innerText = a === 'review' ? "✅ Simpan & ACC" : "💾 Simpan Perubahan"; 
             let btnTolak = document.getElementById('btnTolakModal'); if(btnTolak) { if(a === 'review') btnTolak.classList.remove('hidden'); else btnTolak.classList.add('hidden'); }
             document.getElementById('modalEditor').classList.remove('hidden');
         };
 
+        window.tutupModalEditor = () => { 
+            document.getElementById('editIdSoal').value = ""; document.getElementById('editAsalTab').value = "";
+            quillPertanyaan.root.innerHTML = ""; quillPembahasan.root.innerHTML = "";
+            ['A','B','C','D','E'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; });
+            
+            // Reset semua ceklis & radio
+            document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = false);
+            document.querySelectorAll('.input-matriks-kiri, .input-matriks-kanan').forEach(el => el.checked = false);
+            
+            document.getElementById('modalEditor').classList.add('hidden'); 
+        };
+
         window.aksiSimpanDariModal = async () => {
             let tipe = document.getElementById('editTipeSoal').value;
-            let tk = document.getElementById('editKesulitan') ? document.getElementById('editKesulitan').value : "Sedang";
+            let jumlahOpsi = parseInt(document.getElementById('editJumlahOpsi').value);
+            let hMatriks = document.getElementById('editHeaderMatriks').value; 
+            
             let kontenTanya = quillPertanyaan.root.innerHTML;
             let kontenBahas = quillPembahasan.root.innerHTML;
 
             if(quillPertanyaan.getText().trim().length === 0 && !kontenTanya.includes('<img') && !kontenTanya.includes('<span class="ql-formula"')) return Swal.fire('Oops', 'Pertanyaan tidak boleh kosong!', 'warning');
 
             let arrayOpsi = []; let isValid = false;
+            let huruf = ['A','B','C','D','E'];
+
             if (tipe === 'pg' || tipe === 'pg_kompleks') {
-                document.querySelectorAll('.input-kunci-dinamis').forEach((el, index) => {
-                    let hrf = ['A', 'B', 'C', 'D'][index];
-                    let teksOpsi = mapQuillOpsi[hrf].root.innerHTML; // PIPA DATA V2
-                    let isBenar = el.checked;
-                    if (isBenar) isValid = true;
-                    arrayOpsi.push({ label: hrf, teks: teksOpsi, benar: isBenar });
-                });
-                if (!isValid) return Swal.fire('Oops', 'Anda harus memilih minimal 1 kunci jawaban!', 'warning');
-            } else if (tipe === 'essay') { isValid = true; }
+                for(let i=0; i<jumlahOpsi; i++) {
+                    let hrf = huruf[i];
+                    let isBenar = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-kunci-dinamis`).checked;
+                    if(isBenar) isValid = true;
+                    arrayOpsi.push({ label: hrf, teks: mapQuillOpsi[hrf].root.innerHTML, benar: isBenar });
+                }
+                if (!isValid) return Swal.fire('Oops', 'Pilih minimal 1 kunci jawaban!', 'warning');
+            } 
+            else if (tipe === 'pgk_matriks') {
+                for(let i=0; i<jumlahOpsi; i++) {
+                    let hrf = huruf[i];
+                    // Cek radio mana yang diklik (Kiri / Kanan) pada baris ini
+                    let radioKiri = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-matriks-kiri`);
+                    let radioKanan = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-matriks-kanan`);
+                    let kunciMatriks = radioKiri.checked ? 'Kiri' : (radioKanan.checked ? 'Kanan' : null);
+                    
+                    if(!kunciMatriks) return Swal.fire('Oops', `Anda belum menentukan kunci (Benar/Salah) untuk Pernyataan ke-${i+1}`, 'warning');
+                    
+                    arrayOpsi.push({ 
+                        label: (i+1).toString(), // Menyimpan "1", "2", "3"
+                        teks: mapQuillOpsi[hrf].root.innerHTML, 
+                        benar: kunciMatriks, 
+                        header: hMatriks // Menyimpan "Benar|Salah" dsb.
+                    });
+                }
+                isValid = true;
+            } 
+            else if (tipe === 'essay') { isValid = true; arrayOpsi = []; }
 
             let i = document.getElementById('editIdSoal').value, a = document.getElementById('editAsalTab').value;
             Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
             
             try {
-                let ej = document.getElementById('editJenjang') ? document.getElementById('editJenjang').value : "SMA";
-                let eq = document.getElementById('editKuadran') ? document.getElementById('editKuadran').value : "Global";
-                
                 let py = { 
                     tipe_soal: tipe, 
-                    kesulitan: tk,
                     pertanyaan: kontenTanya, 
                     opsi: arrayOpsi, 
                     pembahasan: kontenBahas, 
-                    kuadran: eq, 
-                    metadata: { mapel: document.getElementById('editMapel').value, sub_bab: document.getElementById('editBab').value, jenjang: ej, kelas: document.getElementById('editKelas').value } 
+                    kuadran: document.getElementById('editKuadran') ? document.getElementById('editKuadran').value : "Global", 
+                    kesulitan: document.getElementById('editKesulitan') ? document.getElementById('editKesulitan').value : "Sedang",
+                    metadata: { 
+                        mapel: document.getElementById('editMapel').value, 
+                        sub_bab: document.getElementById('editBab').value, 
+                        jenjang: document.getElementById('editJenjang') ? document.getElementById('editJenjang').value : "SMA", 
+                        kelas: document.getElementById('editKelas').value,
+                        // Jika Anda sudah menambahkan kolom format Word (Elemen, Konteks, Indikator), masukkan di sini
+                        elemen: document.getElementById('editElemen') ? document.getElementById('editElemen').value : "",
+                        konteks: document.getElementById('editKonteks') ? document.getElementById('editKonteks').value : "",
+                        indikator: document.getElementById('editIndikator') ? document.getElementById('editIndikator').value : ""
+                    } 
                 };
                 
                 if(i === "") { 
@@ -1523,7 +1700,7 @@
                 }
                 
                 window.tutupModalEditor(); 
-                Swal.fire({title: 'Berhasil!', icon: 'success', timer: 1000, showConfirmButton: false}); 
+                Swal.fire({title: 'Tersimpan!', icon: 'success', timer: 1000, showConfirmButton: false}); 
                 if(a === 'review') window.muatSoalPending(); else window.muatSemuaSoal();
             } catch(e) { Swal.fire('Error', 'Gagal menyimpan data.', 'error'); }
         };
