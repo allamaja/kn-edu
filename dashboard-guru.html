@@ -1008,12 +1008,194 @@
 
        window.hapusSoalSaya = id => { Swal.fire({title:'Hapus Soal?', icon:'warning', showCancelButton:true, confirmButtonColor:'#d33'}).then(async r => { if(r.isConfirmed){ await deleteDoc(doc(db,"bank_soal",id)); window.muatBankSoalPribadi(); }}); };
 
-        // FITUR IMPORT EXCEL AUTO-UPGRADE V2
-        window.dataPreviewImport=[];window.bukaModalImportSoal=()=>{window.kembaliStep1Import();document.getElementById('modalImportSoal').classList.remove('hidden');};window.tutupModalImportSoal=()=>{document.getElementById('modalImportSoal').classList.add('hidden');};window.kembaliStep1Import=()=>{document.getElementById('fileImportSoal').value='';document.getElementById('step1Import').classList.remove('hidden');document.getElementById('footerStep1').classList.remove('hidden');document.getElementById('step2Import').classList.add('hidden');document.getElementById('footerStep2').classList.add('hidden');window.dataPreviewImport=[];};
-        window.downloadTemplateSoal=()=>{if(typeof XLSX==='undefined')return Swal.fire('Error','Library Excel belum dimuat.','error');const d=[["Pertanyaan","Opsi A","Opsi B","Opsi C","Opsi D","Kunci (A/B/C/D)","Pembahasan","Mapel","Bab","Kelas","Target (Lokal/Latihan)"],["Ibukota Indonesia?","Surabaya","Jakarta","Bandung","Medan","B","Jakarta jelas ibukota","Geografi","Wilayah","10","Lokal"]];const s=XLSX.utils.aoa_to_sheet(d),b=XLSX.utils.book_new();XLSX.utils.book_append_sheet(b,s,"DataSoal");XLSX.writeFile(b,"Template_Soal_Guru.xlsx");};
-        window.prosesBacaExcel=()=>{let f=document.getElementById('fileImportSoal');if(!f||!f.files.length)return Swal.fire('Oops','Pilih file!','warning');let r=new FileReader();r.onload=async e=>{try{let d=new Uint8Array(e.target.result),b=XLSX.read(d,{type:'array'}),s=b.Sheets[b.SheetNames[0]],a=XLSX.utils.sheet_to_json(s);if(a.length===0)return Swal.fire('Kosong','Tidak ada data.','info');window.dataPreviewImport=[];let h='';let vC=0;for(const[i,rw]of a.entries()){let p=rw["Pertanyaan"],k=(rw["Kunci (A/B/C/D)"]||"").toString().trim().toUpperCase();if(p&&['A','B','C','D'].includes(k)){let aO=[{label:'A',teks:rw["Opsi A"]||"",benar:k==='A'},{label:'B',teks:rw["Opsi B"]||"",benar:k==='B'},{label:'C',teks:rw["Opsi C"]||"",benar:k==='C'},{label:'D',teks:rw["Opsi D"]||"",benar:k==='D'}],py={tipe_soal:'pg',pertanyaan:`<p>${p}</p>`,opsi:aO,pembahasan:`<p>${rw["Pembahasan"]||"-"}</p>`,kuadran:rw["Target (Lokal/Latihan)"]||"Lokal",metadata:{mapel:rw["Mapel"]||"",sub_bab:rw["Bab"]||"-",kelas:(rw["Kelas"]||"10").toString()}};window.dataPreviewImport.push({id_t:i,data:py,v:true});h+=`<label class="flex items-start p-3 border border-indigo-100 bg-indigo-50/30 rounded-xl cursor-pointer hover:bg-indigo-50"><input type="checkbox" value="${i}" class="cek-import-soal w-5 h-5 mt-1 text-indigo-600 rounded" checked><div class="ml-3"><p class="text-sm font-bold line-clamp-1">${p}</p><p class="text-[10px] text-gray-500 uppercase mt-1">Mapel: ${rw["Mapel"]||'-'} | Kunci: ${k}</p></div></label>`;vC++;}else{window.dataPreviewImport.push({id_t:i,data:null,v:false});h+=`<div class="flex items-start p-3 border border-red-200 bg-red-50 rounded-xl opacity-70"><input type="checkbox" disabled class="w-5 h-5 mt-1 rounded"><div class="ml-3"><p class="text-sm font-bold text-red-800 line-clamp-1">${p||'(Kosong)'}</p><p class="text-[10px] text-red-600 font-bold uppercase mt-1">❌ Format Salah</p></div></div>`;}}document.getElementById('listPreviewImport').innerHTML=h;document.getElementById('infoJumlahPreview').innerText=`${vC} Valid dari ${a.length}`;document.getElementById('step1Import').classList.add('hidden');document.getElementById('footerStep1').classList.add('hidden');document.getElementById('step2Import').classList.remove('hidden');document.getElementById('footerStep2').classList.remove('hidden');}catch(er){Swal.fire('Error','Format salah.','error');}};r.readAsArrayBuffer(f.files[0]);};
-        window.eksekusiSimpanImport=async()=>{let l=document.querySelectorAll('.cek-import-soal:checked');if(l.length===0)return Swal.fire('Tunggu','Belum menceklis soal!','warning');Swal.fire({title:`Mengunggah ${l.length} Soal...`,allowOutsideClick:false,didOpen:()=>Swal.showLoading()});let sC=0,fC=0;for(let c of l){let idx=parseInt(c.value),item=window.dataPreviewImport.find(x=>x.id_t===idx);if(item&&item.v){let py=item.data;py.status='pending_review';py.pembuat_id=profilGuru.nama;py.pembuat_email=profilGuru.email;py.sekolah_id=profilGuru.sekolah_id;py.metadata.jenjang=profilGuru.jenjang;py.dibuat_pada=new Date();try{await addDoc(collection(db,"bank_soal"),py);sC++;}catch(er){fC++;}}}window.tutupModalImportSoal();Swal.fire('Berhasil!',`<b>${sC} Soal di-upload</b>.<br>${fC>0?`<span class="text-red-500">${fC} gagal.</span>`:''}`,'success');window.muatBankSoalPribadi();};
+        // ==========================================
+        // FITUR IMPORT SOAL EXCEL V2 (KHUSUS GURU)
+        // ==========================================
+        window.dataPreviewImport = [];
 
+        window.bukaModalImportSoal = () => { 
+            window.kembaliStep1Import(); 
+            document.getElementById('modalImportSoal').classList.remove('hidden'); 
+        };
+        window.tutupModalImportSoal = () => { document.getElementById('modalImportSoal').classList.add('hidden'); };
+
+        window.kembaliStep1Import = () => {
+            document.getElementById('fileImportSoal').value = ''; 
+            document.getElementById('step1Import').classList.remove('hidden');
+            document.getElementById('footerStep1').classList.remove('hidden');
+            document.getElementById('step2Import').classList.add('hidden');
+            document.getElementById('footerStep2').classList.add('hidden');
+            window.dataPreviewImport = [];
+        };
+
+        window.downloadTemplateSoal = () => {
+            if(typeof XLSX === 'undefined') return Swal.fire('Error', 'Library Excel belum dimuat.', 'error');
+            
+            // SHEET 1: TEMPLATE DATA
+            const headerRow = [
+                "Pertanyaan", "Jenis Soal", "Jumlah Pilihan", "Opsi A", "Opsi B", "Opsi C", "Opsi D", "Opsi E", "Kunci Jawaban", "Header Matriks", "Pembahasan", 
+                "Mapel", "Bab", "Kelas", "Target", "Kesulitan"
+            ];
+            
+            const contohPG = [
+                "Ibukota provinsi Jawa Timur adalah?", "pg", 5, "Surabaya", "Jakarta", "Bandung", "Medan", "Semarang", "A", "", "Surabaya adalah ibukota Jatim.", 
+                "Geografi", "Wilayah", "10", "Lokal", "Mudah"
+            ];
+
+            const dataTemplate = [headerRow, contohPG]; 
+            const sheetTemplate = XLSX.utils.aoa_to_sheet(dataTemplate); 
+            sheetTemplate['!cols'] = [ { wch: 40 }, { wch: 15 }, { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 35 }, { wch: 15 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 15 } ];
+
+            // SHEET 2: BUKU PANDUAN
+            const dataPetunjuk = [
+                ["KOLOM", "ATURAN PENGISIAN & CONTOH"],
+                ["Pertanyaan", "Ketik teks soal. \n• RUMUS: Apit tanda dolar ganda (Contoh: $$x^2 + y$$). \n• GAMBAR: Gunakan format [IMG: link_gambar.jpg] \n• HYBRID: Kosongkan jika ingin copas (Snipping Tool) dari Word ke Web Editor."],
+                ["Jenis Soal", "WAJIB DIISI! Ketik: 'pg', 'pg_kompleks', 'pgk_matriks', atau 'essay'."],
+                ["Jumlah Pilihan", "Ketik angka 3, 4, atau 5. Jika 'pgk_matriks', ini menentukan jumlah baris pernyataan."],
+                ["Opsi A - E", "Isi teks jawaban. Jika 'pgk_matriks', Opsi A = Pernyataan 1, Opsi B = Pernyataan 2, dst."],
+                ["Kunci Jawaban", "• pg 👉 Isi 1 huruf (Cth: B)\n• pg_kompleks 👉 Pisah koma (Cth: A, C)\n• pgk_matriks 👉 Ketik Kiri/Kanan, pisah koma (Cth: Kiri, Kanan, Kiri)"],
+                ["Header Matriks", "HANYA JIKA pgk_matriks. Format: TeksKiri|TeksKanan (Cth: Benar|Salah, Sesuai|Tidak Sesuai)."],
+                ["Mapel, Bab, Kelas", "Data identitas soal. (Catatan: Jenjang soal otomatis disesuaikan dengan profil sekolah Anda)."],
+                ["Target", "Ketik 'Lokal' (Untuk ujian resmi sekolah) atau 'Latihan' (Untuk kuis mandiri siswa)."],
+                ["⚠️ PENTING!", "Hapus baris data contoh (baris ke-2) sebelum mengunggah file ini ke sistem! JANGAN MENGUBAH baris 1."]
+            ];
+            
+            const sheetPetunjuk = XLSX.utils.aoa_to_sheet(dataPetunjuk);
+            sheetPetunjuk['!cols'] = [ { wch: 25 }, { wch: 110 } ];
+            for (let i = 1; i < dataPetunjuk.length; i++) {
+                let cellRef = XLSX.utils.encode_cell({c: 1, r: i});
+                if(sheetPetunjuk[cellRef]) sheetPetunjuk[cellRef].s = { alignment: { wrapText: true, vertical: 'top' } };
+            }
+
+            const wb = XLSX.utils.book_new(); 
+            XLSX.utils.book_append_sheet(wb, sheetTemplate, "Template Soal");
+            XLSX.utils.book_append_sheet(wb, sheetPetunjuk, "Buku Panduan"); 
+            XLSX.writeFile(wb, "Template_Bank_Soal_Guru_V2.xlsx");
+        };
+
+        window.prosesBacaExcel = () => {
+            let f = document.getElementById('fileImportSoal'); 
+            if(!f || !f.files.length) return Swal.fire('Oops', 'Pilih file Excel terlebih dahulu!', 'warning');
+            
+            let r = new FileReader();
+            r.onload = async e => {
+                try {
+                    let d = new Uint8Array(e.target.result), b = XLSX.read(d, {type: 'array'});
+                    let targetSheet = b.SheetNames.includes("Template Soal") ? "Template Soal" : b.SheetNames[0];
+                    let s = b.Sheets[targetSheet];
+                    let a = XLSX.utils.sheet_to_json(s);
+                    
+                    if(a.length === 0) return Swal.fire('Kosong', 'Tidak ada data di file Excel.', 'info');
+                    
+                    window.dataPreviewImport = [];
+                    let h = ''; let validCount = 0;
+
+                    for(const [index, rw] of a.entries()){
+                        let tTanya = rw["Pertanyaan"];
+                        let jenisSoal = (rw["Jenis Soal"] || "pg").toString().trim().toLowerCase(); 
+                        let k = (rw["Kunci Jawaban"] || "").toString().trim().toUpperCase();
+                        
+                        let jmlOpsi = parseInt(rw["Jumlah Pilihan"]) || 4;
+                        if (jmlOpsi < 3) jmlOpsi = 3; if (jmlOpsi > 5) jmlOpsi = 5;
+                        let hurufAktif = ['A','B','C','D','E'].slice(0, jmlOpsi); 
+                        
+                        const konversiRichText = (teksAsli) => {
+                            if(!teksAsli) return ""; let teks = String(teksAsli);
+                            teks = teks.replace(/\$\$(.*?)\$\$/g, '<span class="ql-formula" data-value="$1">$1</span>');
+                            teks = teks.replace(/\[IMG:\s*(.*?)\]/g, '<img src="$1" alt="Gambar" style="max-width: 100%; border-radius: 8px; margin: 10px 0;">');
+                            return `<p>${teks}</p>`;
+                        };
+
+                        let isValid = false; let pesanError = ""; let arrayOpsiV2 = [];
+
+                        if(!tTanya && jenisSoal !== 'essay' && !rw["Opsi A"]) {
+                            pesanError = "Baris kosong / Pertanyaan tidak ada.";
+                        } else if(jenisSoal === 'pg') {
+                            if(hurufAktif.includes(k)) {
+                                isValid = true;
+                                hurufAktif.forEach(hrf => { arrayOpsiV2.push({ label: hrf, teks: konversiRichText(rw["Opsi "+hrf]), benar: k === hrf }); });
+                            } else { pesanError = `Kunci PG harus salah satu dari: ${hurufAktif.join(', ')}.`; }
+                        } else if(jenisSoal === 'pg_kompleks') {
+                            let kunciArr = k.split(',').map(x => x.trim());
+                            if(kunciArr.length > 0 && kunciArr.every(x => hurufAktif.includes(x))) {
+                                isValid = true;
+                                hurufAktif.forEach(hrf => { arrayOpsiV2.push({ label: hrf, teks: konversiRichText(rw["Opsi "+hrf]), benar: kunciArr.includes(hrf) }); });
+                            } else { pesanError = "Kunci PG Kompleks harus sesuai dengan jumlah pilihan."; }
+                        } else if(jenisSoal === 'pgk_matriks') {
+                            let kunciArr = k.split(',').map(x => x.trim()); 
+                            let headerMatriks = rw["Header Matriks"] || "Benar|Salah";
+                            if(kunciArr.length === jmlOpsi) {
+                                isValid = true;
+                                hurufAktif.forEach((hrf, i) => {
+                                    let jwbKiriKanan = (kunciArr[i] === 'Kanan') ? 'Kanan' : 'Kiri'; 
+                                    arrayOpsiV2.push({ label: (i+1).toString(), teks: konversiRichText(rw["Opsi "+hrf]), benar: jwbKiriKanan, header: headerMatriks });
+                                });
+                            } else { pesanError = `Jumlah kunci (${kunciArr.length}) tidak sama dengan Jumlah Baris (${jmlOpsi}).`; }
+                        } else if(jenisSoal === 'essay') {
+                            isValid = true; arrayOpsiV2 = []; 
+                        } else { pesanError = "Jenis Soal tidak dikenali."; }
+
+                        // JIKA VALID, BUAT PAYLOAD KHUSUS GURU
+                        if(isValid) {
+                            let py = { 
+                                tipe_soal: jenisSoal, pertanyaan: konversiRichText(tTanya), opsi: arrayOpsiV2, pembahasan: konversiRichText(rw["Pembahasan"]), 
+                                kuadran: rw["Target"] || rw["Target (Global/Lokal/Latihan)"] || "Lokal", 
+                                kesulitan: rw["Kesulitan"] || "Sedang",
+                                
+                                // INI KUNCI PENTING: Otomatis diset sebagai pending dan mengunci identitas Guru
+                                status: "pending_review",
+                                pembuat_id: profilGuru.nama,
+                                pembuat_email: profilGuru.email,
+                                sekolah_id: profilGuru.sekolah_id,
+                                
+                                metadata: { 
+                                    mapel: rw["Mapel"] || "", sub_bab: rw["Bab"] || "-", 
+                                    jenjang: profilGuru.jenjang || "SMA", 
+                                    kelas: (rw["Kelas"] || "10").toString() 
+                                } 
+                            };
+                            
+                            window.dataPreviewImport.push({ id_temp: index, data: py, valid: true });
+                            h += `<label class="flex items-start p-3 border border-indigo-100 bg-indigo-50/30 rounded-xl cursor-pointer hover:bg-indigo-50 transition"><input type="checkbox" value="${index}" class="cek-import-soal w-5 h-5 mt-1 text-indigo-600 rounded" checked><div class="ml-3"><p class="text-sm font-bold text-gray-800 line-clamp-2">${tTanya || '(Soal Gambar/Hybrid)'}</p><p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">MAPEL: ${rw["Mapel"]||'-'} | OPSI: ${jmlOpsi} | TIPE: ${jenisSoal.replace('_', ' ')} | KUNCI: ${k || 'ESSAY'}</p></div></label>`;
+                            validCount++;
+                        } else {
+                            window.dataPreviewImport.push({ id_temp: index, data: null, valid: false });
+                            h += `<div class="flex items-start p-3 border border-red-200 bg-red-50 rounded-xl opacity-70"><input type="checkbox" disabled class="w-5 h-5 mt-1 rounded border-red-300"><div class="ml-3"><p class="text-sm font-bold text-red-800 line-clamp-1">${tTanya || '(Baris Kosong)'}</p><p class="text-[10px] text-red-600 font-bold uppercase tracking-widest mt-1">❌ ${pesanError}</p></div></div>`;
+                        }
+                    }
+                    
+                    document.getElementById('listPreviewImport').innerHTML = h;
+                    document.getElementById('infoJumlahPreview').innerText = `${validCount} Valid dari ${a.length} Baris`;
+                    
+                    document.getElementById('step1Import').classList.add('hidden'); document.getElementById('footerStep1').classList.add('hidden'); document.getElementById('step2Import').classList.remove('hidden'); document.getElementById('footerStep2').classList.remove('hidden');
+                } catch(er) { Swal.fire('Error', 'Format Excel salah atau header tabel diubah.', 'error'); }
+            };
+            r.readAsArrayBuffer(f.files[0]);
+        };
+
+        window.eksekusiSimpanImport = async () => {
+            let listCek = document.querySelectorAll('.cek-import-soal:checked');
+            if(listCek.length === 0) return Swal.fire('Tunggu', 'Anda belum menceklis soal satupun!', 'warning');
+
+            Swal.fire({title: `Mengunggah ${listCek.length} Soal...`, allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            
+            let suksesCount = 0; let failCount = 0;
+            for(let cek of listCek) {
+                let idx = parseInt(cek.value);
+                let item = window.dataPreviewImport.find(x => x.id_temp === idx);
+                if(item && item.valid) {
+                    let py = item.data;
+                    py.dibuat_pada = new Date();
+                    try { await addDoc(collection(db, "bank_soal"), py); suksesCount++; } 
+                    catch(er) { failCount++; }
+                }
+            }
+
+            window.tutupModalImportSoal();
+            Swal.fire('Berhasil!', `<b>${suksesCount} Soal ter-upload</b> dan masuk antrean Review Admin.<br>${failCount > 0 ? `<span class="text-red-500">${failCount} gagal jaringan.</span>` : ''}`, 'success');
+            
+            window.muatBankSoalPribadi(); // Segarkan tabel karya soal
+        };
         window.muatBankSoalGlobalLokal=async()=>{const sg=await getDocs(query(collection(db,"bank_soal"),where("kuadran","==","Global"),where("status","==","aktif"))),sl=await getDocs(query(collection(db,"bank_soal"),where("sekolah_id","==",profilGuru.sekolah_id),where("status","==","aktif")));dataSoalSeluruhnya=[];sg.forEach(d=>dataSoalSeluruhnya.push({id:d.id,...d.data()}));sl.forEach(d=>dataSoalSeluruhnya.push({id:d.id,...d.data()}));};
         window.muatDaftarPaketLokal=async()=>{const s=await getDocs(query(collection(db,"paket_soal"),where("sekolah_id","==",profilGuru.sekolah_id)));dataPaketLokal=[];let h='';s.forEach(d=>{let p=d.data();p.id=d.id;dataPaketLokal.push(p);h+=`<div class="bg-white border border-gray-200 p-6 rounded-3xl relative group hover:shadow-md transition"><button onclick="hapusPaket('${p.id}')" class="absolute top-4 right-4 text-red-400 hover:text-red-600 hidden group-hover:block transition">&times;</button><h3 class="text-lg font-black text-gray-800">${p.nama_paket}</h3><p class="text-sm mt-2 text-gray-600"><b>${p.soal_ids?.length||0}</b> Butir Soal</p></div>`;});let k=document.getElementById('kontainerPaket');if(k)k.innerHTML=h||'<p class="col-span-3 text-center text-gray-400 border-2 border-dashed rounded-xl py-10">Belum ada paket ujian yang dirakit.</p>';};
         window.bukaModalBuatPaket=()=>{document.getElementById('namaPaketBaru').value="";pilihanSoalSementara.clear();window.renderPilihanSoal();document.getElementById('modalPaket').classList.remove('hidden');};window.tutupModalPaket=()=>{document.getElementById('modalPaket').classList.add('hidden');};
