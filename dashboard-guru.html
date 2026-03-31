@@ -136,6 +136,7 @@
                                 <select id="inputTipeSoal" onchange="ubahUIJenisSoal()" required class="w-full px-3 py-2 border border-blue-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-blue-50 font-bold text-blue-800">
                                     <option value="pg">Pilihan Ganda</option>
                                     <option value="pg_kompleks">PG Kompleks</option>
+                                    <option value="pgk_matriks">PGK Matriks (B-S / S-TS)</option>
                                     <option value="essay">Uraian / Essay</option>
                                 </select>
                             </div>
@@ -160,15 +161,77 @@
                             <div id="editorPertanyaan" class="editor-soal"></div>
                         </div>
 
+                        <div class="grid grid-cols-2 gap-4 mb-4 bg-gray-100 p-4 rounded-xl border border-gray-200">
+                            <div>
+                                <label class="block text-xs font-bold mb-1 text-gray-700">Jumlah Pilihan / Pernyataan</label>
+                                <select id="inputJumlahOpsi" onchange="ubahUIJenisSoal()" class="w-full p-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 bg-white shadow-sm">
+                                    <option value="3">3 Baris (A - C)</option>
+                                    <option value="4" selected>4 Baris (A - D)</option>
+                                    <option value="5">5 Baris (A - E)</option>
+                                </select>
+                            </div>
+                            <div id="wadahHeaderMatriks" class="hidden">
+                                <label class="block text-xs font-bold mb-1 text-gray-700">Teks Pilihan Matriks</label>
+                                <select id="inputHeaderMatriks" onchange="ubahUIJenisSoal()" class="w-full p-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-500 bg-white shadow-sm">
+                                    <option value="Benar|Salah">Benar / Salah</option>
+                                    <option value="Sesuai|Tidak Sesuai">Sesuai / Tidak Sesuai</option>
+                                    <option value="Akurat|Tidak Akurat">Akurat / Tidak Akurat</option>
+                                    <option value="Fakta|Opini">Fakta / Opini</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div id="areaOpsiJawaban" class="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
                             <div class="flex justify-between items-center border-b pb-2 mb-2">
-                                <label class="block text-sm font-bold text-gray-700">Pilihan Jawaban & Kunci</label>
-                                <span class="text-xs text-gray-500 font-medium" id="petunjukOpsi">Pilih 1 bulatan biru sebagai kunci.</span>
-                            </div>                            
-                            <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="inputKunci" value="A" class="w-6 h-6 text-blue-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">A</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiA" class="min-h-[60px]"></div></div></div>
-                            <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="inputKunci" value="B" class="w-6 h-6 text-blue-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">B</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiB" class="min-h-[60px]"></div></div></div>
-                            <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="inputKunci" value="C" class="w-6 h-6 text-blue-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">C</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiC" class="min-h-[60px]"></div></div></div>
-                            <div class="flex items-start space-x-3"><div class="pt-3"><input type="radio" name="inputKunci" value="D" class="w-6 h-6 text-blue-600 cursor-pointer input-kunci-dinamis"></div><span class="font-black text-gray-400 text-xl pt-2">D</span><div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiD" class="min-h-[60px]"></div></div></div>
+                                <label class="block text-sm font-bold text-gray-700" id="labelJudulOpsi">Pilihan Jawaban & Kunci</label>
+                                <span class="text-xs text-white bg-blue-500 px-2 py-1 rounded font-bold shadow-sm" id="petunjukOpsi">Pilih 1 bulatan biru sebagai kunci.</span>
+                            </div>
+                            
+                            <div class="baris-opsi flex items-start space-x-3" data-idx="0" data-huruf="A">
+                                <div class="pt-3 kontrol-standar"><input type="radio" name="inputKunci" value="A" class="w-6 h-6 text-orange-600 cursor-pointer input-kunci-dinamis"></div>
+                                <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">A</span>
+                                <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiA" class="min-h-[60px]"></div></div>
+                                <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                    <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_0" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                    <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_0" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                                </div>
+                            </div>
+                            <div class="baris-opsi flex items-start space-x-3" data-idx="1" data-huruf="B">
+                                <div class="pt-3 kontrol-standar"><input type="radio" name="inputKunci" value="B" class="w-6 h-6 text-orange-600 cursor-pointer input-kunci-dinamis"></div>
+                                <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">B</span>
+                                <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiB" class="min-h-[60px]"></div></div>
+                                <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                    <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_1" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                    <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_1" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                                </div>
+                            </div>
+                            <div class="baris-opsi flex items-start space-x-3" data-idx="2" data-huruf="C">
+                                <div class="pt-3 kontrol-standar"><input type="radio" name="inputKunci" value="C" class="w-6 h-6 text-orange-600 cursor-pointer input-kunci-dinamis"></div>
+                                <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">C</span>
+                                <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiC" class="min-h-[60px]"></div></div>
+                                <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                    <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_2" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                    <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_2" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                                </div>
+                            </div>
+                            <div class="baris-opsi flex items-start space-x-3" data-idx="3" data-huruf="D">
+                                <div class="pt-3 kontrol-standar"><input type="radio" name="inputKunci" value="D" class="w-6 h-6 text-orange-600 cursor-pointer input-kunci-dinamis"></div>
+                                <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">D</span>
+                                <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiD" class="min-h-[60px]"></div></div>
+                                <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                    <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_3" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                    <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_3" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                                </div>
+                            </div>
+                            <div class="baris-opsi flex items-start space-x-3" data-idx="4" data-huruf="E">
+                                <div class="pt-3 kontrol-standar"><input type="radio" name="inputKunci" value="E" class="w-6 h-6 text-orange-600 cursor-pointer input-kunci-dinamis"></div>
+                                <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">E</span>
+                                <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiE" class="min-h-[60px]"></div></div>
+                                <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                    <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_4" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                    <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_4" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="bg-yellow-50 p-5 rounded-2xl border border-yellow-200">
@@ -227,9 +290,14 @@
                             <label class="block text-xs font-bold text-blue-800 mb-1">Pilih Ujian / Latihan yang Tersedia</label>
                             <select id="pilihUjianAnalisisGuru" class="w-full px-4 py-3 border border-blue-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm font-bold text-gray-700"></select>
                         </div>
-                        <button onclick="jalankanAnalisisGuru()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm w-full md:w-auto shrink-0 transform hover:-translate-y-1">
-                            🚀 Mulai Analisis
-                        </button>
+                        <div class="flex space-x-2 w-full md:w-auto shrink-0">
+                            <button onclick="jalankanAnalisisGuru()" class="flex-1 md:flex-none bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm transform hover:-translate-y-1">
+                                🚀 Mulai Analisis
+                            </button>
+                            <button onclick="eksporLaporanExcelGuru()" class="flex-1 md:flex-none bg-green-600 text-white px-5 py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-sm flex items-center justify-center transform hover:-translate-y-1" title="Unduh Excel">
+                                <span class="mr-2">📥</span> Unduh Laporan
+                            </button>
+                        </div>
                     </div>
 
                     <div id="kontainerHasilAnalisisGuru" class="hidden space-y-6">
@@ -372,13 +440,14 @@
         let quillPertanyaan = new Quill('#editorPertanyaan', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Ketik teks pertanyaan di sini...' });
         let quillPembahasan = new Quill('#editorPembahasan', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Ketik kunci rubrik / penjelasan di sini...' });
 
-        // Init 4 Opsi Jawaban
-        let quillOpsiA = new Quill('#editorOpsiA', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan A' });
-        let quillOpsiB = new Quill('#editorOpsiB', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan B' });
-        let quillOpsiC = new Quill('#editorOpsiC', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan C' });
-        let quillOpsiD = new Quill('#editorOpsiD', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan D' });
+        // Init 5 Opsi Jawaban
+        let quillOpsiA = new Quill('#editorOpsiA', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan A / Pernyataan 1' });
+        let quillOpsiB = new Quill('#editorOpsiB', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan B / Pernyataan 2' });
+        let quillOpsiC = new Quill('#editorOpsiC', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan C / Pernyataan 3' });
+        let quillOpsiD = new Quill('#editorOpsiD', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan D / Pernyataan 4' });
+        let quillOpsiE = new Quill('#editorOpsiE', { modules: { formula: true, toolbar: toolbarOpsi, blotFormatter: {} }, theme: 'snow', placeholder: 'Teks Pilihan E / Pernyataan 5' });
         
-        const mapQuillOpsi = { 'A': quillOpsiA, 'B': quillOpsiB, 'C': quillOpsiC, 'D': quillOpsiD };
+        const mapQuillOpsi = { 'A': quillOpsiA, 'B': quillOpsiB, 'C': quillOpsiC, 'D': quillOpsiD, 'E': quillOpsiE };
 
         // --- SISTEM KOMPRESI SILUMAN (LAPIS BAJA: MAX 1 MB + CANVAS COMPRESSION) ---
         const prosesKompresiGambar = (quillObj) => {
@@ -458,7 +527,7 @@
         };
         
         pasangFiturCustom(quillPertanyaan); pasangFiturCustom(quillPembahasan);
-        pasangFiturCustom(quillOpsiA); pasangFiturCustom(quillOpsiB); pasangFiturCustom(quillOpsiC); pasangFiturCustom(quillOpsiD);
+        pasangFiturCustom(quillOpsiA); pasangFiturCustom(quillOpsiB); pasangFiturCustom(quillOpsiC); pasangFiturCustom(quillOpsiD); pasangFiturCustom(quillOpsiE);
 
         window.bukaModalMath = () => { let mf = document.getElementById('mathFieldVirtual'); mf.value = ''; document.getElementById('modalMathKeyboard').classList.remove('hidden'); setTimeout(() => { mf.focus(); }, 100); };
         window.tutupModalMath = () => { document.getElementById('modalMathKeyboard').classList.add('hidden'); targetEditorMath = null; };
@@ -475,12 +544,60 @@
         };
 
         window.ubahUIJenisSoal = () => {
-            let tipe = document.getElementById('inputTipeSoal').value, areaOpsi = document.getElementById('areaOpsiJawaban'), petunjuk = document.getElementById('petunjukOpsi'), inputDinamis = document.querySelectorAll('.input-kunci-dinamis');
-            if (tipe === 'essay') { areaOpsi.style.display = 'none'; } 
-            else {
+            let tipe = document.getElementById('inputTipeSoal').value;
+            let jumlahOpsi = parseInt(document.getElementById('inputJumlahOpsi').value);
+            let hdMatriks = document.getElementById('inputHeaderMatriks');
+            let hMatriks = hdMatriks ? hdMatriks.value.split('|') : ['Benar', 'Salah'];
+
+            let areaOpsi = document.getElementById('areaOpsiJawaban');
+            let wadahHeaderMatriks = document.getElementById('wadahHeaderMatriks');
+            let petunjuk = document.getElementById('petunjukOpsi');
+            let judulOpsi = document.getElementById('labelJudulOpsi');
+            let semuaBaris = document.querySelectorAll('.baris-opsi');
+
+            if (tipe === 'essay') {
+                areaOpsi.style.display = 'none';
+                if(wadahHeaderMatriks) wadahHeaderMatriks.style.display = 'none';
+            } else {
                 areaOpsi.style.display = 'block';
-                if (tipe === 'pg') { petunjuk.innerText = 'Pilih 1 bulatan biru sebagai kunci.'; inputDinamis.forEach(el => { el.type = 'radio'; el.name = 'inputKunci'; }); } 
-                else if (tipe === 'pg_kompleks') { petunjuk.innerText = 'Centang kotak jawaban benar (Bisa lebih dari 1).'; inputDinamis.forEach(el => { el.type = 'checkbox'; el.name = 'inputKunciKompleks'; }); }
+                
+                semuaBaris.forEach((baris, idx) => {
+                    if(idx < jumlahOpsi) baris.style.display = 'flex'; else baris.style.display = 'none';
+                });
+
+                if (tipe === 'pg' || tipe === 'pg_kompleks') {
+                    if(wadahHeaderMatriks) wadahHeaderMatriks.style.display = 'none';
+                    judulOpsi.innerText = "Pilihan Jawaban & Kunci";
+                    petunjuk.innerText = tipe === 'pg' ? "Pilih 1 bulatan biru sbg kunci." : "Centang kunci (Bisa > 1).";
+                    petunjuk.className = "text-xs text-white bg-blue-500 px-2 py-1 rounded font-bold shadow-sm";
+
+                    semuaBaris.forEach(baris => {
+                        baris.querySelector('.kontrol-standar').style.display = 'block';
+                        baris.querySelector('.kontrol-matriks').style.display = 'none';
+                        baris.querySelector('.label-huruf').innerText = baris.getAttribute('data-huruf'); 
+                        baris.querySelector('.label-huruf').className = "font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center";
+                        
+                        let inputStandar = baris.querySelector('.input-kunci-dinamis');
+                        inputStandar.type = tipe === 'pg' ? 'radio' : 'checkbox';
+                        inputStandar.name = tipe === 'pg' ? 'inputKunci' : 'inputKunciKompleks';
+                    });
+                } 
+                else if (tipe === 'pgk_matriks') {
+                    if(wadahHeaderMatriks) wadahHeaderMatriks.style.display = 'block';
+                    judulOpsi.innerText = "Daftar Pernyataan & Kunci Matriks";
+                    petunjuk.innerText = `Pilih ${hMatriks[0]} / ${hMatriks[1]} tiap baris.`;
+                    petunjuk.className = "text-xs text-white bg-purple-500 px-2 py-1 rounded font-bold shadow-sm";
+
+                    semuaBaris.forEach((baris, idx) => {
+                        baris.querySelector('.kontrol-standar').style.display = 'none';
+                        baris.querySelector('.kontrol-matriks').style.display = 'flex';
+                        baris.querySelector('.label-huruf').innerText = (idx + 1).toString(); 
+                        baris.querySelector('.label-huruf').className = "font-black text-purple-600 text-2xl pt-1.5 label-huruf w-5 text-center";
+                        
+                        baris.querySelector('.label-kiri').innerText = hMatriks[0];
+                        baris.querySelector('.label-kanan').innerText = hMatriks[1];
+                    });
+                }
             }
         };
 
@@ -757,34 +874,44 @@
         document.getElementById('inputMapel')?.addEventListener('change',e=>{const m=e.target.value,sb=document.getElementById('inputBab');if(!m){sb.innerHTML='<option value="">Pilih Mapel Dulu</option>';sb.disabled=true;}else{sb.disabled=false;sb.innerHTML='<option value="">-- Sub Bab --</option>';let ob=dataKurikulumGlobal.find(x=>x.nama_mapel===m);if(ob?.sub_bab)ob.sub_bab.forEach(b=>sb.innerHTML+=`<option value="${b}">${b}</option>`);}});
         document.getElementById('formTulisSoal')?.addEventListener('submit', async e => {
             e.preventDefault();
-            let t = document.getElementById('inputTipeSoal').value, kT = quillPertanyaan.root.innerHTML, kB = quillPembahasan.root.innerHTML;
-            let tk = document.getElementById('inputKesulitan').value; // <-- BACA NILAI KESULITAN
+            let t = document.getElementById('inputTipeSoal').value;
+            let jumlahOpsi = parseInt(document.getElementById('inputJumlahOpsi').value);
+            let hMatriks = document.getElementById('inputHeaderMatriks') ? document.getElementById('inputHeaderMatriks').value : "Benar|Salah";
+            
+            let kT = quillPertanyaan.root.innerHTML;
+            let kB = quillPembahasan.root.innerHTML;
+            let tk = document.getElementById('inputKesulitan').value; 
             
             if (quillPertanyaan.getText().trim().length === 0 && !kT.includes('<img') && !kT.includes('<span class="ql-formula"')) 
                 return Swal.fire('Oops', 'Pertanyaan kosong!', 'warning');
-            if (kT.length > 500000) return Swal.fire('Gambar Besar!', 'Maksimal 500KB.', 'error');
 
-            let aO = [];
-            let vD = false;
+            let aO = []; let vD = false; let huruf = ['A','B','C','D','E'];
             
             if (t === 'pg' || t === 'pg_kompleks') {
-                document.querySelectorAll('.input-kunci-dinamis').forEach((el, i) => {
-                    let h = ['A', 'B', 'C', 'D'][i];
-                    let tO = mapQuillOpsi[h].root.innerHTML; 
-                    let iB = el.checked;
-                    if (iB) vD = true;
-                    aO.push({ label: h, teks: tO, benar: iB });
-                });
+                for(let i=0; i<jumlahOpsi; i++) {
+                    let hrf = huruf[i];
+                    let isBenar = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-kunci-dinamis`).checked;
+                    if(isBenar) vD = true;
+                    aO.push({ label: hrf, teks: mapQuillOpsi[hrf].root.innerHTML, benar: isBenar });
+                }
                 if (!vD) return Swal.fire('Oops', 'Pilih minimal 1 kunci jawaban!', 'warning');
-            } else if (t === 'essay') {
+            } 
+            else if (t === 'pgk_matriks') {
+                for(let i=0; i<jumlahOpsi; i++) {
+                    let hrf = huruf[i];
+                    let radioKiri = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-matriks-kiri`);
+                    let radioKanan = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-matriks-kanan`);
+                    let kunciMatriks = radioKiri.checked ? 'Kiri' : (radioKanan.checked ? 'Kanan' : null);
+                    if(!kunciMatriks) return Swal.fire('Oops', `Tentukan kunci untuk Pernyataan ke-${i+1}`, 'warning');
+                    aO.push({ label: (i+1).toString(), teks: mapQuillOpsi[hrf].root.innerHTML, benar: kunciMatriks, header: hMatriks });
+                }
                 vD = true;
-            }
+            } 
+            else if (t === 'essay') { vD = true; aO = []; }
 
             let id = document.getElementById('inputIdSoal').value;
             let py = {
-                tipe_soal: t, 
-                kesulitan: tk, // <-- SIMPAN KE FIREBASE
-                pertanyaan: kT, opsi: aO, pembahasan: kB,
+                tipe_soal: t, kesulitan: tk, pertanyaan: kT, opsi: aO, pembahasan: kB,
                 kuadran: document.getElementById('inputKuadran').value, status: 'pending_review',
                 pembuat_id: profilGuru.nama, pembuat_email: profilGuru.email, sekolah_id: profilGuru.sekolah_id,
                 metadata: { mapel: document.getElementById('inputMapel').value, sub_bab: document.getElementById('inputBab').value, kelas: document.getElementById('inputKelas').value, jenjang: profilGuru.jenjang }
@@ -792,47 +919,43 @@
 
             Swal.fire({ title: 'Mengirim...', didOpen: () => Swal.showLoading() });
             try {
-                if (id === "") {
-                    py.dibuat_pada = new Date();
-                    await addDoc(collection(db, "bank_soal"), py);
-                    Swal.fire('Terkirim!', 'Menunggu Review Admin.', 'success');
-                } else {
-                    await updateDoc(doc(db, "bank_soal", id), py);
-                    Swal.fire('Diperbarui!', 'Masuk antrean Review.', 'success');
-                }
-                window.batalEditForm();
-                window.muatBankSoalPribadi();
+                if (id === "") { py.dibuat_pada = new Date(); await addDoc(collection(db, "bank_soal"), py); Swal.fire('Terkirim!', 'Menunggu Review Admin.', 'success'); } 
+                else { await updateDoc(doc(db, "bank_soal", id), py); Swal.fire('Diperbarui!', 'Masuk antrean Review.', 'success'); }
+                window.batalEditForm(); window.muatBankSoalPribadi();
             } catch (er) { Swal.fire('Error', 'Gagal menyimpan.', 'error'); }
         });
+        
         window.batalEditForm = () => {
             document.getElementById('formTulisSoal').reset();
             document.getElementById('inputIdSoal').value = "";
             
             quillPertanyaan.root.innerHTML = "";
             quillPembahasan.root.innerHTML = "";
-            ['A','B','C','D'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; }); 
+            ['A','B','C','D','E'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; }); 
             
-            document.getElementById('inputBab').innerHTML = '<option value="">Pilih Mapel</option>';
-            document.getElementById('inputBab').disabled = true;
+            document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = false);
+            document.querySelectorAll('.input-matriks-kiri, .input-matriks-kanan').forEach(el => el.checked = false);
             
-            document.getElementById('inputKesulitan').value = "Sedang"; // <-- RESET KE DEFAULT
-
+            let sb = document.getElementById('inputBab'); if(sb) { sb.innerHTML = '<option value="">Pilih Mapel</option>'; sb.disabled = true; }
+            
+            if(document.getElementById('inputKesulitan')) document.getElementById('inputKesulitan').value = "Sedang"; 
+            if(document.getElementById('inputJumlahOpsi')) document.getElementById('inputJumlahOpsi').value = "4"; 
+            if(document.getElementById('inputHeaderMatriks')) document.getElementById('inputHeaderMatriks').value = "Benar|Salah";
+            
             document.getElementById('judulFormSoal').innerText = "✨ Tulis Pertanyaan Baru V2";
             document.getElementById('btnKirimSoal').innerHTML = "🚀 Kirim Soal";
             let btnBatal = document.getElementById('btnBatalEdit'); if(btnBatal) btnBatal.classList.add('hidden');
             window.ubahUIJenisSoal();
         };
+
         window.muatBankSoalPribadi=async()=>{const tb=document.getElementById('tabelSoalSaya');if(tb)tb.innerHTML='<tr><td colspan="4" class="text-center py-8">Menarik arsip...</td></tr>';try{const s=await getDocs(query(collection(db,"bank_soal"),where("sekolah_id","==",profilGuru.sekolah_id),where("pembuat_email","==",profilGuru.email)));soalPribadi=[];s.forEach(d=>soalPribadi.push({id:d.id,...d.data()}));let h='';soalPribadi.forEach(d=>{let w=d.status==='aktif'?'bg-green-100 text-green-700':(d.status==='ditolak'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700');let dt=document.createElement("div");dt.innerHTML=d.pertanyaan;let tp=dt.textContent||dt.innerText||"";let bt=d.tipe_soal==='essay'?'📝 ESSAY':(d.tipe_soal==='pg_kompleks'?'☑️ PG KOMPLEKS':'🔘 PG');h+=`<tr class="border-b hover:bg-orange-50"><td class="px-6 py-4"><span class="px-2 py-1 rounded text-[10px] font-black uppercase block mb-1 w-max ${w}">${d.status.replace('_',' ')}</span><span class="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-2 rounded uppercase tracking-widest block w-max">${bt}</span></td><td class="px-6 py-4 text-xs font-bold text-gray-700">${d.metadata?.mapel||'-'}<br><span class="font-normal text-orange-600">Kls: ${d.metadata?.kelas||'-'}</span></td><td class="px-6 py-4"><div class="line-clamp-2 text-sm text-gray-600 italic">"${tp}"</div></td><td class="px-6 py-4 text-center"><button onclick="editSoalSaya('${d.id}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-1 transition">✏️ Edit</button><button onclick="hapusSoalSaya('${d.id}')" class="text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition">🗑️</button></td></tr>`;});if(tb)tb.innerHTML=h||'<tr><td colspan="4" class="text-center py-8 text-gray-400 border-2 border-dashed rounded-xl m-4">Belum ada karya soal.</td></tr>';window.updateStatistik();}catch(e){}};
         window.updateStatistik=()=>{let p=0,a=0,t=0;soalPribadi.forEach(s=>{if(s.status==='aktif')a++;else if(s.status==='ditolak')t++;else p++;});document.getElementById('statPending').innerText=p;document.getElementById('statAktif').innerText=a;document.getElementById('statDitolak').innerText=t;};
         window.editSoalSaya = (id) => {
-            let s = soalPribadi.find(x => x.id === id);
-            if (!s) return;
+            let s = soalPribadi.find(x => x.id === id); if (!s) return;
             document.getElementById('inputIdSoal').value = s.id;
             document.getElementById('inputMapel').value = s.metadata?.mapel || "";
             
-            let sb = document.getElementById('inputBab');
-            sb.innerHTML = '<option value="">-- Sub Bab --</option>';
-            sb.disabled = false;
+            let sb = document.getElementById('inputBab'); sb.innerHTML = '<option value="">-- Sub Bab --</option>'; sb.disabled = false;
             let ob = dataKurikulumGlobal.find(m => m.nama_mapel === s.metadata?.mapel);
             if (ob?.sub_bab) ob.sub_bab.forEach(b => sb.innerHTML += `<option value="${b}">${b}</option>`);
             sb.value = s.metadata?.sub_bab || "";
@@ -840,35 +963,50 @@
             document.getElementById('inputKelas').value = s.metadata?.kelas || "";
             document.getElementById('inputKuadran').value = s.kuadran || "Lokal";
             document.getElementById('inputTipeSoal').value = s.tipe_soal || "pg";
+            if(document.getElementById('inputKesulitan')) document.getElementById('inputKesulitan').value = s.kesulitan || "Sedang"; 
             
-            let ekes = document.getElementById('inputKesulitan'); 
-            if(ekes) ekes.value = s.kesulitan || "Sedang"; // <-- TARIK DATA DARI FIREBASE
-            
+            let jumlahOpsi = 4;
+            if(s.opsi && Array.isArray(s.opsi)) {
+                jumlahOpsi = s.opsi.length;
+                if(jumlahOpsi < 3) jumlahOpsi = 3; if(jumlahOpsi > 5) jumlahOpsi = 5; 
+            }
+            if(document.getElementById('inputJumlahOpsi')) document.getElementById('inputJumlahOpsi').value = jumlahOpsi.toString();
+            if (s.tipe_soal === 'pgk_matriks' && s.opsi[0]?.header && document.getElementById('inputHeaderMatriks')) document.getElementById('inputHeaderMatriks').value = s.opsi[0].header;
+
             window.ubahUIJenisSoal();
             
             quillPertanyaan.root.innerHTML = s.pertanyaan || "";
             quillPembahasan.root.innerHTML = s.pembahasan || "";
             
+            let huruf = ['A','B','C','D','E'];
             if (s.opsi && Array.isArray(s.opsi)) {
-                s.opsi.forEach(op => {
-                    if(mapQuillOpsi[op.label]) mapQuillOpsi[op.label].root.innerHTML = op.teks;
-                    document.querySelectorAll('.input-kunci-dinamis').forEach(el => {
-                        if (el.value === op.label) el.checked = op.benar;
-                    });
+                s.opsi.forEach((op, index) => {
+                    if(index >= 5) return; 
+                    let hrf = huruf[index];
+                    if(mapQuillOpsi[hrf]) mapQuillOpsi[hrf].root.innerHTML = op.teks;
+                    
+                    if (s.tipe_soal === 'pgk_matriks') {
+                        let radioKiri = document.querySelector(`.baris-opsi[data-idx="${index}"] .input-matriks-kiri`);
+                        let radioKanan = document.querySelector(`.baris-opsi[data-idx="${index}"] .input-matriks-kanan`);
+                        if(radioKiri) radioKiri.checked = (op.benar === 'Kiri');
+                        if(radioKanan) radioKanan.checked = (op.benar === 'Kanan');
+                    } else {
+                        let chk = document.querySelector(`.baris-opsi[data-idx="${index}"] .input-kunci-dinamis`);
+                        if(chk) chk.checked = op.benar;
+                    }
                 });
             } else {
-                ['A', 'B', 'C', 'D'].forEach(h => {
-                    if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = s['opsi_' + h.toLowerCase()] || "";
-                });
+                ['A', 'B', 'C', 'D'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = s['opsi_' + h.toLowerCase()] || ""; });
                 document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = (el.value === s.kunci));
             }
             
             document.getElementById('judulFormSoal').innerText = "✏️ Revisi Karya V2";
             document.getElementById('btnKirimSoal').innerHTML = "💾 Ajukan Ulang";
             let btnBatal = document.getElementById('btnBatalEdit'); if(btnBatal) btnBatal.classList.remove('hidden');
-            window.bukaTab('tabBuatSoal');
+            window.bukaTab('tabBuatSoal'); window.scrollTo({top: 0, behavior: 'smooth'});
         };
-        window.hapusSoalSaya=id=>{Swal.fire({title:'Hapus Soal?',icon:'warning',showCancelButton:true,confirmButtonColor:'#d33'}).then(async r=>{if(r.isConfirmed){await deleteDoc(doc(db,"bank_soal",id));window.muatBankSoalPribadi();}});};
+
+       window.hapusSoalSaya = id => { Swal.fire({title:'Hapus Soal?', icon:'warning', showCancelButton:true, confirmButtonColor:'#d33'}).then(async r => { if(r.isConfirmed){ await deleteDoc(doc(db,"bank_soal",id)); window.muatBankSoalPribadi(); }}); };
 
         // FITUR IMPORT EXCEL AUTO-UPGRADE V2
         window.dataPreviewImport=[];window.bukaModalImportSoal=()=>{window.kembaliStep1Import();document.getElementById('modalImportSoal').classList.remove('hidden');};window.tutupModalImportSoal=()=>{document.getElementById('modalImportSoal').classList.add('hidden');};window.kembaliStep1Import=()=>{document.getElementById('fileImportSoal').value='';document.getElementById('step1Import').classList.remove('hidden');document.getElementById('footerStep1').classList.remove('hidden');document.getElementById('step2Import').classList.add('hidden');document.getElementById('footerStep2').classList.add('hidden');window.dataPreviewImport=[];};
@@ -1017,6 +1155,76 @@
             document.getElementById('tabelAnalisisButirGuru').innerHTML = htmlTable;
             document.getElementById('statSoalKillerGuru').innerText = countSulit;
             document.getElementById('kontainerHasilAnalisisGuru').classList.remove('hidden');
+        };
+        window.eksporLaporanExcelGuru = () => {
+            let idJadwal = document.getElementById('pilihUjianAnalisisGuru').value;
+            let teksJudul = document.getElementById('pilihUjianAnalisisGuru').options[document.getElementById('pilihUjianAnalisisGuru').selectedIndex].text;
+            
+            if(!idJadwal) return Swal.fire('Oops', 'Pilih ujian yang ingin di-ekspor!', 'warning');
+
+            let dataUjianIni = dataHasilUjianGuru.filter(x => x.id_jadwal === idJadwal);
+            if(dataUjianIni.length === 0) return Swal.fire('Kosong', 'Belum ada data nilai untuk ujian ini.', 'info');
+
+            Swal.fire({title: 'Meracik File Excel...', didOpen: () => Swal.showLoading()});
+
+            // Sheet 1: Rekap Nilai Siswa
+            let dataRekap = [];
+            dataUjianIni.forEach((siswa, index) => {
+                dataRekap.push({
+                    "No": index + 1, "Nama Siswa": siswa.nama_siswa || "Tanpa Nama", "Username": siswa.username || "-",
+                    "Kelas": siswa.kelas || "-", "Mapel": siswa.mapel || "-",
+                    "Total Benar": siswa.detail?.benar || 0, "Total Salah": siswa.detail?.salah || 0, "Total Kosong": siswa.detail?.kosong || 0,
+                    "Skor Akhir": siswa.nilai_akhir || 0,
+                    "Waktu Selesai": siswa.waktu_selesai ? siswa.waktu_selesai.toDate().toLocaleString('id-ID') : "-"
+                });
+            });
+
+            // Sheet 2: Analisis Butir Soal (Ekspektasi vs Fakta)
+            let dataAnalisis = [];
+            let acuanSoal = dataUjianIni[0].rekam_soal || [];
+            let totalPartisipan = dataUjianIni.length;
+
+            if(acuanSoal.length > 0) {
+                for(let i=0; i<acuanSoal.length; i++) { 
+                    let b = 0, s = 0, k = 0;
+                    dataUjianIni.forEach(siswa => {
+                        let jwbArr = siswa.rekam_jawaban || {};
+                        let jwb = jwbArr[i]; let tipe = acuanSoal[i].tipe_soal || 'pg';
+                        if(tipe === 'pg_kompleks') {
+                            if (!jwb || jwb.length === 0) k++;
+                            else {
+                                let kunciBenarArr = acuanSoal[i].opsi.filter(o => o.benar).map(o => o.label).sort();
+                                let jwbSiswaArr = [...jwb].sort();
+                                if(JSON.stringify(kunciBenarArr) === JSON.stringify(jwbSiswaArr)) b++; else s++;
+                            }
+                        } else if (tipe === 'essay') {
+                            if (!jwb || jwb.trim() === "") k++; else b++;
+                        } else {
+                            if (!jwb) k++;
+                            else {
+                                let kunciMurni = acuanSoal[i].kunci; 
+                                if(acuanSoal[i].opsi && Array.isArray(acuanSoal[i].opsi)) kunciMurni = (acuanSoal[i].opsi.find(o => o.benar) || {}).label;
+                                if (jwb === kunciMurni) b++; else s++;
+                            }
+                        }
+                    });
+                    
+                    dataAnalisis.push({
+                        "No Soal": i + 1, "Tipe": acuanSoal[i].tipe_soal || 'PG', "Kesulitan (Target)": acuanSoal[i].kesulitan || 'Sedang',
+                        "Persentase Benar": Math.round((b / totalPartisipan) * 100) + "%",
+                        "Persentase Salah": Math.round((s / totalPartisipan) * 100) + "%",
+                        "Persentase Kosong": Math.round((k / totalPartisipan) * 100) + "%"
+                    });
+                }
+            }
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataRekap), "Rekap Nilai Siswa");
+            if(dataAnalisis.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataAnalisis), "Analisis Butir Soal");
+
+            let namaFileClean = teksJudul.replace(/[^a-zA-Z0-9 -]/g, ""); 
+            XLSX.writeFile(wb, `Analisis_Guru_${namaFileClean}.xlsx`);
+            Swal.close();
         };
     </script>
 </body>
