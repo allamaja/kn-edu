@@ -466,34 +466,86 @@
             try {
                 const s = await getDocs(query(collection(db, "jadwal_ujian"), where("status", "==", "aktif")));
                 let html = '', adaLive = false, idLive = null, namaLive = ""; let now = new Date();
+                
                 s.forEach(doc => {
-                    let d = doc.data(); d.id = doc.id; let isPusat = !d.sekolah_id || d.sekolah_id.toUpperCase()==="GLOBAL" || d.sekolah_id.toUpperCase()==="YAYASAN";
+                    let d = doc.data(); d.id = doc.id; 
+                    
+                    // Logika Penapisan (Filtering) Hak Akses Jadwal
+                    let isPusat = !d.sekolah_id || d.sekolah_id.toUpperCase()==="GLOBAL" || d.sekolah_id.toUpperCase()==="YAYASAN";
                     if(!isPusat && d.sekolah_id !== userData.sekolah_id) return; 
                     if(isPusat && d.jenjang !== jenjangSekolah && d.jenjang !== "Semua") return; 
                     if(d.kelas != userData.kelas && d.kelas !== "Semua") return; 
-                    let wM = new Date(d.waktu_mulai), wS = new Date(d.waktu_selesai); let st = "", btn = "";
-                    if(now < wM) { st = '<span class="text-yellow-600 font-bold">⏳ Belum Mulai</span>'; btn = `<button class="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-400 cursor-not-allowed border">Terkunci</button>`; } 
-                    else if(now >= wM && now <= wS) { st = '<span class="text-red-600 font-bold animate-pulse">🔴 LIVE</span>'; btn = `<button onclick="masukUjian('${d.id}')" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition transform hover:scale-105">🚀 Kerjakan</button>`; if(!adaLive){ adaLive = true; idLive = d.id; namaLive = d.nama_ujian; } } 
-                    else { st = '<span class="text-gray-400 font-bold">✅ Ditutup</span>'; btn = `<button class="px-4 py-2 rounded-xl text-xs font-bold bg-gray-50 text-gray-400 cursor-not-allowed border">Selesai</button>`; }
-                    let lbl = isPusat ? '<span class="px-2 py-0.5 bg-purple-100 text-purple-700 text-[8px] font-black rounded uppercase ml-2 shadow-sm">Pusat</span>' : '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-black rounded uppercase ml-2 shadow-sm">Lokal</span>';
-                    html += `<tr class="border-b hover:bg-gray-50"><td class="px-6 py-4"><b class="text-gray-800 text-sm">${d.nama_ujian}</b>${lbl}<br><span class="text-xs text-blue-600 font-bold">${d.mapel} | ⏳ ${d.durasi_menit} Menit</span></td><td class="px-6 py-4 text-xs font-medium text-gray-500">${wM.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} <br><span class="text-gray-300">s/d</span><br> ${wS.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td><td class="px-6 py-4 text-center">${st}</td><td class="px-6 py-4 text-center">${btn}</td></tr>`;
+                    
+                    let wM = new Date(d.waktu_mulai), wS = new Date(d.waktu_selesai); 
+                    let st = "", btn = "";
+                    
+                    // Logika Status Waktu
+                    if(now < wM) { 
+                        st = '<span class="text-yellow-600 font-bold px-2 py-1 bg-yellow-50 rounded-lg">⏳ Belum Mulai</span>'; 
+                        btn = `<button class="px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200">Terkunci</button>`; 
+                    } 
+                    else if(now >= wM && now <= wS) { 
+                        st = '<span class="text-red-600 font-bold px-2 py-1 bg-red-50 rounded-lg animate-pulse border border-red-200">🔴 LIVE</span>'; 
+                        btn = `<button onclick="masukUjian('${d.id}')" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition transform hover:-translate-y-0.5">🚀 Kerjakan</button>`; 
+                        if(!adaLive){ adaLive = true; idLive = d.id; namaLive = d.nama_ujian; } 
+                    } 
+                    else { 
+                        st = '<span class="text-gray-500 font-bold px-2 py-1 bg-gray-100 rounded-lg border border-gray-200">✅ Ditutup</span>'; 
+                        btn = `<button class="px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-50 text-gray-400 cursor-not-allowed border border-gray-200">Selesai</button>`; 
+                    }
+                    
+                    let lblPusat = isPusat ? '<span class="px-2 py-0.5 bg-purple-100 text-purple-700 border border-purple-200 text-[8px] font-black rounded uppercase ml-2 shadow-sm">Ujian Pusat</span>' : '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 border border-emerald-200 text-[8px] font-black rounded uppercase ml-2 shadow-sm">Ujian Lokal</span>';
+                    let tglTampil = wM.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+                    
+                    html += `
+                    <tr class="border-b hover:bg-blue-50/40 transition">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center mb-1">
+                                <b class="text-gray-800 text-sm md:text-base">${d.nama_ujian}</b> ${lblPusat}
+                            </div>
+                            <span class="text-xs text-blue-600 font-black tracking-wider uppercase">${d.mapel}</span>
+                            <span class="text-xs text-gray-500 font-medium ml-2">| ⏳ ${d.durasi_menit} Menit</span>
+                        </td>
+                        <td class="px-6 py-4 text-xs font-medium text-gray-600">
+                            <span class="block text-gray-800 font-bold mb-0.5">📅 ${tglTampil}</span>
+                            Pukul ${wM.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})} <span class="text-gray-400 mx-1">-</span> ${wS.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})} WIB
+                        </td>
+                        <td class="px-6 py-4 text-center">${st}</td>
+                        <td class="px-6 py-4 text-center">${btn}</td>
+                    </tr>`;
                 });
-                if(tb) tb.innerHTML = html || '<tr><td colspan="4" class="text-center py-12 text-gray-400 font-medium">Belum ada jadwal ujian. Santai dulu! 🏖️</td></tr>';
+                
+                if(tb) tb.innerHTML = html || '<tr><td colspan="4" class="text-center py-12 text-gray-400 font-medium border-2 border-dashed m-4 rounded-xl bg-gray-50">Belum ada jadwal ujian. Santai dulu! 🏖️</td></tr>';
 
+                // Update Kartu Menu Ujian (Live Status)
                 const kUjian = document.getElementById('kartuUjian'), kIkon = document.getElementById('ikonUjian'), kJudul = document.getElementById('judulUjian'), kStatus = document.getElementById('teksStatusUjian'), kBadge = document.getElementById('badgeLiveUjian');
                 if(adaLive && kUjian) {
-                    ujianAktifID = idLive; kUjian.className = "bg-blue-600 p-6 rounded-3xl shadow-lg shadow-blue-300 border border-blue-500 flex flex-col items-center justify-center cursor-pointer transform hover:-translate-y-1 hover:scale-105 transition-all relative group"; kIkon.innerText = "⏳"; kJudul.className = "font-black text-white text-xl mt-2"; kJudul.innerText = "Masuk Ruang Ujian"; kStatus.className = "text-xs text-blue-200 mt-1 text-center font-bold px-2"; kStatus.innerText = namaLive; kBadge.classList.remove('hidden');
+                    ujianAktifID = idLive; 
+                    kUjian.className = "col-span-2 sm:col-span-1 bg-blue-600 p-3 md:p-6 rounded-2xl md:rounded-3xl shadow-lg shadow-blue-300 border border-blue-500 flex flex-col items-center justify-center cursor-pointer transform hover:-translate-y-1 hover:scale-105 transition-all relative group"; 
+                    kIkon.innerText = "⏳"; 
+                    kJudul.className = "font-black text-white text-sm md:text-xl mt-2"; kJudul.innerText = "Masuk Ujian"; 
+                    kStatus.className = "text-[10px] md:text-xs text-blue-200 mt-1 text-center font-bold px-2 line-clamp-1"; kStatus.innerText = namaLive; 
+                    kBadge.classList.remove('hidden');
                 }
             } catch(e) {}
         };
 
         window.klikUjian = () => {
             if(ujianAktifID) window.masukUjian(ujianAktifID);
-            else Swal.fire({title: 'Terkunci', text: 'Tidak ada ujian yang sedang berlangsung.', icon: 'info', confirmButtonColor: '#3b82f6'});
+            else Swal.fire({title: 'Terkunci', text: 'Tidak ada ujian yang sedang berlangsung saat ini.', icon: 'info', confirmButtonColor: '#3b82f6'});
         };
 
         window.masukUjian = (id) => {
-            Swal.fire({title: 'Siap Tempur?', html: "Pastikan baterai penuh dan internet stabil.<br><b class='text-red-500 mt-2 block'>Waktu ujian akan langsung berjalan!</b>", icon: 'warning', showCancelButton: true, confirmButtonColor: '#2563eb', confirmButtonText: '🚀 Gas Sekarang!'}).then((r) => { if(r.isConfirmed) { sessionStorage.setItem('id_jadwal_aktif', id); window.location.href = "ujian.html"; } });
+            Swal.fire({
+                title: 'Siap Tempur?', 
+                html: "Pastikan baterai penuh dan internet stabil.<br><br><div class='bg-red-50 border border-red-200 p-3 rounded-xl text-red-700 text-sm font-medium'>⚠️ Waktu ujian akan langsung berjalan! Jika kamu menutup aplikasi, nilai akan dikumpulkan otomatis.</div>", 
+                icon: 'warning', showCancelButton: true, confirmButtonColor: '#2563eb', confirmButtonText: '🚀 Gas Sekarang!'
+            }).then((r) => { 
+                if(r.isConfirmed) { 
+                    sessionStorage.setItem('id_jadwal_aktif', id); 
+                    window.location.href = "ujian.html"; 
+                } 
+            });
         };
 
         // GANTI PASSWORD
@@ -516,8 +568,3 @@
 </body>
 
 </html>
-
-
-
-
-
