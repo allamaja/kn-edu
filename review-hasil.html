@@ -123,20 +123,49 @@
                         let jawabTampil = "";
 
                         // SKORING ULANG UNTUK TAMPILAN
+                        // SKORING ULANG UNTUK TAMPILAN
                         if (tipe === 'pg_kompleks') {
                             let kunciBenarArr = soal.opsi ? soal.opsi.filter(o => o.benar).map(o => o.label).sort() : [];
                             let jwbSiswaArr = jwbSiswa ? [...jwbSiswa].sort() : [];
                             isBenar = JSON.stringify(kunciBenarArr) === JSON.stringify(jwbSiswaArr);
                             
                             kunciTampil = kunciBenarArr.join(', ');
-                            jawabTampil = jwbSiswaArr.join(', ') || 'Kosong';
+                            jawabTampil = jwbSiswaArr.length > 0 ? jwbSiswaArr.join(', ') : 'Kosong';
                         } 
+                        else if (tipe === 'pgk_matriks') {
+                            // TIPE BARU: MATRIKS BENAR SALAH
+                            let barisKunciArr = [];
+                            let barisJawabArr = [];
+                            let adaYangSalah = false;
+                            
+                            if(soal.opsi) {
+                                soal.opsi.forEach(op => {
+                                    barisKunciArr.push(`Baris ${op.label}: ${op.benar}`);
+                                    
+                                    let ansSiswa = (jwbSiswa && jwbSiswa[op.label]) ? jwbSiswa[op.label] : "Kosong";
+                                    barisJawabArr.push(`Baris ${op.label}: ${ansSiswa}`);
+                                    
+                                    if(ansSiswa !== op.benar) adaYangSalah = true;
+                                });
+                            }
+                            
+                            let jmlDiisi = jwbSiswa ? Object.keys(jwbSiswa).length : 0;
+                            let jmlBarisMatriks = soal.opsi ? soal.opsi.length : 0;
+                            
+                            if (jmlDiisi === 0) { isBenar = false; jwbSiswa = null; } 
+                            else if (!adaYangSalah && jmlDiisi === jmlBarisMatriks) { isBenar = true; } 
+                            else { isBenar = false; }
+                            
+                            kunciTampil = barisKunciArr.join(' <br> ');
+                            jawabTampil = barisJawabArr.join(' <br> ');
+                        }
                         else if (tipe === 'essay') {
                             isBenar = null; 
-                            kunciTampil = "Sesuai Pembahasan";
+                            kunciTampil = "<i>Evaluasi manual oleh guru.</i>";
                             jawabTampil = jwbSiswa || 'Kosong';
                         } 
                         else {
+                            // TIPE PG BIASA
                             let kunciMurni = soal.kunci;
                             if(soal.opsi && Array.isArray(soal.opsi)) {
                                 let opt = soal.opsi.find(o => o.benar);
@@ -148,22 +177,47 @@
                         }
 
                         // DESAIN UI
-                        let kelasStatus = (!jwbSiswa || jwbSiswa.length === 0) ? "status-kosong" : (isBenar === null ? "status-kosong" : (isBenar ? "status-benar" : "status-salah"));
-                        let iconStatus = (!jwbSiswa || jwbSiswa.length === 0) ? '⬜ KOSONG' : (isBenar === null ? '⏳ ESSAY' : (isBenar ? '✅ BENAR' : '❌ SALAH'));
-                        let warnaBorder = (!jwbSiswa || jwbSiswa.length === 0) ? 'border-gray-200 bg-gray-50/50' : (isBenar === null ? 'border-purple-200 bg-purple-50/30' : (isBenar ? 'border-green-200 bg-green-50/30' : 'border-red-200 bg-red-50/30'));
-                        let warnaLabel = (!jwbSiswa || jwbSiswa.length === 0) ? 'text-gray-600 bg-gray-200' : (isBenar === null ? 'text-purple-700 bg-purple-100' : (isBenar ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'));
+                        let kelasStatus = (!jwbSiswa || jwbSiswa.length === 0 || (tipe === 'pgk_matriks' && Object.keys(jwbSiswa||{}).length === 0)) ? "status-kosong" : (isBenar === null ? "status-kosong" : (isBenar ? "status-benar" : "status-salah"));
+                        let iconStatus = (!jwbSiswa || jwbSiswa.length === 0 || (tipe === 'pgk_matriks' && Object.keys(jwbSiswa||{}).length === 0)) ? '⬜ KOSONG' : (isBenar === null ? '⏳ ESSAY' : (isBenar ? '✅ BENAR' : '❌ SALAH'));
+                        let warnaBorder = kelasStatus === "status-kosong" ? 'border-gray-200 bg-gray-50/50' : (isBenar === null ? 'border-purple-200 bg-purple-50/30' : (isBenar ? 'border-green-200 bg-green-50/30' : 'border-red-200 bg-red-50/30'));
+                        let warnaLabel = kelasStatus === "status-kosong" ? 'text-gray-600 bg-gray-200' : (isBenar === null ? 'text-purple-700 bg-purple-100' : (isBenar ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'));
                         let warnaJawab = isBenar === null ? 'text-gray-600' : (isBenar ? 'text-green-600' : 'text-red-600');
 
                         let htmlTanya = soal.pertanyaan && !soal.pertanyaan.startsWith('<') ? `<p>${soal.pertanyaan}</p>` : (soal.pertanyaan || "");
-                        let htmlBahas = soal.pembahasan && !soal.pembahasan.startsWith('<') ? `<p>${soal.pembahasan}</p>` : (soal.pembahasan || '<i>Guru belum menyertakan pembahasan khusus.</i>');
+                        let htmlBahas = soal.pembahasan && !soal.pembahasan.startsWith('<') ? `<p>${soal.pembahasan}</p>` : (soal.pembahasan || '<i class="text-gray-400">Guru belum menyertakan pembahasan khusus.</i>');
 
-                        let dJawabLengkap = jawabTampil;
-                        let dKunciLengkap = kunciTampil;
-                        if(tipe === 'pg' && jawabTampil !== 'Kosong' && soal.opsi) {
-                            let optJ = soal.opsi.find(o => o.label === jawabTampil);
-                            let optK = soal.opsi.find(o => o.label === kunciTampil);
-                            if(optJ) dJawabLengkap += `. ${optJ.teks}`;
-                            if(optK) dKunciLengkap += `. ${optK.teks}`;
+                        // PERBAIKAN: Mengatur rendering Teks vs HTML Kaya untuk Jawaban dan Kunci
+                        let htmlJawabanSiswa = '';
+                        let htmlKunciBenar = '';
+
+                        if (tipe === 'essay') {
+                            htmlJawabanSiswa = `<div class="mt-1 text-gray-800 font-medium whitespace-pre-wrap">${jawabTampil}</div>`;
+                            htmlKunciBenar = `<div class="mt-1 text-gray-600 text-xs">${kunciTampil}</div>`;
+                        } else if (tipe === 'pg_kompleks' || tipe === 'pgk_matriks') {
+                            htmlJawabanSiswa = `<div class="text-sm font-bold leading-relaxed">${jawabTampil}</div>`;
+                            htmlKunciBenar = `<div class="text-sm font-bold leading-relaxed">${kunciTampil}</div>`;
+                        } else {
+                            // Untuk PG Biasa: Kita render Label (A/B/C/D) dan Teks HTML-nya (opsi.teks) secara terpisah
+                            let teksOptJwb = "Tidak ada teks opsi.";
+                            let teksOptKunci = "Tidak ada teks opsi.";
+                            
+                            if (soal.opsi && Array.isArray(soal.opsi)) {
+                                let findJ = soal.opsi.find(o => o.label === jawabTampil);
+                                let findK = soal.opsi.find(o => o.label === kunciTampil);
+                                if(findJ) teksOptJwb = findJ.teks;
+                                if(findK) teksOptKunci = findK.teks;
+                            } else {
+                                // Kompatibilitas Soal Lama V1
+                                teksOptJwb = soal['opsi_' + (jawabTampil || '').toLowerCase()] || "Pilihan dihapus.";
+                                teksOptKunci = soal['opsi_' + (kunciTampil || '').toLowerCase()] || "Pilihan dihapus.";
+                            }
+
+                            if(jawabTampil === 'Kosong') {
+                                htmlJawabanSiswa = `<b class="text-sm">KOSONG</b>`;
+                            } else {
+                                htmlJawabanSiswa = `<b class="text-sm mr-3 shrink-0 bg-white border-2 border-gray-300 w-8 h-8 flex items-center justify-center rounded-full shadow-sm">${jawabTampil}</b> <div class="ql-editor p-0 min-h-0 flex-1 overflow-x-auto text-sm" style="padding:0;">${teksOptJwb}</div>`;
+                            }
+                            htmlKunciBenar = `<b class="text-sm mr-3 shrink-0 bg-white border-2 border-blue-200 w-8 h-8 flex items-center justify-center rounded-full text-blue-700 shadow-sm">${kunciTampil}</b> <div class="ql-editor p-0 min-h-0 flex-1 overflow-x-auto text-sm" style="padding:0;">${teksOptKunci}</div>`;
                         }
 
                         let divBahas = document.createElement('div');
@@ -174,10 +228,18 @@
                                 <span class="bg-white border-2 font-black w-12 h-12 rounded-2xl flex items-center justify-center mr-6 shrink-0 text-xl shadow-sm mb-4 md:mb-0 text-gray-700">${i + 1}</span>
                                 <div class="flex-1 w-full overflow-hidden">
                                     <div class="text-gray-800 text-base md:text-lg mb-5 leading-relaxed font-medium ql-editor">${htmlTanya}</div>
-                                    <div class="flex flex-wrap gap-3 mt-4">
-                                        <span class="px-4 py-2 rounded-xl text-xs font-black tracking-widest ${warnaLabel} shadow-sm flex items-center">${iconStatus}</span>
-                                        <span class="px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200 flex items-center max-w-full">JAWABANMU: <span class="ml-1 ${warnaJawab} line-clamp-1 break-words">${dJawabLengkap}</span></span>
-                                        ${(!isBenar && isBenar !== null) ? `<span class="px-4 py-2 rounded-xl text-xs font-bold border border-blue-200 text-blue-800 bg-blue-50 shadow-sm flex items-center max-w-full">KUNCI: <span class="ml-1 line-clamp-1 break-words">${dKunciLengkap}</span></span>` : ''}
+                                    
+                                    <div class="space-y-3 mt-6">
+                                        <div class="flex items-start bg-gray-50 border border-gray-200 rounded-xl p-3 shadow-sm max-w-full">
+                                            <span class="px-3 py-1 rounded-lg text-[10px] font-black tracking-widest ${warnaLabel} mr-4 shrink-0 flex items-center">${iconStatus}</span>
+                                            <div class="flex items-center flex-wrap flex-1 ${warnaJawab}">${htmlJawabanSiswa}</div>
+                                        </div>
+                                        
+                                        ${(!isBenar && isBenar !== null) ? `
+                                        <div class="flex items-start bg-blue-50 border border-blue-200 rounded-xl p-3 shadow-sm max-w-full">
+                                            <span class="px-3 py-1 rounded-lg text-[10px] font-black tracking-widest text-blue-800 bg-white border border-blue-200 mr-4 shrink-0 flex items-center">KUNCI JAWABAN</span>
+                                            <div class="flex items-center flex-wrap flex-1 text-blue-900">${htmlKunciBenar}</div>
+                                        </div>` : ''}
                                     </div>
                                 </div>
                             </div>
