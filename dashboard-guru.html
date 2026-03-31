@@ -434,8 +434,18 @@
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">Upload File Excel (.xlsx)</label>
-                        <input type="file" id="fileImportSoal" accept=".xlsx, .xls" 
-                            class="w-full text-sm text-gray-500 bg-white border border-gray-300 rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 file:cursor-pointer file:mr-4 file:py-3 file:px-4 file:rounded-l-xl file:border-0 file:text-sm file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition">
+                        <div class="relative">
+                            <input type="file" id="fileImportSoal" accept=".xlsx, .xls" class="opacity-0 absolute -z-10 w-full h-full cursor-pointer">
+                            
+                            <div class="w-full flex items-center border border-gray-300 rounded-xl bg-white focus-within:ring-2 focus-within:ring-indigo-500">
+                                <button type="button" onclick="triggerFileInput('fileImportSoal')" class="px-5 py-3 bg-indigo-50 text-indigo-700 rounded-l-xl text-sm font-bold border-r border-gray-300 hover:bg-indigo-100 transition shrink-0">
+                                    Pilih File
+                                </button>
+                                <span id="fileNameDisplay" class="px-4 py-3 text-sm text-gray-500 truncate flex-1">
+                                    Tidak ada file yang dipilih
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div id="step2Import" class="hidden flex flex-col h-full">
@@ -1449,6 +1459,38 @@
             XLSX.writeFile(wb, `Analisis_Guru_${namaFileClean}.xlsx`);
             Swal.close();
         };
+        // ==========================================
+        // FITUR KUSTOM FILE INPUT HANDLING
+        // ==========================================
+
+        // Fungsi untuk memicu input file yang tersembunyi ketika tombol kustom ditekan
+        function triggerFileInput(inputId) {
+            document.getElementById(inputId).click();
+        }
+
+        // Fungsi untuk memperbarui nama file yang ditampilkan setelah file dipilih
+        function handleFileChange(inputId, displayId) {
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(displayId);
+            
+            if (input.files && input.files[0]) {
+                display.innerText = input.files[0].name;
+                display.classList.remove('text-gray-500'); // Hapus teks abu-abu terang
+                display.classList.add('text-gray-800'); // Ganti dengan teks gelap
+            } else {
+                display.innerText = "Tidak ada file yang dipilih";
+                display.classList.remove('text-gray-800');
+                display.classList.add('text-gray-500');
+            }
+        }
+
+        // Pastikan fungsi-fungsi ini tersedia secara global jika Anda tidak menggunakan sistem modul
+        // window.triggerFileInput = triggerFileInput;
+
+        // Tambahkan event listener untuk input file
+        document.getElementById('fileImportSoal').addEventListener('change', () => {
+            handleFileChange('fileImportSoal', 'fileNameDisplay');
+        });
     </script>
 </body>
 </html>
