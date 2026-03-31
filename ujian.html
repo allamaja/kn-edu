@@ -174,10 +174,11 @@
                     if (sDoc.exists()) daftarSoal.push({ id: sDoc.id, ...sDoc.data() });
                 }
 
-                // INISIALISASI CERDAS V2
+                // INISIALISASI STRUKTUR JAWABAN V2
                 for(let i=0; i<daftarSoal.length; i++) { 
                     let tipe = daftarSoal[i].tipe_soal || 'pg';
                     if (tipe === 'pg_kompleks') jawabanSiswa[i] = []; 
+                    else if (tipe === 'pgk_matriks') jawabanSiswa[i] = {}; 
                     else if (tipe === 'essay') jawabanSiswa[i] = ""; 
                     else jawabanSiswa[i] = null; 
                     raguRagu[i] = false; eliminasiOpsi[i] = []; 
@@ -207,7 +208,6 @@
                 `;
                 
                 Swal.close(); document.getElementById('layarGerbang').classList.remove('hidden');
-
             } catch (e) { Swal.fire('Error', 'Gagal memuat ujian.', 'error'); }
         }
 
@@ -235,9 +235,9 @@
             let bTipe = document.getElementById('badgeTipeSoal');
             if(tipe === 'essay') { bTipe.innerText = 'ESSAY'; bTipe.className = "bg-purple-50 text-purple-600 border border-purple-200 text-[10px] font-black px-2 py-1 rounded uppercase shadow-sm"; }
             else if(tipe === 'pg_kompleks') { bTipe.innerText = 'PG KOMPLEKS'; bTipe.className = "bg-indigo-50 text-indigo-600 border border-indigo-200 text-[10px] font-black px-2 py-1 rounded uppercase shadow-sm"; }
+            else if(tipe === 'pgk_matriks') { bTipe.innerText = 'MATRIKS (B-S)'; bTipe.className = "bg-teal-50 text-teal-600 border border-teal-200 text-[10px] font-black px-2 py-1 rounded uppercase shadow-sm"; }
             else { bTipe.innerText = 'PG'; bTipe.className = "bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-black px-2 py-1 rounded uppercase shadow-sm"; }
 
-            // 1. RENDER PERTANYAAN
             let qlEditor = document.getElementById('teksPertanyaan');
             if(soal.pertanyaan && !soal.pertanyaan.startsWith('<')) qlEditor.innerHTML = `<p>${soal.pertanyaan}</p>`;
             else qlEditor.innerHTML = soal.pertanyaan || "";
@@ -245,15 +245,51 @@
             let kontainerOpsi = document.getElementById('kontainerOpsi');
             let tips = document.getElementById('tipsSoal');
             
-            // 2. RENDER OPSI JAWABAN
             if (tipe === 'essay') {
                 tips.style.display = 'none'; 
                 let valEssay = jawabanSiswa[indeksSekarang] || "";
                 kontainerOpsi.innerHTML = `
                     <div class="mt-4">
                         <label class="block text-sm font-bold text-gray-600 mb-2">Ketik Jawaban Anda:</label>
-                        <textarea id="inputEssaySiswa" rows="6" oninput="window.simpanJawabanEssay(this.value)" placeholder="Tuliskan penjelasan secara detail..." class="w-full p-4 border border-purple-200 bg-purple-50 focus:bg-white rounded-2xl outline-none focus:ring-4 focus:ring-purple-200 transition text-gray-800 font-medium">${valEssay}</textarea>
+                        <textarea id="inputEssaySiswa" rows="6" oninput="window.simpanJawabanEssay(this.value)" placeholder="Tuliskan jawaban secara detail..." class="w-full p-4 border border-purple-200 bg-purple-50 focus:bg-white rounded-2xl outline-none focus:ring-4 focus:ring-purple-200 transition text-gray-800 font-medium">${valEssay}</textarea>
                     </div>`;
+            } else if (tipe === 'pgk_matriks') {
+                tips.style.display = 'block'; tips.innerHTML = "💡 Tips: Tentukan jawaban pada setiap baris pernyataan.";
+                
+                let listOpsi = soal.opsi || [];
+                let hMatriks = (listOpsi[0] && listOpsi[0].header) ? listOpsi[0].header.split('|') : ['Benar', 'Salah'];
+                
+                let htmlTable = `
+                <div class="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm mt-4">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-teal-50 text-teal-800 uppercase tracking-widest text-[10px]">
+                            <tr>
+                                <th class="p-4 border-b border-teal-100 font-black">Pernyataan</th>
+                                <th class="p-4 border-b border-l border-teal-100 font-black text-center w-24 bg-green-50">${hMatriks[0]}</th>
+                                <th class="p-4 border-b border-l border-teal-100 font-black text-center w-24 bg-red-50">${hMatriks[1]}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">`;
+                
+                listOpsi.forEach(op => {
+                    let ans = jawabanSiswa[indeksSekarang][op.label]; 
+                    let chkKiri = ans === 'Kiri' ? 'checked' : '';
+                    let chkKanan = ans === 'Kanan' ? 'checked' : '';
+                    
+                    htmlTable += `
+                        <tr class="hover:bg-gray-50 transition group">
+                            <td class="p-4 ql-editor bg-white group-hover:bg-transparent" style="min-height:auto;">${op.teks}</td>
+                            <td class="p-4 border-l bg-green-50/20 hover:bg-green-100 cursor-pointer text-center" onclick="window.pilihJawabanMatriks('${op.label}', 'Kiri')">
+                                <input type="radio" name="matriks_${op.label}" class="w-5 h-5 text-green-600 cursor-pointer" ${chkKiri}>
+                            </td>
+                            <td class="p-4 border-l bg-red-50/20 hover:bg-red-100 cursor-pointer text-center" onclick="window.pilihJawabanMatriks('${op.label}', 'Kanan')">
+                                <input type="radio" name="matriks_${op.label}" class="w-5 h-5 text-red-600 cursor-pointer" ${chkKanan}>
+                            </td>
+                        </tr>`;
+                });
+                htmlTable += `</tbody></table></div>`;
+                kontainerOpsi.innerHTML = htmlTable;
+
             } else {
                 tips.style.display = 'block'; 
                 if(tipe === 'pg_kompleks') tips.innerHTML = "💡 Tips: Anda bisa <b>Mencentang Lebih Dari 1</b> Jawaban Benar.";
@@ -271,13 +307,11 @@
                     
                     let isEliminated = eliminasiOpsi[indeksSekarang].includes(op.label);
                     let shape = tipe === 'pg_kompleks' ? 'rounded-lg' : 'rounded-full'; 
-
                     let bgKelas = isChecked ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-200' : 'border-gray-200 bg-white hover:bg-gray-50';
                     let textTercoret = isEliminated ? 'line-through text-gray-400 opacity-60' : 'text-gray-800';
                     let iconKelas = isChecked ? 'bg-blue-600 text-white border-blue-600' : (isEliminated ? 'border-gray-200 text-gray-300' : 'text-gray-500 border-gray-300');
                     let isiIkon = (tipe === 'pg_kompleks' && isChecked) ? '✓' : op.label;
 
-                    // PERBAIKAN: Menggunakan div dengan class ql-editor agar gambar dan teks format kaya dari Quill tidak rusak
                     htmlOpsi += `
                     <div class="flex items-center p-3 md:p-4 border rounded-2xl cursor-pointer transition select-none ${bgKelas}" 
                          onclick="window.pilihJawaban('${op.label}')" 
@@ -289,7 +323,6 @@
                 kontainerOpsi.innerHTML = htmlOpsi;
             }
 
-            // 3. RENDER RUMUS MATEMATIKA (Dipindah ke bawah agar mengeksekusi rumus di dalam opsi jawaban juga)
             setTimeout(() => {
                 document.querySelectorAll('.ql-formula').forEach(el => {
                     let latex = el.getAttribute('data-value');
@@ -297,7 +330,6 @@
                 });
             }, 10);
 
-            // 4. ATUR TOMBOL BAWAH
             const btnRagu = document.getElementById('btnRagu'), btnSeb = document.getElementById('btnSebelumnya'), btnSel = document.getElementById('btnSelanjutnya');
             if(raguRagu[indeksSekarang]) { btnRagu.classList.replace('bg-yellow-50', 'bg-yellow-400'); btnRagu.classList.replace('text-yellow-700', 'text-yellow-900'); btnRagu.classList.replace('border-yellow-200', 'border-yellow-500'); } 
             else { btnRagu.classList.replace('bg-yellow-400', 'bg-yellow-50'); btnRagu.classList.replace('text-yellow-900', 'text-yellow-700'); btnRagu.classList.replace('border-yellow-500', 'border-yellow-200'); }
@@ -325,12 +357,21 @@
             raguRagu[indeksSekarang] = false; tampilkanSoal(indeksSekarang); simpanStateLokal();
         };
 
-        window.simpanJawabanEssay = function(teksVal) { jawabanSiswa[indeksSekarang] = teksVal; raguRagu[indeksSekarang] = false; simpanStateLokal(); renderGridNavigasi(); };
+        window.pilihJawabanMatriks = function(labelBaris, arahJawaban) {
+            jawabanSiswa[indeksSekarang][labelBaris] = arahJawaban;
+            raguRagu[indeksSekarang] = false; tampilkanSoal(indeksSekarang); simpanStateLokal();
+        };
+
+        window.simpanJawabanEssay = function(teksVal) { 
+            jawabanSiswa[indeksSekarang] = teksVal; 
+            raguRagu[indeksSekarang] = false; 
+            simpanStateLokal(); renderGridNavigasi(); 
+        };
 
         window.toggleEliminasi = function(event, opsi) {
             event.preventDefault(); 
             let tipe = daftarSoal[indeksSekarang].tipe_soal || 'pg';
-            if (tipe === 'essay') return; 
+            if (tipe === 'essay' || tipe === 'pgk_matriks') return; 
             
             let idxArray = eliminasiOpsi[indeksSekarang].indexOf(opsi);
             if(idxArray > -1) { eliminasiOpsi[indeksSekarang].splice(idxArray, 1); } 
@@ -412,6 +453,11 @@
                 let t = daftarSoal[i].tipe_soal || 'pg';
                 if(t === 'pg_kompleks' && jawabanSiswa[i].length === 0) arrKosong.push(i);
                 else if(t === 'essay' && jawabanSiswa[i].trim() === "") arrKosong.push(i);
+                else if(t === 'pgk_matriks') {
+                    let jmlBarisMatriks = daftarSoal[i].opsi ? daftarSoal[i].opsi.length : 0;
+                    let jmlDiisi = Object.keys(jawabanSiswa[i]).length;
+                    if(jmlDiisi < jmlBarisMatriks) arrKosong.push(i);
+                }
                 else if(t === 'pg' && !jawabanSiswa[i]) arrKosong.push(i);
             }
 
@@ -419,7 +465,7 @@
                 let htmlTombolKosong = arrKosong.map(idx => `<button onclick="Swal.close(); window.tampilkanSoal(${idx})" class="m-1 px-3 py-1.5 bg-red-100 text-red-700 border border-red-300 font-black rounded-lg hover:bg-red-200 transition shadow-sm">${idx+1}</button>`).join('');
                 Swal.fire({ 
                     title: 'Yakin Ingin Mengakhiri?', 
-                    html: `<p class="text-gray-600 mb-4">Masih ada <b>${arrKosong.length} soal kosong</b>. Klik angka untuk melompat langsung:</p><div class="flex flex-wrap justify-center max-h-40 overflow-y-auto p-2 bg-gray-50 border rounded-xl">${htmlTombolKosong}</div>`, 
+                    html: `<p class="text-gray-600 mb-4">Masih ada <b>${arrKosong.length} soal kosong/belum lengkap</b>. Klik angka untuk melompat langsung:</p><div class="flex flex-wrap justify-center max-h-40 overflow-y-auto p-2 bg-gray-50 border rounded-xl">${htmlTombolKosong}</div>`, 
                     icon: 'warning', showCancelButton: true, confirmButtonColor: '#10b981', cancelButtonColor: '#64748b', confirmButtonText: 'Tetap Kumpulkan', cancelButtonText: 'Lanjutkan Ujian'
                 }).then((res) => { if (res.isConfirmed) { clearInterval(hitungMundur); ujianSedangBerjalan = false; hitungDanSimpanSkor(); } });
             } else {
@@ -435,13 +481,11 @@
             let totalPG = 0, totalEssay = 0;
             
             for (let i = 0; i < daftarSoal.length; i++) {
-                let soal = daftarSoal[i];
-                let tipe = soal.tipe_soal || 'pg';
-                let jwb = jawabanSiswa[i];
+                let soal = daftarSoal[i]; let tipe = soal.tipe_soal || 'pg'; let jwb = jawabanSiswa[i];
 
                 if (tipe === 'essay') {
                     totalEssay++;
-                    if (!jwb || jwb.trim() === "") k++; else s++; // Menunggu nilai manual
+                    if (!jwb || jwb.trim() === "") k++; else s++; 
                 } 
                 else {
                     totalPG++;
@@ -452,37 +496,39 @@
                             let jwbSiswaArr = [...jwb].sort();
                             if(JSON.stringify(kunciBenarArr) === JSON.stringify(jwbSiswaArr)) b++; else s++;
                         }
-                    } else {
+                    } 
+                    else if (tipe === 'pgk_matriks') {
+                        let jmlBarisMatriks = soal.opsi ? soal.opsi.length : 0;
+                        let jmlDiisi = Object.keys(jwb).length;
+                        
+                        if(jmlDiisi === 0) { k++; }
+                        else {
+                            let salahSatuAdaYangSalah = false;
+                            soal.opsi.forEach(op => { let ansSiswa = jwb[op.label]; if(ansSiswa !== op.benar) salahSatuAdaYangSalah = true; });
+                            if(!salahSatuAdaYangSalah && jmlDiisi === jmlBarisMatriks) b++; else s++;
+                        }
+                    }
+                    else {
                         if (!jwb) { k++; }
                         else {
                             let kunciMurni = soal.kunci; 
-                            if(soal.opsi && Array.isArray(soal.opsi)) {
-                                let optBenar = soal.opsi.find(o => o.benar);
-                                if(optBenar) kunciMurni = optBenar.label;
-                            }
+                            if(soal.opsi && Array.isArray(soal.opsi)) { let optBenar = soal.opsi.find(o => o.benar); if(optBenar) kunciMurni = optBenar.label; }
                             if (jwb === kunciMurni) b++; else s++;
                         }
                     }
                 }
             }
             
-            // --- KALKULASI SKOR SEMENTARA UNTUK SISWA ---
             let skorPG = totalPG > 0 ? (b / totalPG) * 100 : 0;
-            let nilaiAkhir = 0;
-            let infoTambahan = "";
+            let nilaiAkhir = 0; let infoTambahan = "";
 
             if (totalPG > 0 && totalEssay > 0) {
-                // Campuran: Ambil 70% dari nilai PG. (30% Essay masih 0 karena belum dikoreksi)
                 nilaiAkhir = Math.round(skorPG * 0.7); 
                 infoTambahan = `<p class="text-xs text-yellow-600 bg-yellow-50 p-2 rounded border border-yellow-200 mt-3">*Terdapat ${totalEssay} soal Essay. Nilai di atas akan bertambah maksimal 30 poin lagi setelah dikoreksi oleh Guru.</p>`;
             } else if (totalPG > 0 && totalEssay === 0) {
-                // PG Murni
-                nilaiAkhir = Math.round(skorPG);
-                infoTambahan = `<p class="text-xs text-gray-500 mt-2">*Nilai ini adalah hasil akhir otomatis.</p>`;
+                nilaiAkhir = Math.round(skorPG); infoTambahan = `<p class="text-xs text-gray-500 mt-2">*Nilai ini adalah hasil akhir otomatis.</p>`;
             } else if (totalPG === 0 && totalEssay > 0) {
-                // Essay Murni
-                nilaiAkhir = 0;
-                infoTambahan = `<p class="text-xs text-yellow-600 bg-yellow-50 p-2 rounded border border-yellow-200 mt-3">*100% Ujian Essay. Menunggu hasil koreksi penuh dari Guru.</p>`;
+                nilaiAkhir = 0; infoTambahan = `<p class="text-xs text-yellow-600 bg-yellow-50 p-2 rounded border border-yellow-200 mt-3">*100% Ujian Essay. Menunggu hasil koreksi penuh dari Guru.</p>`;
             }
 
             try {
@@ -490,9 +536,7 @@
                     username: usernameSiswaAktif, nama_siswa: namaSiswaAsli, sekolah_id: detailJadwal.sekolah_id || "Pusat",
                     kelas: detailJadwal.kelas, mapel: detailJadwal.mapel, id_jadwal: detailJadwal.id, id_paket: detailJadwal.id_paket,  
                     nama_ujian: detailJadwal.nama_ujian, nilai_akhir: nilaiAkhir, detail: { benar: b, salah: s, kosong: k }, 
-                    waktu_selesai: new Date(), aturan_rilis_bahas: detailJadwal.aturan_rilis_bahas, 
-                    rekam_jawaban: jawabanSiswa,
-                    rekam_soal: daftarSoal 
+                    waktu_selesai: new Date(), aturan_rilis_bahas: detailJadwal.aturan_rilis_bahas, rekam_jawaban: jawabanSiswa, rekam_soal: daftarSoal 
                 });
 
                 localStorage.removeItem(`ujian_${usernameSiswaAktif}_${detailJadwal.id}`); sessionStorage.removeItem('id_jadwal_aktif'); 
