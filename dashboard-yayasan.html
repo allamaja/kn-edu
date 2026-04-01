@@ -1875,26 +1875,32 @@
                             pesanError = "Jenis Soal tidak dikenali.";
                         }
 
-                       if(isValid) {
-                            // --- MESIN DETEKSI JENJANG OTOMATIS ---
+                       // JIKA VALID, BUAT PAYLOAD
+                        if(isValid) {
+                            // --- MESIN DETEKSI JENJANG OTOMATIS MURNI (ANTI-CRASH) ---
                             let kelasDiExcel = (rw["Kelas"] || "10").toString().trim();
                             let angkaKelas = parseInt(kelasDiExcel) || 10;
-                            let jenjangDinamis = typeof jenjangSekolahGlobal !== 'undefined' ? jenjangSekolahGlobal : "SMA"; 
-
-                            // JIKA INI ADMIN YAYASAN (Global), TEBAK DARI KELAS
-                            if (jenjangDinamis === "Semua" || !jenjangSekolahGlobal) {
-                                if (angkaKelas >= 1 && angkaKelas <= 6) jenjangDinamis = "SD";
-                                else if (angkaKelas >= 7 && angkaKelas <= 9) jenjangDinamis = "SMP";
-                                else if (angkaKelas >= 10 && angkaKelas <= 12) jenjangDinamis = "SMA";
-                            }
+                            let jenjangDinamis = "SMA"; // Default
+                            
+                            // Deteksi murni berdasarkan angka kelas di Excel
+                            if (angkaKelas >= 1 && angkaKelas <= 6) jenjangDinamis = "SD";
+                            else if (angkaKelas >= 7 && angkaKelas <= 9) jenjangDinamis = "SMP";
+                            else if (angkaKelas >= 10 && angkaKelas <= 12) jenjangDinamis = "SMA";
 
                             let py = { 
-                                tipe_soal: jenisSoal, pertanyaan: konversiRichText(tTanya), opsi: arrayOpsiV2, pembahasan: konversiRichText(rw["Pembahasan"]), 
+                                tipe_soal: jenisSoal, 
+                                pertanyaan: konversiRichText(tTanya), 
+                                opsi: arrayOpsiV2, 
+                                pembahasan: konversiRichText(rw["Pembahasan"]), 
                                 kuadran: rw["Target"] || rw["Target (Global/Lokal/Latihan)"] || "Global", 
                                 kesulitan: rw["Kesulitan"] || rw["Kesulitan (Mudah/Sedang/Sulit)"] || "Sedang",
+                                status: "aktif", 
+                                pembuat_id: "Admin Yayasan", 
+                                sekolah_id: "Global",
                                 metadata: { 
-                                    mapel: rw["Mapel"] || "", sub_bab: rw["Bab"] || "-", 
-                                    jenjang: jenjangDinamis, // 🔥 HASIL TEBAKAN CERDAS
+                                    mapel: rw["Mapel"] || "", 
+                                    sub_bab: rw["Bab"] || "-", 
+                                    jenjang: jenjangDinamis, // 🔥 Otomatis menebak jenjang
                                     kelas: kelasDiExcel 
                                 } 
                             };
