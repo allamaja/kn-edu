@@ -733,11 +733,44 @@
         pasangFiturCustom(quillPertanyaan); pasangFiturCustom(quillPembahasan);
         pasangFiturCustom(quillOpsiA); pasangFiturCustom(quillOpsiB); pasangFiturCustom(quillOpsiC); pasangFiturCustom(quillOpsiD);
 
-        window.bukaModalMath = () => { let mf = document.getElementById('mathFieldVirtual'); mf.value = ''; document.getElementById('modalMathKeyboard').classList.remove('hidden'); setTimeout(() => { mf.focus(); }, 100); };
-        window.tutupModalMath = () => { document.getElementById('modalMathKeyboard').classList.add('hidden'); targetEditorMath = null; };
+        window.bukaModalMath = () => { 
+            let mf = document.getElementById('mathFieldVirtual'); 
+            mf.value = ''; 
+            document.getElementById('modalMathKeyboard').classList.remove('hidden'); 
+            
+            setTimeout(() => { 
+                mf.focus(); 
+                
+                // 🔥 JURUS BRUTAL JS: Paksa keyboard MathLive tunduk! 🔥
+                if(window.mathVirtualKeyboard) {
+                    window.mathVirtualKeyboard.show(); // Buka otomatis tanpa diklik!
+                    let kb = document.querySelector('math-virtual-keyboard');
+                    if(kb) {
+                        // 2147483647 adalah angka Z-Index kasta tertinggi di dunia web browser
+                        kb.style.setProperty('z-index', '2147483647', 'important'); 
+                    }
+                }
+            }, 200); // Jeda sedikit agar MathLive selesai merender komponennya
+        };
+
+        window.tutupModalMath = () => { 
+            document.getElementById('modalMathKeyboard').classList.add('hidden'); 
+            targetEditorMath = null; 
+            
+            // Tutup paksa keyboardnya agar tidak nyangkut di layar
+            if(window.mathVirtualKeyboard) {
+                window.mathVirtualKeyboard.hide(); 
+            }
+        };
+
         window.sisipkanRumus = () => {
-            if(!targetEditorMath) return; let latexCode = document.getElementById('mathFieldVirtual').value;
-            if(latexCode && latexCode.trim() !== '') { let range = targetEditorMath.getSelection(true); targetEditorMath.insertEmbed(range.index, 'formula', latexCode, Quill.sources.USER); targetEditorMath.setSelection(range.index + 1, Quill.sources.SILENT); }
+            if(!targetEditorMath) return; 
+            let latexCode = document.getElementById('mathFieldVirtual').value;
+            if(latexCode && latexCode.trim() !== '') { 
+                let range = targetEditorMath.getSelection(true); 
+                targetEditorMath.insertEmbed(range.index, 'formula', latexCode, Quill.sources.USER); 
+                targetEditorMath.setSelection(range.index + 1, Quill.sources.SILENT); 
+            }
             window.tutupModalMath();
         };
 
