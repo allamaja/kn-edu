@@ -741,26 +741,33 @@
             setTimeout(() => { 
                 mf.focus(); 
                 
-                // 🔥 JURUS BRUTAL JS: Paksa keyboard MathLive tunduk! 🔥
+                // 1. Perintah API untuk memunculkan keyboard
                 if(window.mathVirtualKeyboard) {
-                    window.mathVirtualKeyboard.show(); // Buka otomatis tanpa diklik!
-                    let kb = document.querySelector('math-virtual-keyboard');
-                    if(kb) {
-                        // 2147483647 adalah angka Z-Index kasta tertinggi di dunia web browser
-                        kb.style.setProperty('z-index', '2147483647', 'important'); 
-                    }
+                    window.mathVirtualKeyboard.show(); 
                 }
-            }, 200); // Jeda sedikit agar MathLive selesai merender komponennya
+
+                // 2. 🔥 JURUS RADAR: Cari elemen yang baru lahir & seret ke depan!
+                let radarKeyboard = setInterval(() => {
+                    let kb = document.querySelector('math-virtual-keyboard') || document.querySelector('.ML__keyboard');
+                    if (kb) {
+                        // Ketemu! Paksa Z-Index ke kasta tertinggi di dunia web (2 Miliar)
+                        kb.style.setProperty('z-index', '2147483647', 'important');
+                        // Matikan radar karena target sudah ditaklukkan
+                        clearInterval(radarKeyboard);
+                    }
+                }, 100); // Melacak setiap 0.1 detik
+                
+                // 3. Matikan radar otomatis setelah 3 detik agar browser tidak lelah
+                setTimeout(() => clearInterval(radarKeyboard), 3000);
+
+            }, 300); // Beri sedikit waktu agar animasi modal putihnya selesai
         };
 
         window.tutupModalMath = () => { 
             document.getElementById('modalMathKeyboard').classList.add('hidden'); 
             targetEditorMath = null; 
-            
-            // Tutup paksa keyboardnya agar tidak nyangkut di layar
-            if(window.mathVirtualKeyboard) {
-                window.mathVirtualKeyboard.hide(); 
-            }
+            // Sembunyikan juga keyboardnya agar tidak nyangkut saat modal ditutup
+            if(window.mathVirtualKeyboard) window.mathVirtualKeyboard.hide();
         };
 
         window.sisipkanRumus = () => {
