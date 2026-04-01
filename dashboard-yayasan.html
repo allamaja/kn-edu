@@ -1875,22 +1875,32 @@
                             pesanError = "Jenis Soal tidak dikenali.";
                         }
 
-                        if(isValid) {
-                            // METADATA BERSIH DARI ATRIBUT KURIKULUM WORD
-                            let jenjangFallback = typeof jenjangSekolahGlobal !== 'undefined' ? jenjangSekolahGlobal : "SMA";
+                       if(isValid) {
+                            // --- MESIN DETEKSI JENJANG OTOMATIS ---
+                            let kelasDiExcel = (rw["Kelas"] || "10").toString().trim();
+                            let angkaKelas = parseInt(kelasDiExcel) || 10;
+                            let jenjangDinamis = typeof jenjangSekolahGlobal !== 'undefined' ? jenjangSekolahGlobal : "SMA"; 
+
+                            // JIKA INI ADMIN YAYASAN (Global), TEBAK DARI KELAS
+                            if (jenjangDinamis === "Semua" || !jenjangSekolahGlobal) {
+                                if (angkaKelas >= 1 && angkaKelas <= 6) jenjangDinamis = "SD";
+                                else if (angkaKelas >= 7 && angkaKelas <= 9) jenjangDinamis = "SMP";
+                                else if (angkaKelas >= 10 && angkaKelas <= 12) jenjangDinamis = "SMA";
+                            }
+
                             let py = { 
                                 tipe_soal: jenisSoal, pertanyaan: konversiRichText(tTanya), opsi: arrayOpsiV2, pembahasan: konversiRichText(rw["Pembahasan"]), 
                                 kuadran: rw["Target"] || rw["Target (Global/Lokal/Latihan)"] || "Global", 
                                 kesulitan: rw["Kesulitan"] || rw["Kesulitan (Mudah/Sedang/Sulit)"] || "Sedang",
                                 metadata: { 
                                     mapel: rw["Mapel"] || "", sub_bab: rw["Bab"] || "-", 
-                                    jenjang: (rw["Jenjang"] || jenjangFallback).toString().toUpperCase(), 
-                                    kelas: (rw["Kelas"] || "10").toString() 
+                                    jenjang: jenjangDinamis, // 🔥 HASIL TEBAKAN CERDAS
+                                    kelas: kelasDiExcel 
                                 } 
                             };
                             
                             window.dataPreviewImport.push({ id_temp: index, data: py, valid: true });
-                            h += `<label class="flex items-start p-3 border border-indigo-100 bg-indigo-50/30 rounded-xl cursor-pointer hover:bg-indigo-50 transition"><input type="checkbox" value="${index}" class="cek-import-soal w-5 h-5 mt-1 text-indigo-600 rounded" checked><div class="ml-3"><p class="text-sm font-bold text-gray-800 line-clamp-2">${tTanya || '(Soal Gambar/Hybrid)'}</p><p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">MAPEL: ${rw["Mapel"]||'-'} | OPSI: ${jmlOpsi} | TIPE: ${jenisSoal.replace('_', ' ')} | KUNCI: ${k || 'ESSAY'}</p></div></label>`;
+                            h += `<label class="flex items-start p-3 border border-indigo-100 bg-indigo-50/30 rounded-xl cursor-pointer hover:bg-indigo-50 transition"><input type="checkbox" value="${index}" class="cek-import-soal w-5 h-5 mt-1 text-indigo-600 rounded" checked><div class="ml-3"><p class="text-sm font-bold text-gray-800 line-clamp-2">${tTanya || '(Soal Gambar/Hybrid)'}</p><p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">MAPEL: ${rw["Mapel"]||'-'} | JENJANG: ${jenjangDinamis} (Kls ${kelasDiExcel}) | TIPE: ${jenisSoal.replace('_', ' ')}</p></div></label>`;
                             validCount++;
                         } else {
                             window.dataPreviewImport.push({ id_temp: index, data: null, valid: false });
