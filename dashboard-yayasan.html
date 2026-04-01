@@ -74,9 +74,17 @@
             <div class="flex flex-col gap-0.5">
                 <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Bank Soal</p>
                 <button onclick="bukaTab('tabSemuaSoal')" id="menuSemuaSoal" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs">
-                    <span class="w-5 text-center mr-2">📚</span> Soal Pusat
+                    <span class="w-5 text-center mr-2">📚</span> Daftar Soal
                 </button>
-                <button onclick="bukaTab('tabPaket')" id="menuPaket" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs">
+                
+                <button onclick="bukaModalTambahSoal()" id="menuEditorSoal" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs">
+                    <span class="w-5 text-center mr-2">✍️</span> Editor Soal
+                </button>
+                <button onclick="bukaModalImportSoal()" id="menuImportSoal" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs">
+                    <span class="w-5 text-center mr-2">📥</span> Import Excel
+                </button>
+                
+                <button onclick="bukaTab('tabPaket')" id="menuPaket" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs mt-2">
                     <span class="w-5 text-center mr-2">📦</span> Paket Ujian
                 </button>
                 <button onclick="bukaTab('tabReview')" id="menuReview" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center justify-between text-xs">
@@ -400,165 +408,206 @@
                 </div>
             </div>
         </div>
-    </main>
-
-    <div id="modalEditor" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[100] p-4 overflow-y-auto backdrop-blur-sm">
-        <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl my-8 flex flex-col max-h-[90vh]">
-            <div class="flex justify-between items-center p-6 border-b border-gray-100 shrink-0">
-                <div class="flex items-center space-x-3">
-                    <h3 class="text-xl font-bold text-gray-800" id="judulModalEditor">🔍 Editor Soal Pusat V2</h3>
-                    <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-200">Pro Version</span>
-                </div>
-                <button onclick="tutupModalEditor()" class="text-gray-400 hover:text-red-500 text-3xl font-bold focus:outline-none">&times;</button>
-            </div>
-            
-            <div class="p-6 md:p-8 overflow-y-auto flex-1 space-y-4">
-                <input type="hidden" id="editIdSoal"><input type="hidden" id="editAsalTab">
-                
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4 bg-teal-50 p-4 rounded-xl border border-teal-200">
-                    <div><label class="block text-xs font-bold mb-1 text-teal-800">Mata Pelajaran</label><select id="editMapel" class="w-full p-2 border border-teal-300 rounded-lg dinamis-mapel text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white"></select></div>
-                    <div><label class="block text-xs font-bold mb-1 text-teal-800">Sub Bab</label><select id="editBab" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white"><option value="-">-</option></select></div>
-                    <div><label class="block text-xs font-bold mb-1 text-teal-800">Jenjang</label><select id="editJenjang" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white"><option value="SMA">SMA</option><option value="SMP">SMP</option><option value="SD">SD</option></select></div>
-                    <div><label class="block text-xs font-bold mb-1 text-teal-800">Kelas</label><select id="editKelas" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12" selected>12</option></select></div>
-                    <div><label class="block text-xs font-bold mb-1 text-blue-800">🔥 Jenis Soal</label><select id="editTipeSoal" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-blue-400 bg-blue-50 font-bold text-blue-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"><option value="pg">Pilihan Ganda</option><option value="pg_kompleks">PG Kompleks</option><option value="pgk_matriks">PGK Matriks (B-S / S-TS)</option><option value="essay">Uraian / Essay</option></select></div>
-                    <div><label class="block text-xs font-bold mb-1 text-purple-700">⭐ Kesulitan</label><select id="editKesulitan" class="w-full p-2 border border-purple-300 bg-purple-50 font-bold text-purple-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-purple-500"><option value="Mudah">Mudah</option><option value="Sedang" selected>Sedang</option><option value="Sulit">Sulit</option></select></div>
-                    <div class="col-span-2 md:col-span-3 lg:col-span-6"><label class="block text-xs font-bold mb-1 text-teal-800">Kuadran (Hak Akses)</label><select id="editKuadran" class="w-full p-2 border border-teal-300 rounded-lg text-sm outline-none bg-white"><option value="Global">Global (Untuk Ujian Pusat)</option><option value="Lokal">Lokal (Untuk Sekolah Tertentu)</option><option value="Latihan">Latihan (Siswa bisa akses bebas)</option></select></div>
-                </div>
-
-                <div>
-                    <div class="flex justify-between items-center mb-2"><label class="block text-sm font-bold text-gray-700">Teks Pertanyaan</label><span class="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-500 font-bold">💡 Klik tombol "fx" untuk papan rumus</span></div>
-                    <div id="editorPertanyaan" class="editor-soal"></div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4 mb-4 bg-gray-100 p-4 rounded-xl border border-gray-200">
-                    <div>
-                        <label class="block text-xs font-bold mb-1 text-gray-700">Jumlah Pilihan / Pernyataan</label>
-                        <select id="editJumlahOpsi" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm">
-                            <option value="3">3 Baris (A - C)</option>
-                            <option value="4" selected>4 Baris (A - D)</option>
-                            <option value="5">5 Baris (A - E)</option>
-                        </select>
-                    </div>
-                    <div id="wadahHeaderMatriks" class="hidden">
-                        <label class="block text-xs font-bold mb-1 text-gray-700">Teks Pilihan Matriks</label>
-                        <select id="editHeaderMatriks" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm">
-                            <option value="Benar|Salah">Benar / Salah</option>
-                            <option value="Sesuai|Tidak Sesuai">Sesuai / Tidak Sesuai</option>
-                            <option value="Akurat|Tidak Akurat">Akurat / Tidak Akurat</option>
-                            <option value="Fakta|Opini">Fakta / Opini</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div id="areaOpsiJawaban" class="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
-                    <div class="flex justify-between items-center border-b pb-2 mb-2">
-                        <label class="block text-sm font-bold text-gray-700" id="labelJudulOpsi">Pilihan Jawaban & Kunci</label>
-                        <span class="text-xs text-white bg-blue-500 px-2 py-1 rounded font-bold shadow-sm" id="petunjukOpsi">Pilih 1 bulatan biru sebagai kunci.</span>
-                    </div>
+        <div id="tabEditorSoal" class="space-y-6 hidden">
+                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
                     
-                    <div class="baris-opsi flex items-start space-x-3" data-idx="0" data-huruf="A">
-                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="A" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
-                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">A</span>
-                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiA" class="min-h-[60px]"></div></div>
-                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
-                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_0" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
-                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_0" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-8 pb-5 border-b gap-4">
+                        <div>
+                            <div class="flex items-center space-x-3 mb-1">
+                                <h2 class="text-2xl font-black text-teal-800" id="judulModalEditor">✨ Editor Soal Pusat V2</h2>
+                                <span class="bg-teal-50 text-teal-600 border border-teal-200 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest">Pro Layout</span>
+                            </div>
+                            <p class="text-gray-500 text-sm">Lengkapi metadata dan rancang soal Anda dengan editor interaktif di bawah ini.</p>
                         </div>
-                    </div>
-                    <div class="baris-opsi flex items-start space-x-3" data-idx="1" data-huruf="B">
-                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="B" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
-                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">B</span>
-                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiB" class="min-h-[60px]"></div></div>
-                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
-                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_1" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
-                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_1" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
-                        </div>
-                    </div>
-                    <div class="baris-opsi flex items-start space-x-3" data-idx="2" data-huruf="C">
-                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="C" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
-                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">C</span>
-                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiC" class="min-h-[60px]"></div></div>
-                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
-                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_2" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
-                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_2" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
-                        </div>
-                    </div>
-                    <div class="baris-opsi flex items-start space-x-3" data-idx="3" data-huruf="D">
-                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="D" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
-                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">D</span>
-                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiD" class="min-h-[60px]"></div></div>
-                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
-                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_3" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
-                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_3" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
-                        </div>
-                    </div>
-                    <div class="baris-opsi flex items-start space-x-3" data-idx="4" data-huruf="E">
-                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="E" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
-                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">E</span>
-                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiE" class="min-h-[60px]"></div></div>
-                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
-                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_4" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
-                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_4" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-2 pt-4 border-t border-gray-100">
-                    <label class="block text-sm font-bold text-yellow-600 mb-2">💡 Kunci Penjelasan / Pembahasan</label>
-                    <div id="editorPembahasan" class="editor-bahas border-yellow-300 bg-yellow-50"></div>
-                </div>
-            </div>
-            
-            <div class="p-6 border-t flex justify-between bg-gray-50 rounded-b-3xl shrink-0">
-                <div>
-                    <button onclick="aksiHapusTolakDariModal()" id="btnTolakModal" class="hidden px-6 py-3 text-white bg-red-500 rounded-xl font-bold hover:bg-red-600 transition shadow-sm mr-2">❌ Tolak Soal</button>
-                    <button onclick="tutupModalEditor()" id="btnMerahModal" class="px-6 py-3 text-gray-600 bg-gray-200 rounded-xl font-bold hover:bg-gray-300 transition">Batal</button>
-                </div>
-                <button onclick="aksiSimpanDariModal()" id="btnHijauModal" class="px-8 py-3 text-white bg-teal-600 rounded-xl font-bold shadow-md hover:bg-teal-700 transition">✅ Simpan</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modalImportSoal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[55] p-4 transition-opacity">
-        <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col relative overflow-hidden max-h-[90vh]">
-            <div class="bg-indigo-600 p-6 flex justify-between items-center text-white shrink-0">
-                <h3 class="text-xl font-bold">📥 Import Soal PG (Excel)</h3>
-                <button onclick="tutupModalImportSoal()" class="hover:text-indigo-200 text-3xl font-bold focus:outline-none">&times;</button>
-            </div>
-            
-            <div class="p-6 space-y-4 bg-gray-50 flex-1 overflow-y-auto">
-                <div id="step1Import">
-                    <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl mb-4 shadow-inner">
-                        <h4 class="font-bold text-indigo-800 mb-2 flex items-center">
-                            <span class="mr-2">💡</span> Info Mesin Import V2:
-                        </h4>
-                        <ol class="list-decimal ml-5 text-sm text-indigo-700 space-y-1.5 font-medium mb-3">
-                            <li>Mendukung 4 Tipe Soal: <b>PG, PG Kompleks, Matriks (B-S), & Esai</b>.</li>
-                            <li>Bisa menyisipkan <b>Rumus (LaTeX)</b> dan <b>Link Gambar</b> otomatis.</li>
-                            <li>Mendukung <b>Mode Hybrid</b> (Kosongkan sel Excel jika ingin <i>copas</i> soal bergambar rumit dari Word ke Web Editor).</li>
-                            <li>Wajib membaca aturan pengisian di <b>Sheet 2</b> pada file template.</li>
-                        </ol>
-                        <button onclick="downloadTemplateSoal()" class="mt-2 text-xs font-bold bg-white text-indigo-600 border border-indigo-200 px-4 py-2.5 rounded-lg hover:bg-indigo-100 transition shadow-sm flex items-center">
-                            <span class="mr-2">⬇️</span> Download Template Excel
+                        <button onclick="tutupModalEditor()" class="w-full md:w-auto bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 border border-gray-200 hover:border-red-200 px-5 py-2.5 rounded-xl font-bold transition shadow-sm flex items-center justify-center">
+                            <span class="mr-2">✖</span> Batal & Kembali
                         </button>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Upload File Excel (.xlsx)</label>
-                        <input type="file" id="fileImportSoal" accept=".xlsx, .xls" class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer transition">
-                    </div>
-                </div>
+                    
+                    <div class="space-y-8">
+                        <input type="hidden" id="editIdSoal"><input type="hidden" id="editAsalTab">
+                        
+                        <div>
+                            <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center"><span class="bg-gray-100 text-gray-500 w-6 h-6 rounded-full flex items-center justify-center mr-2">1</span> Pengaturan Dasar</h4>
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 bg-teal-50/30 p-6 rounded-2xl border border-teal-100/50">
+                                <div><label class="block text-xs font-bold mb-1.5 text-gray-600">Mata Pelajaran</label><select id="editMapel" class="w-full p-2.5 border border-gray-200 rounded-xl dinamis-mapel text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm"></select></div>
+                                <div><label class="block text-xs font-bold mb-1.5 text-gray-600">Sub Bab</label><select id="editBab" class="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm"><option value="-">-</option></select></div>
+                                <div><label class="block text-xs font-bold mb-1.5 text-gray-600">Jenjang</label><select id="editJenjang" class="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm"><option value="SMA">SMA</option><option value="SMP">SMP</option><option value="SD">SD</option></select></div>
+                                <div><label class="block text-xs font-bold mb-1.5 text-gray-600">Kelas</label><select id="editKelas" class="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12" selected>12</option></select></div>
+                                <div><label class="block text-xs font-bold mb-1.5 text-blue-700">🔥 Jenis Soal</label><select id="editTipeSoal" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2.5 border border-blue-200 bg-blue-50 font-bold text-blue-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"><option value="pg">Pilihan Ganda</option><option value="pg_kompleks">PG Kompleks</option><option value="pgk_matriks">PGK Matriks (B-S)</option><option value="essay">Uraian / Essay</option></select></div>
+                                <div><label class="block text-xs font-bold mb-1.5 text-purple-700">⭐ Kesulitan</label><select id="editKesulitan" class="w-full p-2.5 border border-purple-200 bg-purple-50 font-bold text-purple-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-purple-500 shadow-sm"><option value="Mudah">Mudah</option><option value="Sedang" selected>Sedang</option><option value="Sulit">Sulit</option></select></div>
+                                <div class="col-span-2 md:col-span-3 lg:col-span-6"><label class="block text-xs font-bold mb-1.5 text-gray-600">Kuadran (Hak Akses)</label><select id="editKuadran" class="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm"><option value="Global">Global (Untuk Ujian Pusat)</option><option value="Lokal">Lokal (Untuk Sekolah Tertentu)</option><option value="Latihan">Latihan (Siswa bisa akses bebas)</option></select></div>
+                            </div>
+                        </div>
 
-                <div id="step2Import" class="hidden flex flex-col h-full">
-                    <div class="flex justify-between items-center mb-2"><h4 class="font-bold text-gray-800">Preview Data Excel</h4><span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded" id="infoJumlahPreview">0 Ditemukan</span></div>
-                    <p class="text-xs text-gray-500 mb-2">Ceklis soal yang ingin di-upload ke database. Soal yang salah format tidak bisa di-ceklis.</p>
-                    <div class="border border-gray-200 rounded-xl bg-white flex-1 overflow-y-auto p-2 space-y-2 max-h-72" id="listPreviewImport"></div>
+                        <div>
+                            <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center justify-between">
+                                <span class="flex items-center"><span class="bg-gray-100 text-gray-500 w-6 h-6 rounded-full flex items-center justify-center mr-2">2</span> Teks Pertanyaan</span>
+                                <button onclick="bukaModalMath()" class="bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center shadow-sm"><span class="mr-1.5 text-sm">🧮</span> Papan Rumus</button>
+                            </h4>
+                            <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+                                <div id="editorPertanyaan" class="editor-soal border-none"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center"><span class="bg-gray-100 text-gray-500 w-6 h-6 rounded-full flex items-center justify-center mr-2">3</span> Pilihan Jawaban & Kunci</h4>
+                            
+                            <div class="grid grid-cols-2 gap-5 mb-5 bg-gray-50 p-5 rounded-2xl border border-gray-200 shadow-inner">
+                                <div>
+                                    <label class="block text-xs font-bold mb-1.5 text-gray-600">Jumlah Opsi / Pernyataan</label>
+                                    <select id="editJumlahOpsi" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm">
+                                        <option value="3">3 Baris (A - C)</option>
+                                        <option value="4" selected>4 Baris (A - D)</option>
+                                        <option value="5">5 Baris (A - E)</option>
+                                    </select>
+                                </div>
+                                <div id="wadahHeaderMatriks" class="hidden">
+                                    <label class="block text-xs font-bold mb-1.5 text-gray-600">Label Kolom Matriks</label>
+                                    <select id="editHeaderMatriks" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm">
+                                        <option value="Benar|Salah">Benar / Salah</option>
+                                        <option value="Sesuai|Tidak Sesuai">Sesuai / Tidak Sesuai</option>
+                                        <option value="Akurat|Tidak Akurat">Akurat / Tidak Akurat</option>
+                                        <option value="Fakta|Opini">Fakta / Opini</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="areaOpsiJawaban" class="space-y-4">
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="block text-xs font-bold text-gray-500" id="labelJudulOpsi">Daftar Pilihan Jawaban</label>
+                                    <span class="text-[10px] text-white bg-blue-500 px-2 py-1 rounded shadow-sm font-bold uppercase tracking-wider" id="petunjukOpsi">Pilih 1 sebagai kunci.</span>
+                                </div>
+                                
+                                <div class="baris-opsi flex items-start space-x-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm" data-idx="0" data-huruf="A">
+                                    <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="A" class="w-6 h-6 text-teal-600 border-gray-300 focus:ring-teal-500 cursor-pointer input-kunci-dinamis"></div>
+                                    <span class="font-black text-gray-300 text-2xl pt-1.5 label-huruf w-6 text-center">A</span>
+                                    <div class="flex-1 bg-white border border-gray-200 rounded-xl overflow-hidden"><div id="editorOpsiA" class="min-h-[60px] border-none"></div></div>
+                                    <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                        <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-2 rounded-lg border border-green-200 hover:bg-green-100 transition"><input type="radio" name="matriks_0" value="Kiri" class="mr-2 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                        <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-2 rounded-lg border border-red-200 hover:bg-red-100 transition"><input type="radio" name="matriks_0" value="Kanan" class="mr-2 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                                    </div>
+                                </div>
+                                <div class="baris-opsi flex items-start space-x-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm" data-idx="1" data-huruf="B">
+                                    <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="B" class="w-6 h-6 text-teal-600 border-gray-300 focus:ring-teal-500 cursor-pointer input-kunci-dinamis"></div>
+                                    <span class="font-black text-gray-300 text-2xl pt-1.5 label-huruf w-6 text-center">B</span>
+                                    <div class="flex-1 bg-white border border-gray-200 rounded-xl overflow-hidden"><div id="editorOpsiB" class="min-h-[60px] border-none"></div></div>
+                                    <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                        <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-2 rounded-lg border border-green-200 hover:bg-green-100 transition"><input type="radio" name="matriks_1" value="Kiri" class="mr-2 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                        <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-2 rounded-lg border border-red-200 hover:bg-red-100 transition"><input type="radio" name="matriks_1" value="Kanan" class="mr-2 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                                    </div>
+                                </div>
+                                <div class="baris-opsi flex items-start space-x-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm" data-idx="2" data-huruf="C">
+                                    <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="C" class="w-6 h-6 text-teal-600 border-gray-300 focus:ring-teal-500 cursor-pointer input-kunci-dinamis"></div>
+                                    <span class="font-black text-gray-300 text-2xl pt-1.5 label-huruf w-6 text-center">C</span>
+                                    <div class="flex-1 bg-white border border-gray-200 rounded-xl overflow-hidden"><div id="editorOpsiC" class="min-h-[60px] border-none"></div></div>
+                                    <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                        <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-2 rounded-lg border border-green-200 hover:bg-green-100 transition"><input type="radio" name="matriks_2" value="Kiri" class="mr-2 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                        <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-2 rounded-lg border border-red-200 hover:bg-red-100 transition"><input type="radio" name="matriks_2" value="Kanan" class="mr-2 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                                    </div>
+                                </div>
+                                <div class="baris-opsi flex items-start space-x-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm" data-idx="3" data-huruf="D">
+                                    <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="D" class="w-6 h-6 text-teal-600 border-gray-300 focus:ring-teal-500 cursor-pointer input-kunci-dinamis"></div>
+                                    <span class="font-black text-gray-300 text-2xl pt-1.5 label-huruf w-6 text-center">D</span>
+                                    <div class="flex-1 bg-white border border-gray-200 rounded-xl overflow-hidden"><div id="editorOpsiD" class="min-h-[60px] border-none"></div></div>
+                                    <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                        <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-2 rounded-lg border border-green-200 hover:bg-green-100 transition"><input type="radio" name="matriks_3" value="Kiri" class="mr-2 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                        <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-2 rounded-lg border border-red-200 hover:bg-red-100 transition"><input type="radio" name="matriks_3" value="Kanan" class="mr-2 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                                    </div>
+                                </div>
+                                <div class="baris-opsi flex items-start space-x-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm" data-idx="4" data-huruf="E">
+                                    <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="E" class="w-6 h-6 text-teal-600 border-gray-300 focus:ring-teal-500 cursor-pointer input-kunci-dinamis"></div>
+                                    <span class="font-black text-gray-300 text-2xl pt-1.5 label-huruf w-6 text-center">E</span>
+                                    <div class="flex-1 bg-white border border-gray-200 rounded-xl overflow-hidden"><div id="editorOpsiE" class="min-h-[60px] border-none"></div></div>
+                                    <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                        <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-2 rounded-lg border border-green-200 hover:bg-green-100 transition"><input type="radio" name="matriks_4" value="Kiri" class="mr-2 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                        <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-2 rounded-lg border border-red-200 hover:bg-red-100 transition"><input type="radio" name="matriks_4" value="Kanan" class="mr-2 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-50/50 p-6 rounded-2xl border border-yellow-200/60">
+                            <label class="block text-sm font-bold text-yellow-700 mb-3 flex items-center"><span class="mr-2 text-xl">💡</span> Kunci Penjelasan / Pembahasan</label>
+                            <div class="bg-white rounded-2xl border border-yellow-200 overflow-hidden shadow-sm">
+                                <div id="editorPembahasan" class="editor-bahas border-none"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-8 border-t border-gray-200 flex flex-col-reverse md:flex-row justify-between items-center gap-4">
+                            <div class="w-full md:w-auto flex space-x-3">
+                                <button onclick="aksiHapusTolakDariModal()" id="btnTolakModal" class="hidden flex-1 md:flex-none px-8 py-3.5 text-red-700 bg-red-100 rounded-xl font-bold hover:bg-red-200 transition shadow-sm">❌ Tolak Soal</button>
+                            </div>
+                            <button onclick="aksiSimpanDariModal()" id="btnHijauModal" class="w-full md:w-auto px-12 py-3.5 text-white bg-teal-600 rounded-xl font-black text-lg shadow-lg shadow-teal-500/30 hover:bg-teal-700 transition transform hover:-translate-y-1">✅ Simpan Data Soal</button>
+                        </div>
+
+                    </div>
                 </div>
             </div>
 
-            <div class="p-6 bg-white border-t flex justify-end shrink-0" id="footerStep1"><button onclick="prosesBacaExcel()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md w-full transition">🔍 Tampilkan Preview</button></div>
-            <div class="p-6 bg-white border-t flex justify-end space-x-3 shrink-0 hidden" id="footerStep2"><button onclick="kembaliStep1Import()" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold transition">Batal</button><button onclick="eksekusiSimpanImport()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md flex-1 transition transform hover:-translate-y-1">🚀 Upload Terpilih</button></div>
-        </div>
-    </div>
+            <div id="tabImportSoal" class="space-y-6 hidden">
+                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+                    
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-8 pb-5 border-b gap-4">
+                        <div>
+                            <h2 class="text-2xl font-black text-indigo-800 flex items-center"><span class="mr-3 text-3xl">📥</span> Import Soal Massal</h2>
+                            <p class="text-gray-500 text-sm mt-1">Unggah file Excel untuk memindahkan ratusan soal ke dalam database dengan cepat.</p>
+                        </div>
+                        <button onclick="tutupModalImportSoal()" class="w-full md:w-auto bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 border border-gray-200 hover:border-red-200 px-5 py-2.5 rounded-xl font-bold transition shadow-sm flex items-center justify-center">
+                            <span class="mr-2">✖</span> Kembali ke Daftar
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-8 flex-1">
+                        <div id="step1Import" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-indigo-50/50 border border-indigo-100 p-6 md:p-8 rounded-2xl shadow-inner">
+                                <h4 class="font-bold text-indigo-800 mb-4 flex items-center text-lg border-b border-indigo-200 pb-3">
+                                    <span class="bg-indigo-200 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-xl">💡</span> Info Mesin Import V2:
+                                </h4>
+                                <ol class="list-decimal ml-5 text-indigo-700 space-y-2.5 font-medium mb-6">
+                                    <li>Mendukung otomatis 4 Tipe Soal: <b>PG, PG Kompleks, Matriks (B-S), & Esai</b>.</li>
+                                    <li>Bisa menyisipkan kode <b>Rumus (LaTeX)</b> dan memanggil <b>Link Gambar</b> otomatis.</li>
+                                    <li>Mendukung <b>Mode Hybrid</b>: Kosongkan sel di Excel jika Anda ingin <i>copas</i> soal bergambar rumit (Snipping Tool) dari Word ke Web Editor nanti.</li>
+                                    <li>Sangat disarankan membaca petunjuk di <b>Sheet 2</b> pada file template.</li>
+                                </ol>
+                                <button onclick="downloadTemplateSoal()" class="w-full md:w-auto text-sm font-bold bg-white text-indigo-600 border border-indigo-200 px-6 py-3 rounded-xl hover:bg-indigo-100 transition shadow-sm flex items-center justify-center">
+                                    <span class="mr-2 text-lg">⬇️</span> Download Template Excel .xlsx
+                                </button>
+                            </div>
+                            
+                            <div class="flex flex-col justify-center">
+                                <label class="block text-lg font-black text-gray-700 mb-3">Pilih File Data Soal</label>
+                                <div class="relative group cursor-pointer">
+                                    <input type="file" id="fileImportSoal" accept=".xlsx, .xls" class="w-full px-6 py-12 border-2 border-dashed border-indigo-300 rounded-2xl bg-indigo-50/30 hover:bg-indigo-50 transition cursor-pointer text-indigo-700 font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/20 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:cursor-pointer file:transition file:shadow-md">
+                                </div>
+                                <button onclick="prosesBacaExcel()" id="footerStep1" class="mt-8 px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-lg shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-1 w-full">
+                                    🔍 Analisis & Tampilkan Preview Data
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="step2Import" class="hidden flex flex-col space-y-4">
+                            <div class="flex flex-col md:flex-row justify-between items-end mb-2 gap-4">
+                                <div>
+                                    <h4 class="text-xl font-black text-gray-800">Preview Pemeriksaan Data</h4>
+                                    <p class="text-sm text-gray-500 mt-1">Sistem hanya akan mengunggah soal yang dicentang. Soal dengan format salah tidak dapat dipilih.</p>
+                                </div>
+                                <span class="text-sm font-black text-white bg-indigo-600 px-5 py-2.5 rounded-xl shadow-md" id="infoJumlahPreview">0 Ditemukan</span>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-2xl bg-gray-50 flex-1 p-5 space-y-3 min-h-[400px] overflow-y-auto shadow-inner" id="listPreviewImport"></div>
+                            
+                            <div class="pt-6 flex flex-col-reverse md:flex-row justify-between items-center gap-4" id="footerStep2">
+                                <button onclick="kembaliStep1Import()" class="w-full md:w-auto px-8 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl border border-gray-200 font-bold transition">Ganti File Excel</button>
+                                <button onclick="eksekusiSimpanImport()" class="w-full md:w-auto px-12 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-lg shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-1">🚀 Mulai Upload Soal Terpilih</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </main>
+
+    
 
     <div id="modalMathKeyboard" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[110] p-4 transition-all">
         <div class="bg-white rounded-3xl w-full max-w-3xl shadow-2xl flex flex-col transform scale-100">
@@ -904,13 +953,12 @@
         };
 
         window.bukaTab = (t) => {
-            let tabs = ['tabDashboard','tabKomparasi','tabReview','tabSemuaSoal','tabKurikulum','tabSekolah','tabJadwal','tabPaket', 'tabUserYayasan'];
-            let menus = ['menuDashboard','menuKomparasi','menuReview','menuSemuaSoal','menuKurikulum','menuSekolah','menuJadwal','menuPaket', 'menuUserYayasan'];
+            // 🔥 UPDATE: TAB BARU DITAMBAHKAN KE DAFTAR 🔥
+            let tabs = ['tabDashboard','tabKomparasi','tabReview','tabSemuaSoal','tabKurikulum','tabSekolah','tabJadwal','tabPaket', 'tabUserYayasan', 'tabEditorSoal', 'tabImportSoal'];
+            let menus = ['menuDashboard','menuKomparasi','menuReview','menuSemuaSoal','menuKurikulum','menuSekolah','menuJadwal','menuPaket', 'menuUserYayasan', 'menuEditorSoal', 'menuImportSoal'];
             
-            // 1. Sembunyikan semua tab konten
             tabs.forEach(x => { let e = document.getElementById(x); if(e) e.classList.add('hidden'); });
             
-            // 2. Kembalikan semua menu ke ukuran langsing (Tidak Aktif)
             menus.forEach(x => { 
                 let e = document.getElementById(x); 
                 if(e) {
@@ -920,15 +968,15 @@
                 }
             });
             
-            // 3. Tampilkan tab konten yang dituju
             let targetTab = document.getElementById(t); 
             if(targetTab) targetTab.classList.remove('hidden');
             
-            // 4. Warnai menu yang sedang aktif
-            let activeStyle = 'bg-teal-500/10 text-teal-400 border-teal-500/20'; // Default Teal
+            let activeStyle = 'bg-teal-500/10 text-teal-400 border-teal-500/20'; 
             if (t === 'tabKurikulum') activeStyle = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'; 
             if (t === 'tabPaket') activeStyle = 'bg-blue-500/10 text-blue-400 border-blue-500/20'; 
-            if (t === 'tabUserYayasan') activeStyle = 'bg-rose-500/10 text-rose-400 border-rose-500/20'; // Khusus Yayasan
+            if (t === 'tabUserYayasan') activeStyle = 'bg-rose-500/10 text-rose-400 border-rose-500/20'; 
+            // Warna khusus untuk Tab Editor & Import
+            if (t === 'tabEditorSoal' || t === 'tabImportSoal') activeStyle = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
 
             let activeMenu = document.getElementById('menu' + t.substring(3)); 
             if(activeMenu) {
@@ -937,7 +985,6 @@
                 activeMenu.className = `${baseActiveClass} ${activeStyle}`;
             }
             
-            // 5. Pemicu Penarikan Data 
             if(t === 'tabDashboard') window.muatDashboard();
             if(t === 'tabKomparasi') jalankanMesinKomparasi();
             if(t === 'tabKurikulum') { window.muatKurikulum(); window.muatJenisUjian(); }
@@ -946,8 +993,12 @@
             if(t === 'tabSekolah') window.muatDaftarSekolah();
             if(t === 'tabPaket') { window.muatSemuaSoal(); window.muatDaftarPaket(); }
             if(t === 'tabJadwal') { window.muatDaftarPaket(); window.muatJenisUjian(); window.muatDaftarJadwal(); }
-            if(t === 'tabUserYayasan') window.muatUserYayasan(); // Eksekusi penarikan data admin pusat
+            if(t === 'tabUserYayasan') window.muatUserYayasan(); 
+            // Jika buka tab Editor dari menu (kosong), arahkan ke fungsi Tambah
+            if(t === 'tabEditorSoal' && document.getElementById('editIdSoal').value === "") window.bukaModalTambahSoal();
         };
+
+        
 
         window.muatDashboard = async () => {
             try {
@@ -1576,12 +1627,13 @@
             let eq = document.getElementById('editKuadran'); if(eq) eq.value = "Global"; 
             
             document.getElementById('editTipeSoal').value = "pg"; 
-            let ekes = document.getElementById('editKesulitan'); if(ekes) ekes.value = "Sedang"; // FITUR KESULITAN
+            let ekes = document.getElementById('editKesulitan'); if(ekes) ekes.value = "Sedang";
             window.ubahUIJenisSoalAdmin();
 
             let btn = document.getElementById('btnHijauModal'); if(btn) btn.innerText = "➕ Simpan Soal"; 
             let btnTolak = document.getElementById('btnTolakModal'); if(btnTolak) btnTolak.classList.add('hidden');
-            document.getElementById('modalEditor').classList.remove('hidden');
+            
+            bukaTab('tabEditorSoal'); // Buka Tab!
         };
 
         window.bukaModalEditor = (i, a) => {
@@ -1596,13 +1648,12 @@
             quillPembahasan.root.innerHTML = s.pembahasan || ""; 
             
             document.getElementById('editTipeSoal').value = s.tipe_soal || "pg"; 
-            if(document.getElementById('editKesulitan')) document.getElementById('editKesulitan').value = s.kesulitan || "Aplikasi";
+            if(document.getElementById('editKesulitan')) document.getElementById('editKesulitan').value = s.kesulitan || "Sedang";
             
-            // Membaca Jumlah Opsi & Header Matriks dari Database
             let jumlahOpsi = 4;
             if(s.opsi && Array.isArray(s.opsi)) {
                 jumlahOpsi = s.opsi.length;
-                if(jumlahOpsi < 3) jumlahOpsi = 3; if(jumlahOpsi > 5) jumlahOpsi = 5; // Batasan aman 3-5
+                if(jumlahOpsi < 3) jumlahOpsi = 3; if(jumlahOpsi > 5) jumlahOpsi = 5; 
             }
             document.getElementById('editJumlahOpsi').value = jumlahOpsi.toString();
             
@@ -1610,34 +1661,30 @@
                 document.getElementById('editHeaderMatriks').value = s.opsi[0].header;
             }
 
-            // Panggil fungsi UI agar layar menyesuaikan
             window.ubahUIJenisSoalAdmin();
 
-            // Ekstrak Opsi / Pernyataan ke dalam Editor
             let huruf = ['A','B','C','D','E'];
             if (s.opsi && Array.isArray(s.opsi)) {
                 s.opsi.forEach((op, index) => {
-                    if(index >= 5) return; // Maksimal 5
+                    if(index >= 5) return; 
                     let hrf = huruf[index];
                     mapQuillOpsi[hrf].root.innerHTML = op.teks;
                     
                     if (s.tipe_soal === 'pgk_matriks') {
                         let radioKiri = document.querySelector(`.baris-opsi[data-idx="${index}"] .input-matriks-kiri`);
                         let radioKanan = document.querySelector(`.baris-opsi[data-idx="${index}"] .input-matriks-kanan`);
-                        radioKiri.checked = (op.benar === 'Kiri');
-                        radioKanan.checked = (op.benar === 'Kanan');
+                        if(radioKiri) radioKiri.checked = (op.benar === 'Kiri');
+                        if(radioKanan) radioKanan.checked = (op.benar === 'Kanan');
                     } else {
                         let chk = document.querySelector(`.baris-opsi[data-idx="${index}"] .input-kunci-dinamis`);
-                        chk.checked = op.benar;
+                        if(chk) chk.checked = op.benar;
                     }
                 });
             } else {
-                // Skema Backward Compatibility (Jika soal lama cuma punya opsi_a, opsi_b)
                 ['A','B','C','D'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = s['opsi_'+h.toLowerCase()] || ""; });
                 document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = (el.value === s.kunci));
             }
 
-            // Isi Metadata
             document.getElementById('editMapel').value = s.metadata?.mapel || ""; 
             let eb = document.getElementById('editBab'); 
             if(eb) {
@@ -1650,14 +1697,11 @@
             if(document.getElementById('editKelas')) document.getElementById('editKelas').value = s.metadata?.kelas || "12"; 
             if(document.getElementById('editKuadran')) document.getElementById('editKuadran').value = s.kuadran || "Global"; 
             
-            // Ekstrak Metadata Kurikulum Nasional (Jika Ada)
-            if(document.getElementById('editElemen')) document.getElementById('editElemen').value = s.metadata?.elemen || "";
-            if(document.getElementById('editKonteks')) document.getElementById('editKonteks').value = s.metadata?.konteks || "";
-            if(document.getElementById('editIndikator')) document.getElementById('editIndikator').value = s.metadata?.indikator || "";
-
             let btn = document.getElementById('btnHijauModal'); if(btn) btn.innerText = a === 'review' ? "✅ Simpan & ACC" : "💾 Simpan Perubahan"; 
             let btnTolak = document.getElementById('btnTolakModal'); if(btnTolak) { if(a === 'review') btnTolak.classList.remove('hidden'); else btnTolak.classList.add('hidden'); }
-            document.getElementById('modalEditor').classList.remove('hidden');
+            
+            bukaTab('tabEditorSoal'); // Buka di Tab Layar Penuh!
+            window.scrollTo({top: 0, behavior: 'smooth'});
         };
 
         window.tutupModalEditor = () => { 
@@ -1665,11 +1709,10 @@
             quillPertanyaan.root.innerHTML = ""; quillPembahasan.root.innerHTML = "";
             ['A','B','C','D','E'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; });
             
-            // Reset semua ceklis & radio
             document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = false);
             document.querySelectorAll('.input-matriks-kiri, .input-matriks-kanan').forEach(el => el.checked = false);
             
-            document.getElementById('modalEditor').classList.add('hidden'); 
+            bukaTab('tabSemuaSoal'); // Kembali ke halaman tabel
         };
 
         window.aksiSimpanDariModal = async () => {
@@ -1769,11 +1812,16 @@
         // ==========================================
         window.dataPreviewImport = []; 
 
-        window.bukaModalImportSoal = () => { window.kembaliStep1Import(); document.getElementById('modalImportSoal').classList.remove('hidden'); };
-        window.tutupModalImportSoal = () => { document.getElementById('modalImportSoal').classList.add('hidden'); };
+        window.bukaModalImportSoal = () => { 
+            window.kembaliStep1Import(); 
+            bukaTab('tabImportSoal'); 
+        };
+        window.tutupModalImportSoal = () => { 
+            bukaTab('tabSemuaSoal'); 
+        };
         
         window.kembaliStep1Import = () => {
-            document.getElementById('fileImportSoal').value = ''; 
+            let f = document.getElementById('fileImportSoal'); if(f) f.value = ''; 
             document.getElementById('step1Import').classList.remove('hidden');
             document.getElementById('footerStep1').classList.remove('hidden');
             document.getElementById('step2Import').classList.add('hidden');
