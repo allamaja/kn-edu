@@ -1944,6 +1944,7 @@
             let totalPartisipan = dataUjianIni.length;
             if(totalPartisipan === 0) return Swal.fire('Kosong', 'Belum ada siswa yang mengerjakan ujian ini.', 'info');
 
+            // Kita jadikan kertas siswa pertama sebagai "Master Urutan Tampilan"
             let acuanSoal = dataUjianIni[0].rekam_soal;
             if(!acuanSoal) return Swal.fire('Error', 'Data ujian ini tidak memiliki rekam soal.', 'error');
 
@@ -1951,47 +1952,61 @@
             for(let i=0; i<acuanSoal.length; i++) { 
                 analisis.push({ 
                     no: i+1, 
+                    id_soal: acuanSoal[i].id, // KUNCI PENTING!
                     tipe: acuanSoal[i].tipe_soal || 'pg', 
                     targetKesulitan: acuanSoal[i].kesulitan || 'Sedang',
                     benar: 0, salah: 0, kosong: 0 
                 }); 
             }
 
+            // 🔥 LOGIKA BARU: PENCOCOKAN BERDASARKAN ID SOAL, BUKAN NOMOR URUT
             dataUjianIni.forEach(siswa => {
                 let jwbArr = siswa.rekam_jawaban || {};
-                acuanSoal.forEach((soal, i) => {
-                    let jwb = jwbArr[i]; let tipe = soal.tipe_soal || 'pg';
-                    if(tipe === 'pg_kompleks') {
-                        if (!jwb || jwb.length === 0) analisis[i].kosong++;
-                        else {
-                            let kunciBenarArr = soal.opsi.filter(o => o.benar).map(o => o.label).sort();
-                            let jwbSiswaArr = [...jwb].sort();
-                            if(JSON.stringify(kunciBenarArr) === JSON.stringify(jwbSiswaArr)) analisis[i].benar++; else analisis[i].salah++;
-                        }
-                    } else if (tipe === 'pgk_matriks') {
-                        let jmlBarisMatriks = soal.opsi ? soal.opsi.length : 0;
-                        let jmlDiisi = jwb ? Object.keys(jwb).length : 0;
+                let soalSiswaArr = siswa.rekam_soal || []; // Susunan acak milik siswa ini
+
+                acuanSoal.forEach((soalAcuan, i) => {
+                    // Cari di posisi ke berapa soal ini berada di layar siswa tersebut
+                    let indexSiswa = soalSiswaArr.findIndex(s => s.id === soalAcuan.id);
+
+                    if (indexSiswa !== -1) {
+                        let jwb = jwbArr[indexSiswa]; // Ambil jawaban di posisi aslinya
+                        let tipe = soalAcuan.tipe_soal || 'pg';
                         
-                        if(jmlDiisi === 0) analisis[i].kosong++;
-                        else {
-                            let adaYangSalah = false;
-                            soal.opsi.forEach(op => { if(jwb[op.label] !== op.benar) adaYangSalah = true; });
-                            if(!adaYangSalah && jmlDiisi === jmlBarisMatriks) analisis[i].benar++; else analisis[i].salah++;
+                        if(tipe === 'pg_kompleks') {
+                            if (!jwb || jwb.length === 0) analisis[i].kosong++;
+                            else {
+                                let kunciBenarArr = soalAcuan.opsi.filter(o => o.benar).map(o => o.label).sort();
+                                let jwbSiswaArr = [...jwb].sort();
+                                if(JSON.stringify(kunciBenarArr) === JSON.stringify(jwbSiswaArr)) analisis[i].benar++; else analisis[i].salah++;
+                            }
+                        } else if (tipe === 'pgk_matriks') {
+                            let jmlBarisMatriks = soalAcuan.opsi ? soalAcuan.opsi.length : 0;
+                            let jmlDiisi = jwb ? Object.keys(jwb).length : 0;
+                            
+                            if(jmlDiisi === 0) analisis[i].kosong++;
+                            else {
+                                let adaYangSalah = false;
+                                soalAcuan.opsi.forEach(op => { if(jwb[op.label] !== op.benar) adaYangSalah = true; });
+                                if(!adaYangSalah && jmlDiisi === jmlBarisMatriks) analisis[i].benar++; else analisis[i].salah++;
+                            }
+                        } else if (tipe === 'essay') {
+                            if (!jwb || jwb.trim() === "") analisis[i].kosong++; else analisis[i].benar++;
+                        } else {
+                            if (!jwb) analisis[i].kosong++;
+                            else {
+                                let kunciMurni = soalAcuan.kunci; if(soalAcuan.opsi && Array.isArray(soalAcuan.opsi)) kunciMurni = (soalAcuan.opsi.find(o => o.benar) || {}).label;
+                                if (jwb === kunciMurni) analisis[i].benar++; else analisis[i].salah++;
+                            }
                         }
-                    } else if (tipe === 'essay') {
-                        if (!jwb || jwb.trim() === "") analisis[i].kosong++; else analisis[i].benar++;
                     } else {
-                        if (!jwb) analisis[i].kosong++;
-                        else {
-                            let kunciMurni = soal.kunci; if(soal.opsi && Array.isArray(soal.opsi)) kunciMurni = (soal.opsi.find(o => o.benar) || {}).label;
-                            if (jwb === kunciMurni) analisis[i].benar++; else analisis[i].salah++;
-                        }
+                        // Antisipasi jika ada paket soal yang berubah di tengah jalan
+                        analisis[i].kosong++;
                     }
                 });
             });
 
             let htmlTable = ''; let countSulit = 0, countMudah = 0;
-            analisis.forEach(res => {
+            analisis.forEach((res, i) => {
                 let persenSalah = Math.round((res.salah / totalPartisipan) * 100) || 0, persenBenar = Math.round((res.benar / totalPartisipan) * 100) || 0, persenKosong = Math.round((res.kosong / totalPartisipan) * 100) || 0;
                 
                 // Fakta Aktual Lapangan
@@ -2001,12 +2016,17 @@
                     else if(persenBenar >= 80) { faktaLevel = '<span class="text-green-600 font-bold">Terlalu Mudah</span>'; barColor = 'bg-green-500'; countMudah++; }
                 } else { faktaLevel = '<span class="text-purple-600 font-bold">Esai (Nilai Manual)</span>'; barColor = 'bg-purple-500'; }
 
-                // Target Desain Guru
                 let warnaTarget = res.targetKesulitan === 'Sulit' ? 'bg-red-100 text-red-700 border-red-200' : (res.targetKesulitan === 'Mudah' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-100 text-yellow-700 border-yellow-200');
 
+                // 🔥 BUAT CUPLIKAN TEKS SOAL UNTUK GURU
+                let divTemp = document.createElement("div"); 
+                divTemp.innerHTML = acuanSoal[i].pertanyaan; 
+                let teksPreview = (divTemp.textContent || divTemp.innerText || "[Soal Gambar/Rumus]").substring(0, 70) + "...";
+
                 htmlTable += `<tr class="hover:bg-gray-50 border-b transition">
-                    <td class="px-6 py-4 text-center font-black text-lg text-gray-500">${res.no}</td>
+                    <td class="px-6 py-4 text-center font-black text-xl text-gray-500">${res.no}</td>
                     <td class="px-6 py-4">
+                        <p class="text-xs text-gray-500 font-medium italic mb-2 line-clamp-1">"${teksPreview}"</p>
                         <div class="flex justify-between text-xs font-bold text-gray-500 mb-1"><span>✅ Benar: ${persenBenar}%</span><span>❌ Salah: ${persenSalah}%</span><span>⬜ Kosong: ${persenKosong}%</span></div>
                         <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden flex shadow-inner"><div class="${barColor} h-2.5" style="width: ${persenBenar}%"></div><div class="bg-gray-400 h-2.5" style="width: ${persenSalah}%"></div><div class="bg-gray-200 h-2.5" style="width: ${persenKosong}%"></div></div>
                     </td>
@@ -2048,7 +2068,6 @@
         window.eksporLaporanExcel = () => {
             let idJadwal = document.getElementById('pilihUjianAnalisis').value;
             let teksJudul = document.getElementById('pilihUjianAnalisis').options[document.getElementById('pilihUjianAnalisis').selectedIndex].text;
-            
             if(!idJadwal) return Swal.fire('Oops', 'Pilih ujian yang ingin di-ekspor terlebih dahulu!', 'warning');
 
             let dataUjianIni = dataHasilUjianLokal.filter(x => x.id_jadwal === idJadwal);
@@ -2056,7 +2075,6 @@
 
             Swal.fire({title: 'Meracik File Excel...', didOpen: () => Swal.showLoading()});
 
-            // 1. Siapkan Struktur Data untuk Excel (Sheet 1: Rekap Nilai)
             let dataRekap = [];
             dataUjianIni.forEach((siswa, index) => {
                 dataRekap.push({
@@ -2073,49 +2091,62 @@
                 });
             });
 
-            // 2. Siapkan Struktur Data (Sheet 2: Analisis Butir Soal)
             let dataAnalisis = [];
             let acuanSoal = dataUjianIni[0].rekam_soal || [];
             let totalPartisipan = dataUjianIni.length;
 
             if(acuanSoal.length > 0) {
-                // Kalkulasi ulang matriks analisis
                 for(let i=0; i<acuanSoal.length; i++) { 
                     let b = 0, s = 0, k = 0;
+                    
                     dataUjianIni.forEach(siswa => {
                         let jwbArr = siswa.rekam_jawaban || {};
-                        let jwb = jwbArr[i]; let tipe = acuanSoal[i].tipe_soal || 'pg';
-                        if(tipe === 'pg_kompleks') {
-                            if (!jwb || jwb.length === 0) k++;
-                            else {
-                                let kunciBenarArr = acuanSoal[i].opsi.filter(o => o.benar).map(o => o.label).sort();
-                                let jwbSiswaArr = [...jwb].sort();
-                                if(JSON.stringify(kunciBenarArr) === JSON.stringify(jwbSiswaArr)) b++; else s++;
+                        let soalSiswaArr = siswa.rekam_soal || []; 
+                        
+                        // CARI ID SOAL SEPERTI DI ATAS
+                        let indexSiswa = soalSiswaArr.findIndex(x => x.id === acuanSoal[i].id);
+
+                        if (indexSiswa !== -1) {
+                            let jwb = jwbArr[indexSiswa]; let tipe = acuanSoal[i].tipe_soal || 'pg';
+                            if(tipe === 'pg_kompleks') {
+                                if (!jwb || jwb.length === 0) k++;
+                                else {
+                                    let kunciBenarArr = acuanSoal[i].opsi.filter(o => o.benar).map(o => o.label).sort();
+                                    let jwbSiswaArr = [...jwb].sort();
+                                    if(JSON.stringify(kunciBenarArr) === JSON.stringify(jwbSiswaArr)) b++; else s++;
+                                }
+                            } else if (tipe === 'pgk_matriks') {
+                                let jmlBarisMatriks = acuanSoal[i].opsi ? acuanSoal[i].opsi.length : 0;
+                                let jmlDiisi = jwb ? Object.keys(jwb).length : 0;
+                                if(jmlDiisi === 0) k++;
+                                else {
+                                    let adaYangSalah = false;
+                                    acuanSoal[i].opsi.forEach(op => { if(jwb[op.label] !== op.benar) adaYangSalah = true; });
+                                    if(!adaYangSalah && jmlDiisi === jmlBarisMatriks) b++; else s++;
+                                }
+                            } else if (tipe === 'essay') {
+                                if (!jwb || jwb.trim() === "") k++; else b++;
+                            } else {
+                                if (!jwb) k++;
+                                else {
+                                    let kunciMurni = acuanSoal[i].kunci; 
+                                    if(acuanSoal[i].opsi && Array.isArray(acuanSoal[i].opsi)) kunciMurni = (acuanSoal[i].opsi.find(o => o.benar) || {}).label;
+                                    if (jwb === kunciMurni) b++; else s++;
+                                }
                             }
-                        } else if (tipe === 'pgk_matriks') {
-                            let jmlBarisMatriks = acuanSoal[i].opsi ? acuanSoal[i].opsi.length : 0;
-                            let jmlDiisi = jwb ? Object.keys(jwb).length : 0;
-                            
-                            if(jmlDiisi === 0) k++;
-                            else {
-                                let adaYangSalah = false;
-                                acuanSoal[i].opsi.forEach(op => { if(jwb[op.label] !== op.benar) adaYangSalah = true; });
-                                if(!adaYangSalah && jmlDiisi === jmlBarisMatriks) b++; else s++;
-                            }
-                        } else if (tipe === 'essay') {
-                            if (!jwb || jwb.trim() === "") k++; else b++;
                         } else {
-                            if (!jwb) k++;
-                            else {
-                                let kunciMurni = acuanSoal[i].kunci; 
-                                if(acuanSoal[i].opsi && Array.isArray(acuanSoal[i].opsi)) kunciMurni = (acuanSoal[i].opsi.find(o => o.benar) || {}).label;
-                                if (jwb === kunciMurni) b++; else s++;
-                            }
+                            k++;
                         }
                     });
                     
+                    // Ekspor cuplikan soal ke Excel juga
+                    let divTemp = document.createElement("div"); 
+                    divTemp.innerHTML = acuanSoal[i].pertanyaan; 
+                    let teksPreview = (divTemp.textContent || divTemp.innerText || "[Soal Gambar/Rumus]").substring(0, 100) + "...";
+
                     dataAnalisis.push({
-                        "No Soal": i + 1,
+                        "No Acuan": i + 1,
+                        "Potongan Soal": teksPreview,
                         "Tipe": acuanSoal[i].tipe_soal || 'PG',
                         "Kesulitan (Target)": acuanSoal[i].kesulitan || 'Sedang',
                         "Persentase Benar": Math.round((b / totalPartisipan) * 100) + "%",
@@ -2125,9 +2156,7 @@
                 }
             }
 
-            // 3. Konversi ke Excel WorkBook
             const wb = XLSX.utils.book_new();
-            
             const wsRekap = XLSX.utils.json_to_sheet(dataRekap);
             XLSX.utils.book_append_sheet(wb, wsRekap, "Rekap Nilai Siswa");
             
@@ -2136,10 +2165,8 @@
                 XLSX.utils.book_append_sheet(wb, wsAnalisis, "Analisis Butir Soal");
             }
 
-            // 4. Trigger Download
-            let namaFileClean = teksJudul.replace(/[^a-zA-Z0-9 -]/g, ""); // Buang karakter aneh
+            let namaFileClean = teksJudul.replace(/[^a-zA-Z0-9 -]/g, ""); 
             XLSX.writeFile(wb, `Laporan_Ujian_${namaFileClean}.xlsx`);
-            
             Swal.close();
         };
     </script>
