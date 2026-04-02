@@ -1873,7 +1873,7 @@
         };
 
         // ==========================================
-        // MESIN DATA SCIENCE & ANALITIK
+        // MESIN DATA SCIENCE & ANALITIK (UPDATE V2)
         // ==========================================
         let dataHasilUjianLokal = []; 
         let chartInstance = null;
@@ -1881,10 +1881,27 @@
         // Panggil fungsi ini di dalam onAuthStateChanged setelah login berhasil!
         window.tarikDataSains = async () => {
             try {
-                const snapNilai = await getDocs(query(collection(db, "hasil_ujian"), where("sekolah_id", "==", idSekolahGlobal)));
+                // 1. Tarik daftar username siswa dari sekolah ini (Sebagai alat saring)
+                let usernameLokal = new Set();
+                const snapUsers = await getDocs(query(collection(db, "users"), where("sekolah_id", "==", idSekolahGlobal)));
+                snapUsers.forEach(u => {
+                    let ud = u.data();
+                    if(ud.email && ud.role === 'siswa') usernameLokal.add(ud.email.split('@')[0]);
+                });
+
+                // 2. Tarik hasil ujian, BAIK YANG LOKAL MAUPUN YANG GLOBAL
+                const q = query(collection(db, "hasil_ujian"), where("sekolah_id", "in", [idSekolahGlobal, "GLOBAL", "Global", "Pusat", "YAYASAN"]));
+                const snapNilai = await getDocs(q);
+                
                 dataHasilUjianLokal = [];
-                snapNilai.forEach(doc => dataHasilUjianLokal.push({id: doc.id, ...doc.data()}));
-            } catch(e) { console.error("Gagal menarik data sains."); }
+                snapNilai.forEach(doc => {
+                    let d = doc.data();
+                    // 3. Masukkan jika ujian lokal, ATAU ujian global tapi yang mengerjakan adalah siswa sekolah ini
+                    if (d.sekolah_id === idSekolahGlobal || usernameLokal.has(d.username)) {
+                        dataHasilUjianLokal.push({id: doc.id, ...d});
+                    }
+                });
+            } catch(e) { console.error("Gagal menarik data sains.", e); }
         }
 
         window.renderGrafikTren = () => {
@@ -1935,7 +1952,7 @@
                 analisis.push({ 
                     no: i+1, 
                     tipe: acuanSoal[i].tipe_soal || 'pg', 
-                    targetKesulitan: acuanSoal[i].kesulitan || 'Sedang', // 🎯 BACA LEVEL TARGET DARI DB
+                    targetKesulitan: acuanSoal[i].kesulitan || 'Sedang',
                     benar: 0, salah: 0, kosong: 0 
                 }); 
             }
@@ -1950,6 +1967,16 @@
                             let kunciBenarArr = soal.opsi.filter(o => o.benar).map(o => o.label).sort();
                             let jwbSiswaArr = [...jwb].sort();
                             if(JSON.stringify(kunciBenarArr) === JSON.stringify(jwbSiswaArr)) analisis[i].benar++; else analisis[i].salah++;
+                        }
+                    } else if (tipe === 'pgk_matriks') {
+                        let jmlBarisMatriks = soal.opsi ? soal.opsi.length : 0;
+                        let jmlDiisi = jwb ? Object.keys(jwb).length : 0;
+                        
+                        if(jmlDiisi === 0) analisis[i].kosong++;
+                        else {
+                            let adaYangSalah = false;
+                            soal.opsi.forEach(op => { if(jwb[op.label] !== op.benar) adaYangSalah = true; });
+                            if(!adaYangSalah && jmlDiisi === jmlBarisMatriks) analisis[i].benar++; else analisis[i].salah++;
                         }
                     } else if (tipe === 'essay') {
                         if (!jwb || jwb.trim() === "") analisis[i].kosong++; else analisis[i].benar++;
@@ -1994,6 +2021,7 @@
             document.getElementById('statSoalSulit').innerText = countSulit; document.getElementById('statSoalMudah').innerText = countMudah; document.getElementById('statPartisipan').innerText = totalPartisipan;
             document.getElementById('kontainerHasilAnalisis').classList.remove('hidden');
         };
+
         // FITUR BUKA-TUTUP MENU DI HP
         window.toggleSidebarMobile = () => {
             const sidebar = document.getElementById('sidebarUtama');
@@ -2010,12 +2038,10 @@
         window.addEventListener('click', (e) => {
             const sidebar = document.getElementById('sidebarUtama');
             if (window.innerWidth < 768 && !sidebar.classList.contains('hidden')) {
-                // Jika klik di luar sidebar dan bukan klik tombol hamburger
-                if (!sidebar.contains(e.target) && e.target.innerText !== '☰') {
-                    toggleSidebarMobile();
-                }
+                if (!sidebar.contains(e.target) && e.target.innerText !== '☰') toggleSidebarMobile();
             }
         });
+
         // ==========================================
         // FITUR EXPORT EXCEL (ADMIN SEKOLAH)
         // ==========================================
@@ -2053,7 +2079,7 @@
             let totalPartisipan = dataUjianIni.length;
 
             if(acuanSoal.length > 0) {
-                // Kalkulasi ulang matriks analisis (seperti di layar)
+                // Kalkulasi ulang matriks analisis
                 for(let i=0; i<acuanSoal.length; i++) { 
                     let b = 0, s = 0, k = 0;
                     dataUjianIni.forEach(siswa => {
@@ -2065,6 +2091,16 @@
                                 let kunciBenarArr = acuanSoal[i].opsi.filter(o => o.benar).map(o => o.label).sort();
                                 let jwbSiswaArr = [...jwb].sort();
                                 if(JSON.stringify(kunciBenarArr) === JSON.stringify(jwbSiswaArr)) b++; else s++;
+                            }
+                        } else if (tipe === 'pgk_matriks') {
+                            let jmlBarisMatriks = acuanSoal[i].opsi ? acuanSoal[i].opsi.length : 0;
+                            let jmlDiisi = jwb ? Object.keys(jwb).length : 0;
+                            
+                            if(jmlDiisi === 0) k++;
+                            else {
+                                let adaYangSalah = false;
+                                acuanSoal[i].opsi.forEach(op => { if(jwb[op.label] !== op.benar) adaYangSalah = true; });
+                                if(!adaYangSalah && jmlDiisi === jmlBarisMatriks) b++; else s++;
                             }
                         } else if (tipe === 'essay') {
                             if (!jwb || jwb.trim() === "") k++; else b++;
