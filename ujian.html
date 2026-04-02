@@ -473,19 +473,20 @@
             }
         };
 
-        // MESIN SKORING SEMENTARA (Mendukung Pembobotan 70/30)
+        // MESIN SKORING V2 DENGAN SNAPSHOT METHOD (DIOPTIMASI)
         async function hitungDanSimpanSkor() {
             Swal.fire({ title: 'Memproses Jawaban...', text: 'Menyimpan Bukti Pengerjaan ke Server...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
             
             let b = 0, s = 0, k = 0;
             let totalPG = 0, totalEssay = 0;
             
+            // 1. Hitung Nilai (Sama seperti sebelumnya)
             for (let i = 0; i < daftarSoal.length; i++) {
                 let soal = daftarSoal[i]; let tipe = soal.tipe_soal || 'pg'; let jwb = jawabanSiswa[i];
 
                 if (tipe === 'essay') {
                     totalEssay++;
-                    if (!jwb || jwb.trim() === "") k++; else s++; 
+                    if (!jwb || jwb.trim() === "") k++; else s++; // Essay selalu dihitung salah dulu sampai dikoreksi guru
                 } 
                 else {
                     totalPG++;
@@ -519,6 +520,7 @@
                 }
             }
             
+            // 2. Kalkulasi Skor & Info Tampilan
             let skorPG = totalPG > 0 ? (b / totalPG) * 100 : 0;
             let nilaiAkhir = 0; let infoTambahan = "";
 
@@ -531,18 +533,62 @@
                 nilaiAkhir = 0; infoTambahan = `<p class="text-xs text-yellow-600 bg-yellow-50 p-2 rounded border border-yellow-200 mt-3">*100% Ujian Essay. Menunggu hasil koreksi penuh dari Guru.</p>`;
             }
 
+            // 3. DIET DATA (Merampingkan Rekam Soal agar tidak Error Max Document Size 1MB)
+            // Hapus gambar Base64 dari soal yang disimpan ke log siswa
+            let rekamSoalDiet = daftarSoal.map(soalAsli => {
+                let soalCopy = JSON.parse(JSON.stringify(soalAsli)); // Clone
+                if(soalCopy.pertanyaan) {
+                    // Buang tag <img> yang berisi base64 panjang
+                    soalCopy.pertanyaan = soalCopy.pertanyaan.replace(/<img[^>]*src="data:image[^>]*>/g, '[Gambar Dihapus dari Log]');
+                }
+                if(soalCopy.opsi && Array.isArray(soalCopy.opsi)){
+                    soalCopy.opsi.forEach(op => {
+                        if(op.teks) op.teks = op.teks.replace(/<img[^>]*src="data:image[^>]*>/g, '[Gambar Dihapus dari Log]');
+                    });
+                }
+                return soalCopy;
+            });
+
+            // 4. SIMPAN KE FIREBASE (Dengan Error Handling yang jelas)
             try {
                 await addDoc(collection(db, "hasil_ujian"), {
-                    username: usernameSiswaAktif, nama_siswa: namaSiswaAsli, sekolah_id: detailJadwal.sekolah_id || "Pusat",
-                    kelas: detailJadwal.kelas, mapel: detailJadwal.mapel, id_jadwal: detailJadwal.id, id_paket: detailJadwal.id_paket,  
-                    nama_ujian: detailJadwal.nama_ujian, nilai_akhir: nilaiAkhir, detail: { benar: b, salah: s, kosong: k }, 
-                    waktu_selesai: new Date(), aturan_rilis_bahas: detailJadwal.aturan_rilis_bahas, rekam_jawaban: jawabanSiswa, rekam_soal: daftarSoal 
+                    username: usernameSiswaAktif, 
+                    nama_siswa: namaSiswaAsli, 
+                    sekolah_id: detailJadwal.sekolah_id || "Pusat",
+                    kelas: detailJadwal.kelas || "Umum", 
+                    mapel: detailJadwal.mapel || "Campuran", 
+                    id_jadwal: detailJadwal.id, 
+                    id_paket: detailJadwal.id_paket || "",  
+                    nama_ujian: detailJadwal.nama_ujian || "Ujian Tanpa Nama", 
+                    nilai_akhir: nilaiAkhir, 
+                    detail: { benar: b, salah: s, kosong: k }, 
+                    waktu_selesai: new Date(), 
+                    aturan_rilis_bahas: detailJadwal.aturan_rilis_bahas || "setelah_ujian_tutup", 
+                    rekam_jawaban: jawabanSiswa, 
+                    rekam_soal: rekamSoalDiet // 🔥 Data yang sudah dikuruskan
                 });
 
-                localStorage.removeItem(`ujian_${usernameSiswaAktif}_${detailJadwal.id}`); sessionStorage.removeItem('id_jadwal_aktif'); 
-                Swal.fire({ icon: 'success', title: 'Ujian Selesai!', html: `<div class="text-left space-y-2 mt-4 text-gray-700 text-sm md:text-base border-t border-gray-200 pt-4"><p>Terkumpul: <b>${daftarSoal.length - k} Soal</b><br>Nilai Sementara: <span class="text-3xl font-black text-blue-600 block mt-1">${nilaiAkhir}</span></p>${infoTambahan}</div>`, confirmButtonColor: '#2563eb', confirmButtonText: 'Kembali ke Dashboard', allowOutsideClick: false
+                // Bersihkan Cache Lokal agar HP siswa tidak berat
+                localStorage.removeItem(`ujian_${usernameSiswaAktif}_${detailJadwal.id}`); 
+                sessionStorage.removeItem('id_jadwal_aktif'); 
+                
+                // Tampilkan Hasil
+                Swal.fire({ 
+                    icon: 'success', title: 'Ujian Selesai!', 
+                    html: `
+                        <div class="text-left space-y-2 mt-4 text-gray-700 text-sm md:text-base border-t border-gray-200 pt-4">
+                            <p>Terkumpul: <b>${daftarSoal.length - k} Soal Terjawab</b><br>
+                            Nilai Sementara: <span class="text-3xl font-black text-blue-600 block mt-1">${nilaiAkhir}</span></p>
+                            ${infoTambahan}
+                        </div>`, 
+                    confirmButtonColor: '#2563eb', confirmButtonText: 'Kembali ke Dashboard', allowOutsideClick: false
                 }).then(() => window.location.replace("dashboard.html"));
-            } catch (error) { Swal.fire('Koneksi Error', 'Gagal mengirim nilai ke server.', 'error'); }
+                
+            } catch (error) { 
+                console.error("Gagal simpan ke Firebase:", error);
+                // Menampilkan alasan asli error agar tidak meraba-raba dalam gelap
+                Swal.fire('Koneksi Error', `Gagal mengirim nilai. (Sistem: ${error.code || error.message})`, 'error'); 
+            }
         }
 
         // Radar Koneksi & Anti Cheat
