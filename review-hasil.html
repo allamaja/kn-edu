@@ -69,6 +69,9 @@
         // ==========================================
         // MESIN BONGKAR ARSIP (METODE SNAPSHOT)
         // ==========================================
+        // ==========================================
+        // MESIN BONGKAR ARSIP & RESTORASI GAMBAR
+        // ==========================================
         async function muatPembahasan() {
             if (!idHasil) return Swal.fire('Error', 'ID Ujian tidak ditemukan di URL!', 'error').then(()=>window.location.href='riwayat-ujian.html');
 
@@ -88,24 +91,52 @@
                     document.getElementById('judulHeader').innerText = data.nama_ujian || "Review Ujian";
                     document.getElementById('panelFilter').classList.remove('hidden');
                     
-                    // MENARIK SNAPSHOT SOAL DARI MEMORI
-                    let soalArray = data.rekam_soal || [];
+                    // --- 💡 MESIN RESTORASI GAMBAR (DIET RECOVERY) ---
+                    let soalArraySnapshot = data.rekam_soal || [];
                     const jawabanArray = data.rekam_jawaban || {}; 
+                    let soalArrayFinal = [];
 
-                    // Fallback Pintar: Jika ini adalah data jadul sebelum fitur Snapshot diaktifkan
-                    if (soalArray.length === 0 && data.id_paket) {
+                    if (soalArraySnapshot.length > 0) {
+                        // Deteksi apakah rekam soal ini versi "Diet" (gambar dipotong)
+                        let butuhRestorasi = JSON.stringify(soalArraySnapshot).includes('[Gambar Dihapus dari Log]');
+                        
+                        if (butuhRestorasi) {
+                            Swal.fire({ title: 'Merestorasi Gambar...', text: 'Menarik gambar asli dari Bank Soal...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                            
+                            for (let i = 0; i < soalArraySnapshot.length; i++) {
+                                let idSoal = soalArraySnapshot[i].id;
+                                if (idSoal) {
+                                    const sDoc = await getDoc(doc(db, "bank_soal", idSoal));
+                                    if (sDoc.exists()) {
+                                        soalArrayFinal.push({ id: sDoc.id, ...sDoc.data() }); // Tarik soal utuh berserta gambar
+                                    } else {
+                                        soalArrayFinal.push(soalArraySnapshot[i]); // Fallback jika soal dihapus admin
+                                    }
+                                } else {
+                                    soalArrayFinal.push(soalArraySnapshot[i]);
+                                }
+                            }
+                            Swal.close();
+                        } else {
+                            soalArrayFinal = soalArraySnapshot; // Aman, tidak ada gambar yang dipotong
+                        }
+                    } 
+                    // Fallback Pintar: Data jadul sebelum fitur Snapshot
+                    else if (data.id_paket) {
+                        Swal.fire({ title: 'Membongkar Arsip Lama...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                         const pDoc = await getDoc(doc(db, "paket_soal", data.id_paket));
                         if(pDoc.exists()) {
                             const arrIdSoal = pDoc.data().soal_ids || [];
                             for(let i=0; i<arrIdSoal.length; i++){
                                 const sDoc = await getDoc(doc(db, "bank_soal", arrIdSoal[i]));
-                                if(sDoc.exists()) soalArray.push(sDoc.data());
-                                else soalArray.push({ pertanyaan: "<i>Soal telah dihapus oleh Admin dari Bank Soal.</i>", tipe_soal: 'pg' });
+                                if(sDoc.exists()) soalArrayFinal.push({ id: sDoc.id, ...sDoc.data() });
+                                else soalArrayFinal.push({ pertanyaan: "<i>Soal telah dihapus oleh Admin dari Bank Soal.</i>", tipe_soal: 'pg' });
                             }
                         }
+                        Swal.close();
                     }
 
-                    if (soalArray.length === 0) {
+                    if (soalArrayFinal.length === 0) {
                         document.getElementById('kontainerPembahasan').innerHTML = `<div class="bg-yellow-50 text-yellow-700 p-8 rounded-3xl text-center border border-yellow-200 font-medium">Maaf, data soal untuk arsip ujian ini sudah tidak dapat diakses.</div>`;
                         document.getElementById('panelFilter').classList.add('hidden');
                         return;
@@ -114,7 +145,7 @@
                     const kontainer = document.getElementById('kontainerPembahasan');
                     kontainer.innerHTML = '';
 
-                    soalArray.forEach((soal, i) => {
+                    soalArrayFinal.forEach((soal, i) => {
                         let jwbSiswa = jawabanArray[i];
                         let tipe = soal.tipe_soal || 'pg';
                         
@@ -122,7 +153,6 @@
                         let kunciTampil = "";
                         let jawabTampil = "";
 
-                        // SKORING ULANG UNTUK TAMPILAN
                         // SKORING ULANG UNTUK TAMPILAN
                         if (tipe === 'pg_kompleks') {
                             let kunciBenarArr = soal.opsi ? soal.opsi.filter(o => o.benar).map(o => o.label).sort() : [];
@@ -133,7 +163,6 @@
                             jawabTampil = jwbSiswaArr.length > 0 ? jwbSiswaArr.join(', ') : 'Kosong';
                         } 
                         else if (tipe === 'pgk_matriks') {
-                            // TIPE BARU: MATRIKS BENAR SALAH
                             let barisKunciArr = [];
                             let barisJawabArr = [];
                             let adaYangSalah = false;
@@ -165,7 +194,6 @@
                             jawabTampil = jwbSiswa || 'Kosong';
                         } 
                         else {
-                            // TIPE PG BIASA
                             let kunciMurni = soal.kunci;
                             if(soal.opsi && Array.isArray(soal.opsi)) {
                                 let opt = soal.opsi.find(o => o.benar);
@@ -186,7 +214,6 @@
                         let htmlTanya = soal.pertanyaan && !soal.pertanyaan.startsWith('<') ? `<p>${soal.pertanyaan}</p>` : (soal.pertanyaan || "");
                         let htmlBahas = soal.pembahasan && !soal.pembahasan.startsWith('<') ? `<p>${soal.pembahasan}</p>` : (soal.pembahasan || '<i class="text-gray-400">Guru belum menyertakan pembahasan khusus.</i>');
 
-                        // PERBAIKAN: Mengatur rendering Teks vs HTML Kaya untuk Jawaban dan Kunci
                         let htmlJawabanSiswa = '';
                         let htmlKunciBenar = '';
 
@@ -197,7 +224,6 @@
                             htmlJawabanSiswa = `<div class="text-sm font-bold leading-relaxed">${jawabTampil}</div>`;
                             htmlKunciBenar = `<div class="text-sm font-bold leading-relaxed">${kunciTampil}</div>`;
                         } else {
-                            // Untuk PG Biasa: Kita render Label (A/B/C/D) dan Teks HTML-nya (opsi.teks) secara terpisah
                             let teksOptJwb = "Tidak ada teks opsi.";
                             let teksOptKunci = "Tidak ada teks opsi.";
                             
@@ -207,7 +233,6 @@
                                 if(findJ) teksOptJwb = findJ.teks;
                                 if(findK) teksOptKunci = findK.teks;
                             } else {
-                                // Kompatibilitas Soal Lama V1
                                 teksOptJwb = soal['opsi_' + (jawabTampil || '').toLowerCase()] || "Pilihan dihapus.";
                                 teksOptKunci = soal['opsi_' + (kunciTampil || '').toLowerCase()] || "Pilihan dihapus.";
                             }
