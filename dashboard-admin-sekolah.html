@@ -818,7 +818,7 @@
                     
                     Swal.fire({title: 'Menyiapkan Ruang Kerja V2...', didOpen: () => Swal.showLoading()});
                     window.setDinamisKelas();
-                    await window.muatKurikulumDataSaja(); await window.tarikDataSains(); await window.muatJenisUjianDataSaja(); await window.muatDashboardLokal(); await window.muatSoalLokalPending(); await window.muatLaporanKendala();
+                    await window.muatKurikulumDataSaja(); await window.muatJenisUjianDataSaja(); await window.muatDashboardLokal(); await window.muatSoalLokalPending(); await window.muatLaporanKendala();
                     Swal.close();
                 } else { Swal.fire('Akses Ditolak', 'Bukan Admin Sekolah!', 'error').then(() => window.keluarAplikasi()); }
             } else window.location.replace("index.html");
@@ -850,43 +850,52 @@
             });
         };
 
-        window.bukaTab = (idTab) => {
-    let tabs = ['tabDashboard','tabAnalitik','tabReview','tabSemuaSoal','tabUser','tabJadwal','tabPaket','tabLaporan'];
-    let menus = ['menuDashboard','menuAnalitik','menuReview','menuSemuaSoal','menuUser','menuJadwal','menuPaket','menuLaporan'];
+        window.bukaTab = async (idTab) => {
+            let tabs = ['tabDashboard','tabAnalitik','tabReview','tabSemuaSoal','tabUser','tabJadwal','tabPaket','tabLaporan'];
+            let menus = ['menuDashboard','menuAnalitik','menuReview','menuSemuaSoal','menuUser','menuJadwal','menuPaket','menuLaporan'];
 
-    tabs.forEach(t => { let e = document.getElementById(t); if(e) e.classList.add('hidden'); });
-    
-    // Reset semua menu ke langsing & redup, amankan layout badge
-    menus.forEach(m => { 
-        let e = document.getElementById(m); 
-        if(e) {
-            let baseClass = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs border border-transparent";
-            if(m === 'menuReview' || m === 'menuLaporan') baseClass += " justify-between"; // Amankan posisi badge merah
-            e.className = `${baseClass} text-slate-400 hover:bg-slate-800 hover:text-slate-200`;
-        }
-    });
+            tabs.forEach(t => { let e = document.getElementById(t); if(e) e.classList.add('hidden'); });
+            
+            // Reset semua menu
+            menus.forEach(m => { 
+                let e = document.getElementById(m); 
+                if(e) {
+                    let baseClass = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs border border-transparent";
+                    if(m === 'menuReview' || m === 'menuLaporan') baseClass += " justify-between"; 
+                    e.className = `${baseClass} text-slate-400 hover:bg-slate-800 hover:text-slate-200`;
+                }
+            });
 
-    let e = document.getElementById(idTab); if(e) e.classList.remove('hidden');
-    
-    // Warnai menu aktif gaya kaca Emerald
-    let mId = 'menu' + idTab.substring(3), m = document.getElementById(mId);
-    if(m) {
-        let baseActiveClass = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs font-medium border";
-        if(idTab === 'tabReview' || idTab === 'tabLaporan') baseActiveClass += " justify-between";
-        
-        m.className = `${baseActiveClass} bg-emerald-500/10 text-emerald-400 border-emerald-500/20`;
-    }
-    
-    // Triggers
-    if(idTab === 'tabDashboard') window.muatDashboardLokal();
-    if(idTab === 'tabAnalitik') { renderGrafikTren(); siapkanDropdownAnalisis(); }
-    if(idTab === 'tabSemuaSoal') window.muatBankSoalLokal();
-    if(idTab === 'tabUser') window.muatDataUserLokal();
-    if(idTab === 'tabReview') window.muatSoalLokalPending();
-    if(idTab === 'tabPaket') { window.muatBankSoalGlobalLokal(); window.muatDaftarPaketLokal(); }
-    if(idTab === 'tabJadwal') { window.muatDaftarPaketLokal(); window.muatDaftarJadwal(); }
-    if(idTab === 'tabLaporan') window.muatLaporanKendala();
-};
+            let e = document.getElementById(idTab); if(e) e.classList.remove('hidden');
+            
+            // Warnai menu aktif
+            let mId = 'menu' + idTab.substring(3), m = document.getElementById(mId);
+            if(m) {
+                let baseActiveClass = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs font-medium border";
+                if(idTab === 'tabReview' || idTab === 'tabLaporan') baseActiveClass += " justify-between";
+                m.className = `${baseActiveClass} bg-emerald-500/10 text-emerald-400 border-emerald-500/20`;
+            }
+            
+            // 🔥 TRIGGERS (LAZY LOADING)
+            if(idTab === 'tabDashboard') window.muatDashboardLokal();
+            if(idTab === 'tabSemuaSoal') window.muatBankSoalLokal();
+            if(idTab === 'tabUser') window.muatDataUserLokal();
+            if(idTab === 'tabReview') window.muatSoalLokalPending();
+            if(idTab === 'tabPaket') { window.muatBankSoalGlobalLokal(); window.muatDaftarPaketLokal(); }
+            if(idTab === 'tabJadwal') { window.muatDaftarPaketLokal(); window.muatDaftarJadwal(); }
+            if(idTab === 'tabLaporan') window.muatLaporanKendala();
+            
+            // Eksekusi Tarik Sains hanya saat tab Analitik dibuka pertama kali!
+            if(idTab === 'tabAnalitik') { 
+                if (dataHasilUjianLokal.length === 0) {
+                    Swal.fire({title: 'Sinkronisasi Data...', text: 'Menarik riwayat ujian cabang ini...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+                    await window.tarikDataSains();
+                    Swal.close();
+                }
+                renderGrafikTren(); 
+                siapkanDropdownAnalisis(); 
+            }
+        };
 
         window.muatDashboardLokal = async () => {
             if(!idSekolahGlobal) return;
