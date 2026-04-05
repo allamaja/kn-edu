@@ -33,6 +33,9 @@
                 <div id="dotKoneksi" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                 <span id="teksKoneksi">Online (Tersimpan)</span>
             </div>
+            <button onclick="laporKendalaIT()" class="bg-rose-100 text-rose-700 border border-rose-200 hover:bg-rose-200 px-3 py-1 rounded-full text-[10px] md:text-xs font-bold shadow-sm transition flex items-center">
+                <span class="mr-1">🆘</span> Lapor Kendala
+            </button>
         </div>
 
         <div class="flex items-center space-x-3 md:space-x-6">
@@ -98,14 +101,16 @@
             <div class="w-full lg:w-80 shrink-0">
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 lg:sticky lg:top-24">
                     <h3 class="font-black text-gray-800 mb-4 pb-3 border-b border-gray-100 flex items-center justify-between">
-                        Navigasi Soal <span class="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded" id="progressTeks">0/0</span>
+                        Navigasi Soal <span class="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded" id="progressTeks">0/0</span>
                     </h3>
                     <div id="gridNavigasi" class="grid grid-cols-5 gap-2 mb-6 max-h-[250px] lg:max-h-[350px] overflow-y-auto grid-nav p-1"></div>
-                    <div class="flex flex-wrap gap-2 text-[10px] md:text-xs font-bold text-gray-500 mb-6 bg-gray-50 p-3 rounded-xl border">
-                        <div class="flex items-center w-full mb-1"><div class="w-3 h-3 bg-blue-600 rounded mr-2"></div> Terjawab</div>
-                        <div class="flex items-center w-full mb-1"><div class="w-3 h-3 bg-yellow-400 rounded mr-2"></div> Ragu-ragu</div>
-                        <div class="flex items-center w-full"><div class="w-3 h-3 border-2 border-gray-300 bg-white rounded mr-2"></div> Belum Dijawab</div>
+                    
+                    <div class="flex flex-col gap-2 text-[10px] md:text-xs font-bold text-gray-600 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="flex items-center w-full"><span class="w-5 h-5 flex items-center justify-center bg-blue-100 border border-blue-400 text-blue-700 rounded mr-2">✅</span> Sudah Terjawab</div>
+                        <div class="flex items-center w-full"><span class="w-5 h-5 flex items-center justify-center bg-yellow-100 border border-yellow-400 text-yellow-700 rounded mr-2">?</span> Ragu-ragu</div>
+                        <div class="flex items-center w-full"><span class="w-5 h-5 flex items-center justify-center bg-white border border-gray-300 text-gray-300 rounded mr-2"></span> Belum Dijawab</div>
                     </div>
+                    
                     <button id="btnSelesai" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3.5 rounded-xl font-black shadow-md transition transform hover:-translate-y-1 flex items-center justify-center">
                         <span class="mr-2">🏁</span> Kumpulkan Ujian
                     </button>
@@ -118,13 +123,16 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, addDoc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"; // TAMBAH UPDATE & ONSNAPSHOT
 
         const app = initializeApp({ apiKey: "AIzaSyCTd3H3E9baMGDQpHbJDBFzupuSaIUn0v0", authDomain: "smartkhairunnas.firebaseapp.com", projectId: "smartkhairunnas", storageBucket: "smartkhairunnas.firebasestorage.app", messagingSenderId: "3009868062", appId: "1:3009868062:web:f6d158a8aa60fabf91590f" });
         const db = getFirestore(app); const auth = getAuth(app);
 
         // STATE UJIAN UTAMA
         let usernameSiswaAktif = ""; let namaSiswaAsli = ""; let jenjangSiswa = "SMA";
+        let asalSekolahSiswa = ""; let kelasSiswaAsli = ""; // BARU: UNTUK SINKRONISASI
+        let idDokumenHasilAktif = null; // BARU: UNTUK LIVE PROCTOR
+
         let detailJadwal = null;
         let daftarSoal = [];     
         let jawabanSiswa = {};   
@@ -138,16 +146,41 @@
 
         let jumlahPelanggaran = 0; const MAKSIMAL_PELANGGARAN = 3; let sedangDihukum = false; let ujianSedangBerjalan = false;
 
-        onAuthStateChanged(auth, async (user) => {
+        // 🛡️ FITUR ALWAYS AWAKE (BARU)
+        let wakeLock = null;
+        const requestWakeLock = async () => {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Screen Wake Lock aktif!');
+                }
+            } catch (err) { console.error('Wake Lock error:', err.message); }
+        };
+
+       onAuthStateChanged(auth, async (user) => {
             if (user) {
                 usernameSiswaAktif = user.email.split('@')[0];
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    namaSiswaAsli = userDoc.data().nama;
+                
+                // 🐛 FIX: Gunakan Query berdasarkan email, BUKAN menggunakan user.uid!
+                const qSiswa = query(collection(db, "users"), where("email", "==", user.email));
+                const snapSiswa = await getDocs(qSiswa);
+                
+                if (!snapSiswa.empty) {
+                    let d = snapSiswa.docs[0].data();
+                    namaSiswaAsli = d.nama || usernameSiswaAktif;
+                    asalSekolahSiswa = d.sekolah_id || "Pusat";
+                    kelasSiswaAsli = d.kelas || "Umum";
+                    jenjangSiswa = d.jenjang || "SMA";
                     document.getElementById('namaSiswaHeader').innerText = `${namaSiswaAsli}`;
+                } else {
+                    console.warn("Data user tidak ditemukan di koleksi users!");
+                    namaSiswaAsli = usernameSiswaAktif; // Fallback jika data tidak ada
                 }
+                
                 inisialisasiUjian();
-            } else window.location.replace("index.html");
+            } else {
+                window.location.replace("index.html");
+            }
         });
 
         async function inisialisasiUjian() {
@@ -162,12 +195,45 @@
 
                 const qH = query(collection(db, "hasil_ujian"), where("username", "==", usernameSiswaAktif), where("id_jadwal", "==", detailJadwal.id));
                 const snapH = await getDocs(qH);
-                if (!snapH.empty) return Swal.fire('Selesai', 'Anda sudah menyelesaikan ujian ini.', 'info').then(()=>window.location.replace("dashboard.html"));
-
-                const pDoc = await getDoc(doc(db, "paket_soal", detailJadwal.id_paket));
-                if (!pDoc.exists()) return Swal.fire('Error', 'Paket soal hilang dari server.', 'error');
                 
-                const arrIdSoal = pDoc.data().soal_ids || [];
+                let dHasil = null;
+                if (!snapH.empty) {
+                    dHasil = snapH.docs[0].data();
+                    if (dHasil.status_pengerjaan === 'selesai') return Swal.fire('Selesai', 'Anda sudah menyelesaikan ujian ini.', 'info').then(()=>window.location.replace("dashboard.html"));
+                }
+
+                let arrIdSoal = [];
+
+                if (!dHasil) {
+                    // 🎲 SISWA BARU: AMBIL DARI PAKET LALU ACAK URUTANNYA
+                    const pDoc = await getDoc(doc(db, "paket_soal", detailJadwal.id_paket));
+                    if (!pDoc.exists()) return Swal.fire('Error', 'Paket soal hilang dari server.', 'error');
+                    
+                    arrIdSoal = pDoc.data().soal_ids || [];
+                    
+                    // ALGORITMA PENGACAK FISHER-YATES
+                    for (let i = arrIdSoal.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [arrIdSoal[i], arrIdSoal[j]] = [arrIdSoal[j], arrIdSoal[i]];
+                    }
+                } else {
+                    // 🔄 SISWA MELANJUTKAN (RESUME)
+                    arrIdSoal = dHasil.urutan_id_soal || [];
+                    idDokumenHasilAktif = snapH.docs[0].id;
+                    
+                    // Kunci Waktu: Hitung selisih dari waktu mulai di server
+                    let waktuMulai = dHasil.waktu_mulai_pengerjaan.toDate(); 
+                    let selisihDetik = Math.floor((new Date() - waktuMulai) / 1000);
+                    let durasiAsliDetik = detailJadwal.durasi_menit * 60;
+                    
+                    sisaWaktuDetik = durasiAsliDetik - selisihDetik;
+                    if (sisaWaktuDetik < 0) sisaWaktuDetik = 0; // Jika sudah minus, langsung 0
+                }
+
+                // Simpan ke memori lokal untuk dipush ke Firebase nanti
+                window.urutanSoalSiswaIni = arrIdSoal;
+
+                // Fetch Soal Asli Berdasarkan Urutan Acakan Siswa Tersebut
                 daftarSoal = [];
                 for (let i = 0; i < arrIdSoal.length; i++) {
                     const sDoc = await getDoc(doc(db, "bank_soal", arrIdSoal[i]));
@@ -203,27 +269,110 @@
                     <li>📌 <b>Nama Ujian:</b> ${detailJadwal.nama_ujian}</li>
                     <li>📖 <b>Mata Pelajaran:</b> ${detailJadwal.mapel}</li>
                     <li>⏳ <b>Durasi:</b> ${detailJadwal.durasi_menit} Menit</li>
-                    <li>📝 <b>Jumlah Soal:</b> ${daftarSoal.length} Butir</li>
+                    <li>📝 <b>Jumlah Soal:</b> ${daftarSoal.length} Butir (Urutan Diacak)</li>
                     ${pesanPemulihan}
                 `;
                 
                 Swal.close(); document.getElementById('layarGerbang').classList.remove('hidden');
-            } catch (e) { Swal.fire('Error', 'Gagal memuat ujian.', 'error'); }
+            } catch (e) { console.error(e); Swal.fire('Error', 'Gagal memuat ujian.', 'error'); }
         }
 
+        // TOMBOL MULAI & KONEKSI KE PROCTOR
         document.getElementById('btnMasukUjian').addEventListener('click', async () => {
-            try { if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); } catch (e) {}
-            document.getElementById('layarGerbang').classList.add('hidden');
-            document.getElementById('layarUjian').classList.remove('hidden');
-            document.getElementById('panelTimer').classList.remove('hidden'); 
-            document.getElementById('panelTimer').classList.add('flex');
-            document.getElementById('kontrolHuruf').classList.remove('hidden');
+            Swal.fire({title: 'Memasuki Ruangan...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             
-            ujianSedangBerjalan = true;
-            renderGridNavigasi(); tampilkanSoal(0); mulaiTimer(); simpanStateLokal();
+            try {
+                // 1. CARI ATAU BUAT DOKUMEN HASIL UJIAN (UNTUK RADAR GURU)
+                const qH = query(collection(db, "hasil_ujian"), where("username", "==", usernameSiswaAktif), where("id_jadwal", "==", detailJadwal.id));
+                const snapH = await getDocs(qH);
+                
+                if(snapH.empty) {
+                    let docRef = await addDoc(collection(db, "hasil_ujian"), {
+                        username: usernameSiswaAktif, nama_siswa: namaSiswaAsli, asal_sekolah_siswa: asalSekolahSiswa, kelas: kelasSiswaAsli,
+                        sekolah_id: detailJadwal.sekolah_id || "Pusat", mapel: detailJadwal.mapel || "Campuran", id_jadwal: detailJadwal.id,
+                        nama_ujian: detailJadwal.nama_ujian || "Ujian", nilai_akhir: 0, status_pengerjaan: 'berjalan', waktu_mulai_pengerjaan: new Date(),
+                        urutan_id_soal: window.urutanSoalSiswaIni // 👈 SIMPAN URUTAN ACAKANNYA KE FIREBASE
+                    });
+                    idDokumenHasilAktif = docRef.id;
+                } else {
+                    let d = snapH.docs[0];
+                    if(d.data().status_pengerjaan === 'selesai') return Swal.fire('Selesai', 'Anda sudah mengumpulkan ujian ini.', 'error');
+                    idDokumenHasilAktif = d.id;
+                }
+
+                // 2. PASANG SENSOR LIVE DARI GURU
+                onSnapshot(doc(db, "hasil_ujian", idDokumenHasilAktif), (docSnap) => {
+                    if(!docSnap.exists()) {
+                        Swal.fire('Sesi Direset', 'Pengawas telah mereset sesi Anda. Anda harus mengulang dari awal.', 'warning').then(() => window.location.reload());
+                    }
+                });
+
+                requestWakeLock(); // PANGGIL WAKE LOCK
+
+                try { if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); } catch (e) {}
+                document.getElementById('layarGerbang').classList.add('hidden');
+                document.getElementById('layarUjian').classList.remove('hidden');
+                document.getElementById('panelTimer').classList.remove('hidden'); 
+                document.getElementById('panelTimer').classList.add('flex');
+                document.getElementById('kontrolHuruf').classList.remove('hidden');
+                
+                ujianSedangBerjalan = true;
+                Swal.close();
+                renderGridNavigasi(); tampilkanSoal(0); mulaiTimer(); simpanStateLokal();
+            } catch(e) { Swal.fire('Error', 'Gagal terhubung ke server pengawas.', 'error'); }
         });
 
-        // MESIN RENDER SOAL V2.0 (SUDAH DIPERBAIKI UNTUK QUILL & KATEX)
+        // MESIN LAPOR KENDALA IT (SOS) - (BARU)
+        window.laporKendalaIT = async () => {
+            const { value: formValues } = await Swal.fire({
+                title: '🆘 Lapor Kendala',
+                html: `
+                    <select id="kategoriSOS" class="w-full p-3 border rounded-xl mb-3 outline-none">
+                        <option value="Sistem Error">Sistem Error / Layar Ngeblank</option>
+                        <option value="Koneksi Terputus">Koneksi Putus / Kuota Habis</option>
+                        <option value="Waktu Error">Tombol Tidak Bisa Diklik / Bug</option>
+                        <option value="Lainnya">Masalah Lainnya</option>
+                    </select>
+                    <textarea id="pesanSOS" rows="3" class="w-full p-3 border rounded-xl outline-none" placeholder="Tuliskan detail masalah Anda..."></textarea>
+                `,
+                focusConfirm: false, showCancelButton: true, confirmButtonText: 'Kirim Laporan', confirmButtonColor: '#e11d48',
+                preConfirm: () => { return [ document.getElementById('kategoriSOS').value, document.getElementById('pesanSOS').value ] }
+            });
+
+            if (formValues) {
+                Swal.fire({title: 'Mengirim Laporan...', didOpen: () => Swal.showLoading()});
+                try {
+                    let [kat, pes] = formValues;
+                    let payloadLapor = {
+                        kategori: kat, pesan: pes || "Tidak ada detail.", id_jadwal: detailJadwal.id,
+                        nama_ujian: detailJadwal.nama_ujian, username_siswa: usernameSiswaAktif,
+                        nama_siswa: namaSiswaAsli, sekolah_id: detailJadwal.sekolah_id, kelas: kelasSiswaAsli || "-",
+                        status: 'Pending', waktu_lapor: new Date()
+                    };
+                    
+                    let docRef = await addDoc(collection(db, "laporan_kendala"), payloadLapor);
+                    
+                    // Pause Timer & Kunci Layar Sampai Guru Bertindak
+                    clearInterval(hitungMundur); ujianSedangBerjalan = false;
+                    
+                    Swal.fire({ title: 'Laporan Terkirim! 📡', html: 'Waktu ujian Anda <b>dihentikan sementara</b>.<br><br>Silakan angkat tangan dan panggil Ustadz/Ustadzah pengawas untuk mengecek komputer/HP Anda.', icon: 'info', allowOutsideClick: false, showConfirmButton: false });
+
+                    const unsubscribe = onSnapshot(doc(db, "laporan_kendala", docRef.id), (docSnap) => {
+                        let data = docSnap.data();
+                        if(data && data.status === 'Selesai') {
+                            unsubscribe(); 
+                            Swal.fire('Diizinkan Lanjut!', 'Pengawas telah membuka gembok ujian Anda.', 'success').then(() => {
+                                ujianSedangBerjalan = true; mulaiTimer(); 
+                                if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>{});
+                            });
+                        }
+                    });
+
+                } catch(e) { Swal.fire('Gagal', 'Tidak dapat terhubung ke server.', 'error'); }
+            }
+        };
+
+        // MESIN RENDER SOAL V2.0 
         window.tampilkanSoal = function(indeks) {
             indeksSekarang = indeks; 
             const soal = daftarSoal[indeks];
@@ -394,29 +543,43 @@
             document.getElementById('areaSoalOpsi').style.fontSize = ukuranHuruf + 'px';
         };
 
+        // ZOOM GAMBAR (BARU)
+        document.addEventListener('click', (e) => {
+            if(e.target.tagName === 'IMG' && e.target.closest('.ql-editor')) {
+                Swal.fire({ imageUrl: e.target.src, imageAlt: 'Zoom', width: '90%', showConfirmButton: false, showCloseButton: true, backdrop: `rgba(15, 23, 42, 0.9)` });
+            }
+        });
+
+        // RENDER GRID (DI-UPDATE BUG KOTAK BIRU)
         function renderGridNavigasi() {
             const grid = document.getElementById('gridNavigasi'); grid.innerHTML = ''; let terjawab = 0;
             for (let i = 0; i < daftarSoal.length; i++) {
                 let tipe = daftarSoal[i].tipe_soal || 'pg'; let isDijawab = false;
-                if (tipe === 'pg_kompleks') isDijawab = jawabanSiswa[i].length > 0;
-                else if (tipe === 'essay') isDijawab = jawabanSiswa[i].trim().length > 0;
+                
+                if (tipe === 'pg_kompleks') isDijawab = jawabanSiswa[i] && jawabanSiswa[i].length > 0;
+                else if (tipe === 'pgk_matriks') isDijawab = jawabanSiswa[i] && Object.keys(jawabanSiswa[i]).length > 0;
+                else if (tipe === 'essay') isDijawab = jawabanSiswa[i] && String(jawabanSiswa[i]).trim().length > 0;
                 else isDijawab = !!jawabanSiswa[i];
 
                 if(isDijawab) terjawab++;
 
-                let btn = document.createElement('button'); btn.innerText = i + 1; 
-                btn.className = "w-full aspect-square flex items-center justify-center rounded-xl border-2 font-black text-sm transition transform hover:scale-105 shadow-sm ";
+                let btn = document.createElement('button'); 
+                btn.className = "w-full aspect-square flex flex-col items-center justify-center rounded-xl border-2 font-black text-sm transition transform hover:scale-105 shadow-sm relative overflow-hidden ";
                 
-                if (i === indeksSekarang) btn.className += "ring-4 ring-blue-200 border-transparent ";
+                let isiGrid = `<span class="mt-1">${i + 1}</span>`;
+                if (i === indeksSekarang) btn.className += "ring-4 ring-blue-300 border-transparent ";
                 
-                if (raguRagu[i]) btn.className += "bg-yellow-400 text-yellow-900 border-yellow-500 "; 
-                else if (isDijawab) {
-                    if(tipe === 'essay') btn.className += "bg-purple-600 text-white border-purple-700 ";
-                    else if(tipe === 'pg_kompleks') btn.className += "bg-indigo-600 text-white border-indigo-700 ";
-                    else btn.className += "bg-blue-600 text-white border-blue-700 "; 
+                if (raguRagu[i]) {
+                    btn.className += "bg-yellow-100 text-yellow-800 border-yellow-400 "; 
+                    isiGrid += `<span class="text-[8px] bg-yellow-400 text-white w-full absolute bottom-0 py-0.5">?</span>`;
+                } else if (isDijawab) {
+                    btn.className += "bg-blue-50 text-blue-800 border-blue-400 "; 
+                    isiGrid += `<span class="text-[8px] bg-blue-500 text-white w-full absolute bottom-0 py-0.5">✅</span>`;
+                } else {
+                    btn.className += "bg-white text-gray-500 border-gray-200 hover:bg-gray-50 ";
                 }
-                else btn.className += "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 ";
                 
+                btn.innerHTML = isiGrid;
                 btn.addEventListener('click', () => tampilkanSoal(i)); grid.appendChild(btn);
             }
             document.getElementById('progressTeks').innerText = `${terjawab}/${daftarSoal.length}`;
@@ -444,18 +607,17 @@
             }, 1000);
         }
 
-        // MESIN SKORING V2 DENGAN SNAPSHOT METHOD
         window.prosesKumpulUjian = function(dipaksa = false) {
             if (dipaksa) return hitungDanSimpanSkor();
 
             let arrKosong = [];
             for(let i=0; i<daftarSoal.length; i++) { 
                 let t = daftarSoal[i].tipe_soal || 'pg';
-                if(t === 'pg_kompleks' && jawabanSiswa[i].length === 0) arrKosong.push(i);
-                else if(t === 'essay' && jawabanSiswa[i].trim() === "") arrKosong.push(i);
+                if(t === 'pg_kompleks' && (!jawabanSiswa[i] || jawabanSiswa[i].length === 0)) arrKosong.push(i);
+                else if(t === 'essay' && (!jawabanSiswa[i] || String(jawabanSiswa[i]).trim() === "")) arrKosong.push(i);
                 else if(t === 'pgk_matriks') {
                     let jmlBarisMatriks = daftarSoal[i].opsi ? daftarSoal[i].opsi.length : 0;
-                    let jmlDiisi = Object.keys(jawabanSiswa[i]).length;
+                    let jmlDiisi = jawabanSiswa[i] ? Object.keys(jawabanSiswa[i]).length : 0;
                     if(jmlDiisi < jmlBarisMatriks) arrKosong.push(i);
                 }
                 else if(t === 'pg' && !jawabanSiswa[i]) arrKosong.push(i);
@@ -473,20 +635,19 @@
             }
         };
 
-        // MESIN SKORING V2 DENGAN SNAPSHOT METHOD (DIOPTIMASI)
+        // PENYIMPANAN KE FIREBASE (DI-UPDATE SINKRONISASI DATABASE)
         async function hitungDanSimpanSkor() {
             Swal.fire({ title: 'Memproses Jawaban...', text: 'Menyimpan Bukti Pengerjaan ke Server...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
             
             let b = 0, s = 0, k = 0;
             let totalPG = 0, totalEssay = 0;
             
-            // 1. Hitung Nilai (Sama seperti sebelumnya)
             for (let i = 0; i < daftarSoal.length; i++) {
                 let soal = daftarSoal[i]; let tipe = soal.tipe_soal || 'pg'; let jwb = jawabanSiswa[i];
 
                 if (tipe === 'essay') {
                     totalEssay++;
-                    if (!jwb || jwb.trim() === "") k++; else s++; // Essay selalu dihitung salah dulu sampai dikoreksi guru
+                    if (!jwb || String(jwb).trim() === "") k++; else s++; 
                 } 
                 else {
                     totalPG++;
@@ -500,7 +661,7 @@
                     } 
                     else if (tipe === 'pgk_matriks') {
                         let jmlBarisMatriks = soal.opsi ? soal.opsi.length : 0;
-                        let jmlDiisi = Object.keys(jwb).length;
+                        let jmlDiisi = jwb ? Object.keys(jwb).length : 0;
                         
                         if(jmlDiisi === 0) { k++; }
                         else {
@@ -520,7 +681,6 @@
                 }
             }
             
-            // 2. Kalkulasi Skor & Info Tampilan
             let skorPG = totalPG > 0 ? (b / totalPG) * 100 : 0;
             let nilaiAkhir = 0; let infoTambahan = "";
 
@@ -533,46 +693,37 @@
                 nilaiAkhir = 0; infoTambahan = `<p class="text-xs text-yellow-600 bg-yellow-50 p-2 rounded border border-yellow-200 mt-3">*100% Ujian Essay. Menunggu hasil koreksi penuh dari Guru.</p>`;
             }
 
-            // 3. DIET DATA (Merampingkan Rekam Soal agar tidak Error Max Document Size 1MB)
-            // Hapus gambar Base64 dari soal yang disimpan ke log siswa
             let rekamSoalDiet = daftarSoal.map(soalAsli => {
-                let soalCopy = JSON.parse(JSON.stringify(soalAsli)); // Clone
-                if(soalCopy.pertanyaan) {
-                    // Buang tag <img> yang berisi base64 panjang
-                    soalCopy.pertanyaan = soalCopy.pertanyaan.replace(/<img[^>]*src="data:image[^>]*>/g, '[Gambar Dihapus dari Log]');
-                }
+                let soalCopy = JSON.parse(JSON.stringify(soalAsli));
+                if(soalCopy.pertanyaan) soalCopy.pertanyaan = soalCopy.pertanyaan.replace(/<img[^>]*src="data:image[^>]*>/g, '[Gambar Dihapus]');
                 if(soalCopy.opsi && Array.isArray(soalCopy.opsi)){
-                    soalCopy.opsi.forEach(op => {
-                        if(op.teks) op.teks = op.teks.replace(/<img[^>]*src="data:image[^>]*>/g, '[Gambar Dihapus dari Log]');
-                    });
+                    soalCopy.opsi.forEach(op => { if(op.teks) op.teks = op.teks.replace(/<img[^>]*src="data:image[^>]*>/g, '[Gambar Dihapus]'); });
                 }
                 return soalCopy;
             });
 
-            // 4. SIMPAN KE FIREBASE (Dengan Error Handling yang jelas)
             try {
-                await addDoc(collection(db, "hasil_ujian"), {
-                    username: usernameSiswaAktif, 
-                    nama_siswa: namaSiswaAsli, 
-                    sekolah_id: detailJadwal.sekolah_id || "Pusat",
-                    kelas: detailJadwal.kelas || "Umum", 
-                    mapel: detailJadwal.mapel || "Campuran", 
-                    id_jadwal: detailJadwal.id, 
-                    id_paket: detailJadwal.id_paket || "",  
-                    nama_ujian: detailJadwal.nama_ujian || "Ujian Tanpa Nama", 
-                    nilai_akhir: nilaiAkhir, 
-                    detail: { benar: b, salah: s, kosong: k }, 
-                    waktu_selesai: new Date(), 
+                let py = {
+                    username: usernameSiswaAktif, nama_siswa: namaSiswaAsli, 
+                    asal_sekolah_siswa: asalSekolahSiswa, kelas: kelasSiswaAsli,
+                    id_jadwal: detailJadwal.id, nama_ujian: detailJadwal.nama_ujian || "Ujian", 
+                    mapel: detailJadwal.mapel || "Campuran", id_paket: detailJadwal.id_paket || "",  
+                    nilai_akhir: nilaiAkhir, detail: { benar: b, salah: s, kosong: k }, 
+                    waktu_selesai: new Date(), status_pengerjaan: 'selesai',
                     aturan_rilis_bahas: detailJadwal.aturan_rilis_bahas || "setelah_ujian_tutup", 
-                    rekam_jawaban: jawabanSiswa, 
-                    rekam_soal: rekamSoalDiet // 🔥 Data yang sudah dikuruskan
-                });
+                    rekam_jawaban: jawabanSiswa, rekam_soal: rekamSoalDiet 
+                };
 
-                // Bersihkan Cache Lokal agar HP siswa tidak berat
+                // CEK APAKAH INI UPDATE (Dari Resume) ATAU BARU
+                if(idDokumenHasilAktif) {
+                    await updateDoc(doc(db, "hasil_ujian", idDokumenHasilAktif), py);
+                } else {
+                    await addDoc(collection(db, "hasil_ujian"), py);
+                }
+
                 localStorage.removeItem(`ujian_${usernameSiswaAktif}_${detailJadwal.id}`); 
                 sessionStorage.removeItem('id_jadwal_aktif'); 
                 
-                // Tampilkan Hasil
                 Swal.fire({ 
                     icon: 'success', title: 'Ujian Selesai!', 
                     html: `
@@ -585,9 +736,14 @@
                 }).then(() => window.location.replace("dashboard.html"));
                 
             } catch (error) { 
-                console.error("Gagal simpan ke Firebase:", error);
-                // Menampilkan alasan asli error agar tidak meraba-raba dalam gelap
-                Swal.fire('Koneksi Error', `Gagal mengirim nilai. (Sistem: ${error.code || error.message})`, 'error'); 
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Terkirim!',
+                    text: 'Koneksi terputus saat mengirim data. Jangan tutup halaman ini! Cek internet Anda dan klik Kumpulkan lagi.',
+                    confirmButtonText: 'Oke, Saya Paham'
+                });
+                // Kembalikan status agar tombol bisa diklik lagi nanti
+                ujianSedangBerjalan = true; 
             }
         }
 
@@ -595,8 +751,15 @@
         window.addEventListener('online', () => { isOnline = true; let ind=document.getElementById('indikatorKoneksi'),d=document.getElementById('dotKoneksi'),t=document.getElementById('teksKoneksi'); if(ind){ ind.className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-green-50 border border-green-200 text-green-700 text-[10px] md:text-xs font-bold transition-all"; d.className="w-2 h-2 rounded-full bg-green-500 animate-pulse"; t.innerText="Online (Tersimpan)"; } document.getElementById('btnSelesai').disabled=false; });
         window.addEventListener('offline', () => { isOnline = false; let ind=document.getElementById('indikatorKoneksi'),d=document.getElementById('dotKoneksi'),t=document.getElementById('teksKoneksi'); if(ind){ ind.className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-red-50 border border-red-200 text-red-700 text-[10px] md:text-xs font-bold transition-all"; d.className="w-2 h-2 rounded-full bg-red-500"; t.innerText="Offline! Jangan Keluar"; } document.getElementById('btnSelesai').disabled=true; Swal.fire({toast:true,position:'top',icon:'error',title:'Koneksi Terputus!',text:'Jawaban disimpan di Laptop/HP.',showConfirmButton:false,timer:3000}); });
 
+        let waktuPelanggaranTerakhir = 0;
         function prosesPelanggaran(jenis) {
             if (!ujianSedangBerjalan || sedangDihukum) return;
+            
+            // 🛡️ SISTEM KEBAL (COOLDOWN 2 DETIK)
+            let sekarang = Date.now();
+            if (sekarang - waktuPelanggaranTerakhir < 2000) return; 
+            waktuPelanggaranTerakhir = sekarang;
+
             sedangDihukum = true; jumlahPelanggaran++;
             if (jumlahPelanggaran < MAKSIMAL_PELANGGARAN) {
                 Swal.fire({ icon: 'warning', title: '🛑 PELANGGARAN!', html: `<div class="bg-red-50 p-4 border border-red-200 rounded-xl mt-2 text-red-800"><b class="text-xl block mb-2">Peringatan ${jumlahPelanggaran} dari ${MAKSIMAL_PELANGGARAN}</b>Terdeteksi keluar dari Mode Layar Ujian!</div>`, confirmButtonColor: '#d33', confirmButtonText: 'Kembali Fokus', allowOutsideClick: false, allowEscapeKey: false }).then(() => { sedangDihukum = false; if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>{}); });
@@ -614,17 +777,10 @@
         document.addEventListener('cut', (e) => { e.preventDefault(); });
         document.addEventListener('paste', (e) => { e.preventDefault(); });
 
-        // 🔒 BLOKIR SHORTCUT KEYBOARD (Ctrl+C, Ctrl+V, Ctrl+U, Inspect Element)
+        // 🔒 BLOKIR SHORTCUT KEYBOARD
         document.addEventListener('keydown', (e) => {
-            // Blokir Copy Paste Shortcut
-            if (e.ctrlKey && (e.key === 'c' || e.key === 'C' || e.key === 'v' || e.key === 'V' || e.key === 'u' || e.key === 'U')) {
-                e.preventDefault();
-                prosesPelanggaran('shortcut'); // Langsung dianggap pelanggaran CCTV!
-            }
-            // Blokir F12 dan Ctrl+Shift+I (Inspect Element Hacker)
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c'))) {
-                e.preventDefault();
-            }
+            if (e.ctrlKey && (e.key === 'c' || e.key === 'C' || e.key === 'v' || e.key === 'V' || e.key === 'u' || e.key === 'U')) { e.preventDefault(); prosesPelanggaran('shortcut'); }
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c'))) { e.preventDefault(); }
         });
     </script>
 </body>
