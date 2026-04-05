@@ -106,6 +106,9 @@
                 <button onclick="bukaTab('tabUser')" id="menuUser" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
                     <span class="w-5 text-center mr-2">👥</span> Manajemen User
                 </button>
+                <button onclick="bukaTab('tabRombel')" id="menuRombel" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent mt-0.5">
+                    <span class="w-5 text-center mr-2 text-emerald-400">🏢</span> Master Rombel
+                </button>
             </div>
         </nav>
         <div class="p-3 border-t border-slate-800 bg-slate-900/50 shrink-0">
@@ -359,6 +362,31 @@
                                 <tr><td colspan="4" class="text-center py-8">Memuat data...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tabRombel" class="space-y-6 hidden animate-fade-in">
+                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-end mb-6 border-b pb-4">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800 flex items-center"><span class="mr-3">🏢</span> Manajemen Rombel</h2>
+                            <p class="text-slate-500 text-sm mt-1 font-medium">Kelola rombongan belajar, plotting siswa, dan penugasan guru mapel.</p>
+                        </div>
+                        <button onclick="bukaModalTambahRombel()" class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow-md transform hover:-translate-y-1">
+                            + Buat Rombel Baru
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <input type="text" id="cariRombel" placeholder="Cari nama kelas..." oninput="renderDaftarRombel()" class="px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                        <select id="filterTingkatRombel" onchange="renderDaftarRombel()" class="px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                            <option value="">Semua Tingkat</option>
+                            </select>
+                    </div>
+
+                    <div id="gridRombel" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="col-span-full text-center py-12 text-slate-400 font-medium">Memuat data rombel...</div>
                     </div>
                 </div>
             </div>
@@ -867,6 +895,58 @@
         </div>
     </div>
 
+    <div id="modalEditRombel" style="z-index: 9999;" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4 transition-all">
+        <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl flex flex-col overflow-hidden" style="max-height: 90vh;">
+            <div class="bg-slate-800 p-5 flex justify-between items-center text-white shrink-0 border-b-4 border-emerald-500">
+                <h3 class="font-black text-xl" id="judulModalRombel">🏢 Konfigurasi Rombel</h3>
+                <button onclick="tutupModalRombel()" class="text-slate-400 hover:text-white text-3xl font-bold">&times;</button>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row flex-1 min-h-0">
+                <div class="w-full lg:w-1/2 p-6 border-r overflow-y-auto space-y-4">
+                    <input type="hidden" id="idRombelAktif">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">NAMA ROMBEL (CONTOH: 9A - UTSMAN)</label>
+                        <input type="text" id="inputNamaRombel" placeholder="Ketik nama spesifik kelas..." class="w-full px-4 py-3 border rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">TINGKAT KELAS</label>
+                        <select id="inputTingkatRombel" class="w-full px-4 py-3 border rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                            </select>
+                    </div>
+
+                    <div class="pt-2 border-t mt-4">
+                        <label class="block text-xs font-bold text-amber-600 mb-1 uppercase tracking-widest flex items-center"><span class="mr-1">⭐</span> Wali Kelas</label>
+                        <select id="inputWaliKelas" class="w-full px-4 py-3 border border-amber-200 bg-amber-50 rounded-xl font-bold text-amber-800 focus:ring-2 focus:ring-amber-500 outline-none shadow-sm">
+                            <option value="">-- Pilih Wali Kelas --</option>
+                        </select>
+                    </div>
+
+                    <div class="pt-2 border-t mt-4">
+                        <label class="block text-xs font-bold text-slate-500 mb-2">GURU MAPEL DI KELAS INI</label>
+                        <div id="listPlotGuru" class="space-y-2 max-h-60 overflow-y-auto p-2 bg-slate-50 rounded-xl border shadow-inner">
+                            </div>
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-1/2 p-6 bg-slate-50 overflow-y-auto flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="block text-xs font-bold text-slate-500">DAFTAR SISWA (TINGKAT SAMA)</label>
+                        <span id="countSiswaRombel" class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-black">0 Terpilih</span>
+                    </div>
+                    <input type="text" id="cariSiswaRombel" oninput="renderChecklistSiswaRombel()" placeholder="Cari nama siswa..." class="w-full px-4 py-2 border rounded-xl mb-3 text-sm outline-none">
+                    <div id="listPlotSiswa" class="flex-1 overflow-y-auto space-y-1 p-2 border bg-white rounded-xl shadow-inner">
+                        </div>
+                </div>
+            </div>
+
+            <div class="p-5 border-t bg-slate-50 flex justify-end space-x-3">
+                <button onclick="tutupModalRombel()" class="px-6 py-3 bg-white border font-bold rounded-xl text-slate-600 hover:bg-slate-100">Batal</button>
+                <button onclick="simpanDataRombel()" class="px-8 py-3 bg-emerald-600 text-white font-black rounded-xl shadow-lg hover:bg-emerald-700 transform hover:-translate-y-1 transition">💾 Simpan Rombel</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
@@ -1080,8 +1160,8 @@
         };
 
         window.bukaTab = async (idTab) => {
-            let tabs = ['tabDashboard','tabAnalitik','tabEvaluasiSoal','tabReview','tabSemuaSoal','tabUser','tabJadwal','tabRuanganMaster','tabPaket','tabLaporan'];
-            let menus = ['menuDashboard','menuAnalitik','menuEvaluasiSoal','menuReview','menuSemuaSoal','menuUser','menuJadwal','menuRuanganMaster','menuPaket','menuLaporan'];
+            let tabs = ['tabDashboard','tabAnalitik','tabEvaluasiSoal','tabReview','tabSemuaSoal','tabUser','tabJadwal','tabRuanganMaster','tabRombel','tabPaket','tabLaporan'];
+            let menus = ['menuDashboard','menuAnalitik','menuEvaluasiSoal','menuReview','menuSemuaSoal','menuUser','menuJadwal','menuRuanganMaster','menuRombel','menuPaket','menuLaporan'];
 
             tabs.forEach(t => { let e = document.getElementById(t); if(e) e.classList.add('hidden'); });
             
@@ -1118,6 +1198,7 @@
             if(idTab === 'tabAnalitik') window.muatFilterRaporSekolah();
             if(idTab === 'tabEvaluasiSoal') window.muatFilterEvaluasiSoalLokal();
             if(idTab === 'tabRuanganMaster') window.muatDaftarSemuaRuangan();
+            if(idTab === 'tabRombel') window.muatMasterRombel();
         };
 
         window.muatDashboardLokal = async () => {
@@ -2323,7 +2404,7 @@
                 }
             }
         };
-        
+
         // ==========================================
         // FITUR IMPORT SOAL EXCEL V2 (DENGAN PREVIEW)
         // ==========================================
@@ -2987,6 +3068,209 @@
                 Swal.close();
             }
         };
+        // ==========================================
+        // SISTEM MASTER ROMBEL (RUANG KELAS) + WALI KELAS
+        // ==========================================
+        let dataRombelLokal = [];
+        let allSiswaTingkat = []; 
+        let allGuruSekolah = [];
+        let mapNamaGuru = {}; // Untuk melacak nama Wali Kelas di kartu
+        let setSiswaTerpilihRombel = new Set();
+        let setGuruTerpilihRombel = new Set();
+
+        window.muatMasterRombel = async () => {
+            const grid = document.getElementById('gridRombel');
+            grid.innerHTML = '<div class="col-span-full text-center py-12 animate-pulse text-emerald-600 font-bold">Sinkronisasi Rombel...</div>';
+            
+            // Set Dropdown Tingkat Filter
+            let j = jenjangSekolahGlobal, mn = j==='SD'?1:(j==='SMP'?7:10), mx = j==='SD'?6:(j==='SMP'?9:12);
+            let hFilter = '<option value="">Semua Tingkat</option>';
+            let hInput = '';
+            for(let i=mn; i<=mx; i++){ hFilter += `<option value="${i}">Kelas ${i}</option>`; hInput += `<option value="${i}">Tingkat ${i}</option>`; }
+            document.getElementById('filterTingkatRombel').innerHTML = hFilter;
+            document.getElementById('inputTingkatRombel').innerHTML = hInput;
+
+            try {
+                // Tarik data guru dulu untuk Map Nama
+                const snapGuru = await getDocs(query(collection(db, "users"), where("sekolah_id", "==", idSekolahGlobal), where("role", "==", "guru")));
+                mapNamaGuru = {};
+                snapGuru.forEach(d => { mapNamaGuru[d.data().email] = d.data().nama; });
+
+                const snap = await getDocs(query(collection(db, "rombel"), where("sekolah_id", "==", idSekolahGlobal)));
+                dataRombelLokal = [];
+                snap.forEach(d => dataRombelLokal.push({id: d.id, ...d.data()}));
+                window.renderDaftarRombel();
+            } catch(e) { grid.innerHTML = 'Gagal memuat.'; }
+        };
+
+        window.renderDaftarRombel = () => {
+            let kw = document.getElementById('cariRombel').value.toLowerCase();
+            let tk = document.getElementById('filterTingkatRombel').value;
+            let html = '';
+
+            let filtered = dataRombelLokal.filter(r => r.nama_rombel.toLowerCase().includes(kw) && (tk==="" || r.tingkat == tk));
+
+            filtered.sort((a,b) => a.tingkat - b.tingkat).forEach(r => {
+                let namaWali = r.wali_kelas_email ? (mapNamaGuru[r.wali_kelas_email] || r.wali_kelas_email) : "Belum Diatur";
+
+                html += `
+                <div class="bg-white border-2 border-slate-100 p-5 rounded-3xl shadow-sm hover:border-emerald-300 transition group relative">
+                    <div class="flex items-center space-x-4 mb-3">
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-black border border-emerald-100">🏢</div>
+                        <div class="flex-1">
+                            <h4 class="font-black text-slate-800 text-lg leading-tight flex justify-between items-center">${r.nama_rombel} <span class="text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded uppercase ml-2">Tingkat ${r.tingkat}</span></h4>
+                            <p class="text-[10px] text-slate-500 font-bold mt-1 truncate">⭐ Wali Kelas: <span class="text-amber-600 font-black">${namaWali}</span></p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-xs font-bold text-slate-500">
+                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">👥 ${r.siswa_usernames?.length || 0} Siswa</div>
+                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">👨‍🏫 ${r.guru_emails?.length || 0} Guru Mapel</div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t flex justify-between">
+                        <button onclick="bukaModalEditRombel('${r.id}')" class="text-xs font-black text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition">⚙️ Pengaturan</button>
+                        <button onclick="hapusRombel('${r.id}')" class="text-xs font-black text-rose-400 hover:text-rose-600 transition px-2">Hapus</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('gridRombel').innerHTML = html || '<div class="col-span-full py-12 text-center text-slate-400">Belum ada rombel.</div>';
+        };
+
+        window.bukaModalTambahRombel = () => {
+            document.getElementById('judulModalRombel').innerText = "🏢 Buat Rombel Baru";
+            document.getElementById('idRombelAktif').value = "";
+            document.getElementById('inputNamaRombel').value = "";
+            document.getElementById('inputWaliKelas').value = "";
+            
+            // Set default tingkat ke yang paling atas (misal Kelas 7/10)
+            let defaultTingkat = jenjangSekolahGlobal === 'SD' ? "1" : (jenjangSekolahGlobal === 'SMP' ? "7" : "10");
+            document.getElementById('inputTingkatRombel').value = defaultTingkat;
+
+            setSiswaTerpilihRombel.clear();
+            setGuruTerpilihRombel.clear();
+            window.prepareDataPlotting();
+        };
+
+        window.prepareDataPlotting = async () => {
+            Swal.fire({title: 'Menyiapkan Data...', didOpen: () => Swal.showLoading()});
+            
+            // Tarik SEMUA Siswa & Guru cabang ini SEKALIGUS (Filter nanti di lokal)
+            const snap = await getDocs(query(collection(db, "users"), where("sekolah_id", "==", idSekolahGlobal)));
+            
+            allSiswaTingkat = []; allGuruSekolah = [];
+            snap.forEach(d => {
+                let u = d.data();
+                if(u.role === 'siswa') allSiswaTingkat.push({nama: u.nama, username: u.email.split('@')[0], kelas: u.kelas});
+                if(u.role === 'guru') allGuruSekolah.push({nama: u.nama, email: u.email, mapel: u.mapel_diampu || []});
+            });
+
+            // Render Dropdown Wali Kelas & Checklist Guru Mapel
+            let hWali = '<option value="">-- Pilih Wali Kelas --</option>';
+            let hGuru = '';
+            
+            allGuruSekolah.sort((a,b)=>a.nama.localeCompare(b.nama)).forEach(g => {
+                hWali += `<option value="${g.email}">${g.nama}</option>`;
+                let check = setGuruTerpilihRombel.has(g.email) ? 'checked' : '';
+                // FIX: Tambahkan label mapel yang diampu guru tersebut di sebelahnya
+                let labelMapel = g.mapel && g.mapel.length > 0 ? `<span class="text-[9px] bg-slate-200 px-1.5 py-0.5 rounded ml-2 font-normal text-slate-500">${g.mapel.join(', ')}</span>` : '';
+                hGuru += `<label class="flex items-center p-2 hover:bg-white rounded-lg cursor-pointer text-xs font-bold text-slate-600"><input type="checkbox" value="${g.email}" onchange="toggleGuruRombel(this)" class="mr-3 w-4 h-4" ${check}> ${g.nama} ${labelMapel}</label>`;
+            });
+            
+            document.getElementById('inputWaliKelas').innerHTML = hWali;
+            document.getElementById('listPlotGuru').innerHTML = hGuru;
+
+            // Set Ulang Data Jika Sedang Edit
+            let idEdit = document.getElementById('idRombelAktif').value;
+            if(idEdit) {
+                let r = dataRombelLokal.find(x => x.id === idEdit);
+                if(r && r.wali_kelas_email) document.getElementById('inputWaliKelas').value = r.wali_kelas_email;
+            }
+
+            // FIX: Tambahkan Event Listener ke Dropdown Tingkat Kelas agar me-refresh daftar siswa saat diubah
+            document.getElementById('inputTingkatRombel').addEventListener('change', window.renderChecklistSiswaRombel);
+
+            window.renderChecklistSiswaRombel();
+            document.getElementById('modalEditRombel').classList.remove('hidden');
+            Swal.close();
+        };
+
+        window.renderChecklistSiswaRombel = () => {
+            let kw = document.getElementById('cariSiswaRombel').value.toLowerCase();
+            let tingkatAktif = document.getElementById('inputTingkatRombel').value; // Ambil nilai tingkat dari dropdown
+            let html = '';
+            
+            let idEdit = document.getElementById('idRombelAktif').value;
+            let sudahAdaRombel = new Set();
+            dataRombelLokal.forEach(r => {
+                if(r.id !== idEdit) r.siswa_usernames?.forEach(u => sudahAdaRombel.add(u));
+            });
+
+            // FIX: Saring siswa yang kelasnya (dari user profile) SAMA dengan dropdown tingkat di modal
+            let calonSiswa = allSiswaTingkat.filter(s => String(s.kelas) === String(tingkatAktif) && s.nama.toLowerCase().includes(kw) && !sudahAdaRombel.has(s.username));
+
+            calonSiswa.forEach(s => {
+                let check = setSiswaTerpilihRombel.has(s.username) ? 'checked' : '';
+                html += `<label class="flex items-center p-2.5 border border-slate-100 rounded-xl mb-1 hover:bg-emerald-50 transition cursor-pointer text-xs font-bold"><input type="checkbox" value="${s.username}" onchange="toggleSiswaRombel(this)" class="mr-3 w-4 h-4" ${check}> ${s.nama}</label>`;
+            });
+            
+            document.getElementById('listPlotSiswa').innerHTML = html || `<div class="text-center py-8 px-4"><span class="text-3xl mb-2 block text-slate-300">👻</span><p class="text-slate-400 text-xs font-bold leading-relaxed">Tidak ada siswa tersedia di Kelas ${tingkatAktif}.<br>Atau semua siswa kelas ini sudah masuk ke Rombel lain.</p></div>`;
+            document.getElementById('countSiswaRombel').innerText = `${setSiswaTerpilihRombel.size} Terpilih`;
+        };
+
+        window.toggleSiswaRombel = (c) => { if(c.checked) setSiswaTerpilihRombel.add(c.value); else setSiswaTerpilihRombel.delete(c.value); document.getElementById('countSiswaRombel').innerText = `${setSiswaTerpilihRombel.size} Terpilih`; };
+        window.toggleGuruRombel = (c) => { if(c.checked) setGuruTerpilihRombel.add(c.value); else setGuruTerpilihRombel.delete(c.value); };
+
+        window.simpanDataRombel = async () => {
+            let nama = document.getElementById('inputNamaRombel').value;
+            let tingkat = document.getElementById('inputTingkatRombel').value;
+            let wali = document.getElementById('inputWaliKelas').value;
+            let id = document.getElementById('idRombelAktif').value;
+
+            if(!nama) return Swal.fire('Oops', 'Nama Rombel wajib diisi!', 'warning');
+
+            Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
+            try {
+                let py = {
+                    nama_rombel: nama,
+                    tingkat: parseInt(tingkat),
+                    wali_kelas_email: wali,
+                    siswa_usernames: Array.from(setSiswaTerpilihRombel),
+                    guru_emails: Array.from(setGuruTerpilihRombel),
+                    sekolah_id: idSekolahGlobal,
+                    update_terakhir: new Date()
+                };
+
+                if(id === "") await addDoc(collection(db, "rombel"), py);
+                else await updateDoc(doc(db, "rombel", id), py);
+
+                window.tutupModalRombel();
+                window.muatMasterRombel();
+                Swal.fire('Berhasil!', 'Struktur Rombel diperbarui.', 'success');
+            } catch(e) { Swal.fire('Error', 'Gagal menyimpan rombel.', 'error'); }
+        };
+
+        window.bukaModalEditRombel = (id) => {
+            let r = dataRombelLokal.find(x => x.id === id);
+            if(!r) return;
+            document.getElementById('judulModalRombel').innerText = "⚙️ Edit Rombel";
+            document.getElementById('idRombelAktif').value = r.id;
+            document.getElementById('inputNamaRombel').value = r.nama_rombel;
+            document.getElementById('inputTingkatRombel').value = r.tingkat;
+            
+            setSiswaTerpilihRombel = new Set(r.siswa_usernames || []);
+            setGuruTerpilihRombel = new Set(r.guru_emails || []);
+            window.prepareDataPlotting();
+        };
+
+        window.hapusRombel = async (id) => {
+            if((await Swal.fire({title: 'Hapus Rombel?', text: 'Siswa akan terlepas dari kelas ini (tapi akun mereka tetap aman).', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48'})).isConfirmed) {
+                Swal.fire({title: 'Menghapus...', didOpen: () => Swal.showLoading()});
+                await deleteDoc(doc(db, "rombel", id));
+                window.muatMasterRombel();
+                Swal.close();
+            }
+        };
+
+        window.tutupModalRombel = () => document.getElementById('modalEditRombel').classList.add('hidden');
     </script>
 </body>
 
