@@ -222,83 +222,73 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-full">
-                        <h3 class="text-base font-black text-gray-800 border-b pb-3 mb-4 flex items-center"><span class="mr-2">🔎</span> Filter & Pilih Ujian</h3>
+                <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                        <div>
+                            <label class="block text-[10px] font-black text-indigo-800 uppercase tracking-widest mb-1.5">Dari Tanggal</label>
+                            <input type="date" id="filterTglMulaiUjian" onchange="muatFilterKomparasi()" class="w-full px-4 py-2.5 border border-indigo-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50/30 font-bold text-indigo-900">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-indigo-800 uppercase tracking-widest mb-1.5">Sampai Tanggal</label>
+                            <input type="date" id="filterTglAkhirUjian" onchange="muatFilterKomparasi()" class="w-full px-4 py-2.5 border border-indigo-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50/30 font-bold text-indigo-900">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-indigo-800 uppercase tracking-widest mb-1.5">Target Kelas</label>
+                            <select id="filterKelasKomparasi" class="w-full px-4 py-2.5 border border-indigo-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-900 bg-indigo-50/30">
+                                <option value="semua">Semua Kelas</option><option value="12">Kelas 12</option><option value="11">Kelas 11</option><option value="10">Kelas 10</option><option value="9">Kelas 9</option><option value="8">Kelas 8</option><option value="7">Kelas 7</option><option value="6">Kelas 6</option>
+                            </select>
+                        </div>
                         
-                        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-4 space-y-3">
-                            <div>
-                                <label class="block text-[10px] font-black text-indigo-800 uppercase tracking-widest mb-1">Dari Tanggal:</label>
-                                <input type="date" id="filterTglMulaiUjian" onchange="muatFilterKomparasi()" class="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-indigo-800 uppercase tracking-widest mb-1">Sampai Tanggal:</label>
-                                <input type="date" id="filterTglAkhirUjian" onchange="muatFilterKomparasi()" class="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-indigo-800 uppercase tracking-widest mb-1">Target Kelas:</label>
-                                <select id="filterKelasKomparasi" class="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-gray-700 bg-white">
-                                    <option value="semua">Semua Kelas</option><option value="12">Kelas 12</option><option value="11">Kelas 11</option><option value="10">Kelas 10</option><option value="9">Kelas 9</option><option value="8">Kelas 8</option><option value="7">Kelas 7</option><option value="6">Kelas 6</option>
-                                </select>
+                        <div class="relative">
+                            <label class="block text-[10px] font-black text-indigo-800 uppercase tracking-widest mb-1.5">Pilih Ujian (Min. 1)</label>
+                            <button type="button" onclick="document.getElementById('dropdownUjian').classList.toggle('hidden')" class="w-full px-4 py-2.5 border border-indigo-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-left flex justify-between items-center font-bold text-gray-600 shadow-sm">
+                                <span id="teksPilihUjian">Pilih Ujian (0)</span>
+                                <span class="text-xs">▼</span>
+                            </button>
+                            
+                            <div id="dropdownUjian" class="hidden absolute z-50 mt-2 w-full md:w-[400px] right-0 bg-white border border-gray-200 rounded-2xl shadow-xl max-h-72 overflow-y-auto p-2">
+                                <div id="listCheckboxUjian" class="space-y-1">
+                                    <div class="text-center py-6 text-gray-400 font-medium text-xs">Memuat data...</div>
+                                </div>
                             </div>
                         </div>
 
-                        <label class="block text-xs font-bold text-gray-500 mb-2">Daftar Ujian (Pilih minimal 1):</label>
-                        <div class="flex-1 border border-gray-200 rounded-xl p-3 overflow-y-auto space-y-2 bg-gray-50 min-h-[250px] shadow-inner" id="listCheckboxUjian">
-                            <div class="text-center py-10 text-gray-400 font-medium">Memuat data...</div>
+                        <div>
+                            <button onclick="kalkulasiRaporGabungan()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-black text-sm shadow-lg shadow-indigo-500/30 transition transform hover:-translate-y-1 flex items-center justify-center">
+                                <span class="mr-2">⚡</span> Kalkulasi
+                            </button>
                         </div>
+                    </div>
+                </div>
 
-                        <button onclick="kalkulasiRaporGabungan()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-xl font-black text-base shadow-md shadow-indigo-500/30 transition transform hover:-translate-y-1 flex items-center justify-center">
-                            <span class="mr-2">⚡</span> Kalkulasi Nasional
-                        </button>
+                <div>
+                    <div id="placeholderKomparasi" class="h-full min-h-[350px] flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 text-gray-400 p-6">
+                        <svg class="w-20 h-20 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <h3 class="text-lg font-bold text-gray-500">Menunggu Analisis</h3>
+                        <p class="text-xs mt-1.5 max-w-sm text-center">Silakan atur filter di atas, pilih ujian dari dropdown, lalu klik "Kalkulasi".</p>
                     </div>
 
-                    <div class="lg:col-span-2 space-y-6">
-                        <div id="placeholderKomparasi" class="h-full min-h-[450px] flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 text-gray-400 p-6">
-                            <svg class="w-20 h-20 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                            <h3 class="text-lg font-bold text-gray-500">Menunggu Analisis</h3>
-                            <p class="text-xs mt-1.5 max-w-sm text-center">Silakan pilih ujian di panel sebelah kiri dan klik "Kalkulasi Nasional" untuk menampilkan peringkat eksekutif.</p>
+                    <div id="panelHasilKomparasi" class="hidden animate-fade-in">
+                        <div class="flex flex-col md:flex-row justify-between items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm mb-6 gap-4">
+                            <div class="flex space-x-6">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-xl">👨‍🎓</div>
+                                    <div><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Siswa Teranalisis</p><h4 class="text-xl font-black text-gray-800" id="statJmlSiswa">0</h4></div>
+                                </div>
+                                <div class="w-px h-10 bg-gray-200 hidden md:block"></div>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center text-xl">📝</div>
+                                    <div><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ujian Digabung</p><h4 class="text-xl font-black text-gray-800" id="statJmlUjian">0</h4></div>
+                                </div>
+                            </div>
+                            <button onclick="unduhExcelRaporGabungan()" class="w-full md:w-auto bg-indigo-600 text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md transition flex items-center justify-center">
+                                <span class="mr-2 text-lg">📥</span> Export Excel Rapor
+                            </button>
                         </div>
-
-                        <div id="panelHasilKomparasi" class="hidden space-y-6 animate-fade-in">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="bg-white border-l-4 border-l-blue-500 p-4 rounded-xl shadow-sm flex items-center justify-between">
-                                    <div><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Siswa Teranalisis</p><h4 class="text-2xl font-black text-gray-800 mt-1" id="statJmlSiswa">0</h4></div>
-                                    <div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-lg">👨‍🎓</div>
-                                </div>
-                                <div class="bg-white border-l-4 border-l-emerald-500 p-4 rounded-xl shadow-sm flex items-center justify-between">
-                                    <div><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ujian Digabung</p><h4 class="text-2xl font-black text-gray-800 mt-1" id="statJmlUjian">0</h4></div>
-                                    <div class="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center text-lg">📝</div>
-                                </div>
-                            </div>
-
-                            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-                                <div class="bg-indigo-50 border-b border-indigo-100 p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-                                    <div>
-                                        <h3 class="font-black text-indigo-900 text-base tracking-widest uppercase">🏫 Top Peringkat Cabang</h3>
-                                        <p class="text-[10px] text-indigo-600 font-bold mt-0.5">Rata-Rata Kolektif Seluruh Siswa di Sekolah</p>
-                                    </div>
-                                    <button onclick="unduhExcelRaporGabungan()" class="w-full md:w-auto bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-indigo-700 shadow-md transition flex items-center justify-center">
-                                        <span class="mr-2 text-base">📥</span> Export Excel Lengkap
-                                    </button>
-                                </div>
-                                <div class="p-5 space-y-4" id="kontainerTopCabang"></div>
-                            </div>
-
-                            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-                                <div class="bg-slate-50 border-b border-slate-200 p-4">
-                                    <h3 class="font-black text-slate-800 text-base tracking-widest uppercase">🏆 Top 10 Siswa Nasional</h3>
-                                    <p class="text-[10px] text-slate-500 font-bold mt-0.5">Berdasarkan Rata-Rata Nilai Tertinggi</p>
-                                </div>
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-sm text-left">
-                                        <tbody id="kontainerTopSiswa" class="divide-y divide-gray-100"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                        
+                        <div id="kontainerTopCabang" class="space-y-6"></div>
                     </div>
                 </div>
             </div>
@@ -2887,56 +2877,81 @@
 
                     countAda++;
                     let tglFormat = tglUjian.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
+                    
+                    // 🔥 UI BARU: Lebih compact untuk dropdown
                     html += `
-                    <label class="flex items-center p-3 border border-gray-200 bg-white rounded-xl hover:border-indigo-400 hover:bg-indigo-50/50 cursor-pointer transition shadow-sm">
-                        <input type="checkbox" value="${j.id}" data-nama="${j.nama_ujian}" data-mapel="${j.mapel}" class="cb-ujian-komparasi w-5 h-5 text-indigo-600 rounded border-gray-300 mr-3">
+                    <label class="flex items-center p-2 border-b border-gray-100 hover:bg-indigo-50 cursor-pointer transition rounded-lg">
+                        <input type="checkbox" value="${j.id}" data-nama="${j.nama_ujian}" data-mapel="${j.mapel || 'Campuran'}" onchange="updateTeksPilihUjian()" class="cb-ujian-komparasi w-4 h-4 text-indigo-600 rounded border-gray-300 mr-3">
                         <div class="flex-1">
-                            <p class="font-bold text-gray-800 text-sm line-clamp-1">${j.nama_ujian}</p>
-                            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">${j.mapel} | KLS ${j.kelas} | 📅 ${tglFormat}</p>
+                            <p class="font-bold text-gray-800 text-xs line-clamp-1">${j.nama_ujian}</p>
+                            <p class="text-[9px] text-gray-500 font-bold uppercase mt-0.5 tracking-widest">${j.mapel || 'Campuran'} | KLS ${j.kelas}</p>
                         </div>
                     </label>`;
                 });
                 
-                wadah.innerHTML = countAda > 0 ? html : '<div class="text-center py-10 text-gray-400 font-bold border-2 border-dashed border-gray-200 rounded-xl m-2">Tidak ada ujian di tanggal ini.</div>';
+                wadah.innerHTML = countAda > 0 ? html : '<div class="text-center py-6 text-gray-400 text-xs font-bold">Tidak ada ujian di tanggal ini.</div>';
+                window.updateTeksPilihUjian(); // Reset counter
             } catch (e) {
-                wadah.innerHTML = '<div class="text-center py-10 text-red-500">Gagal memuat jadwal ujian.</div>';
+                wadah.innerHTML = '<div class="text-center py-6 text-red-500 text-xs font-bold">Gagal memuat jadwal ujian.</div>';
             }
         };
 
-       window.kalkulasiRaporGabungan = async () => {
+        window.updateTeksPilihUjian = () => {
+            let jml = document.querySelectorAll('.cb-ujian-komparasi:checked').length;
+            let btnTeks = document.getElementById('teksPilihUjian');
+            if(btnTeks) {
+                btnTeks.innerText = jml > 0 ? `Terpilih (${jml} Ujian)` : `Pilih Ujian (0)`;
+                if(jml > 0) btnTeks.classList.add('text-indigo-700'); else btnTeks.classList.remove('text-indigo-700');
+            }
+        };
+
+        window.addEventListener('click', (e) => {
+            let dropdown = document.getElementById('dropdownUjian');
+            let btn = document.getElementById('teksPilihUjian')?.parentElement;
+            if(dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+       // 2. Mesin Kalkulasi (Dengan Klasemen Total & Klasemen Spesifik Per Mapel)
+        window.kalkulasiRaporGabungan = async () => {
             let cbTerpilih = Array.from(document.querySelectorAll('.cb-ujian-komparasi:checked'));
             let filterKelas = document.getElementById('filterKelasKomparasi').value;
 
             if (cbTerpilih.length === 0) return Swal.fire('Oops', 'Pilih minimal 1 ujian di daftar sebelah kiri!', 'warning');
             
-            Swal.fire({title: 'Mengkalkulasi...', html: 'Mengolah data nilai seluruh siswa...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            Swal.fire({title: 'Mengkalkulasi...', html: 'Mengolah matriks klasemen nasional...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
 
             try {
-                // 1. Petakan Ujian & Mapel yang dipilih
+                // Ekstrak Mapel
                 daftarUjianTerpilih = cbTerpilih.map(cb => ({ 
                     id: cb.value, 
                     nama: cb.getAttribute('data-nama'),
-                    mapel: cb.getAttribute('data-mapel') || 'Umum' 
+                    mapel: cb.getAttribute('data-mapel') || 'Campuran' 
                 }));
-                
-                // Ambil daftar Mapel Unik untuk Header Tabel Matriks
+
                 window.listMapelUnik = [...new Set(daftarUjianTerpilih.map(u => u.mapel))];
 
-                // 🔥 2. SISTEM CACHE: Sedot Data Super Cepat
-                let semuaDataHasil = [];
-                for (let u of daftarUjianTerpilih) {
-                    if (!cacheHasilUjianGlobal[u.id]) {
-                        const snap = await getDocs(query(collection(db, "hasil_ujian"), where("id_jadwal", "==", u.id)));
-                        let tempArr = []; snap.forEach(doc => tempArr.push(doc.data()));
-                        cacheHasilUjianGlobal[u.id] = tempArr; // Simpan ke brankas RAM
+                // 🔥 SISTEM CACHE & PARALLEL FETCH
+                let fetchPromises = daftarUjianTerpilih.map(u => {
+                    if (cacheHasilUjianGlobal[u.id]) {
+                        return Promise.resolve({ idUjian: u.id, data: cacheHasilUjianGlobal[u.id] });
+                    } else {
+                        return getDocs(query(collection(db, "hasil_ujian"), where("id_jadwal", "==", u.id)))
+                            .then(snap => {
+                                let tempArr = [];
+                                snap.forEach(doc => tempArr.push(doc.data()));
+                                cacheHasilUjianGlobal[u.id] = tempArr;
+                                return { idUjian: u.id, data: tempArr };
+                            });
                     }
-                    semuaDataHasil.push({ idUjian: u.id, data: cacheHasilUjianGlobal[u.id] });
-                }
+                });
+
+                let semuaDataHasil = await Promise.all(fetchPromises);
 
                 let keranjangCabang = {};
                 let keranjangSiswa = {};
 
-                // 3. Ekstrak Data dari Cache
                 semuaDataHasil.forEach((paket) => {
                     let mapelUjianIni = daftarUjianTerpilih.find(x => x.id === paket.idUjian).mapel;
 
@@ -2944,17 +2959,17 @@
                         if (filterKelas !== "semua" && String(d.kelas) !== filterKelas) return;
 
                         let idCabang = d.asal_sekolah_siswa || "Tanpa_Cabang";
-                        let namaCabang = masterSekolah[d.asal_sekolah_siswa] || d.asal_sekolah_siswa || "Tidak Diketahui";
+                        let namaCabang = masterSekolah[idCabang] || idCabang;
+                        if (idCabang === "Tanpa_Cabang" || idCabang === "") namaCabang = "Data Ujian Lama";
 
-                        // Buat Keranjang Cabang Jika Belum Ada
-                        if (!keranjangCabang[idCabang]) {
-                            keranjangCabang[idCabang] = { nama: namaCabang, siswaList: {}, jumlahSiswa: 0 };
-                        }
+                        let uname = d.username || d.nama_siswa || ("anonim_" + Math.random().toString(36).substr(2, 6));
 
-                        // Buat Keranjang Siswa di dalam Cabang
-                        if (!keranjangCabang[idCabang].siswaList[d.username]) {
-                            keranjangCabang[idCabang].siswaList[d.username] = {
-                                nama: d.nama_siswa || d.username, kelas: d.kelas || "-",
+                        if (!keranjangCabang[idCabang]) keranjangCabang[idCabang] = { nama: namaCabang, siswaList: {}, jumlahSiswa: 0 };
+
+                        if (!keranjangCabang[idCabang].siswaList[uname]) {
+                            keranjangCabang[idCabang].siswaList[uname] = {
+                                nama: d.nama_siswa || d.username || "Siswa Tanpa Nama",
+                                kelas: d.kelas || "-",
                                 nama_cabang: namaCabang, skorPerMapel: {}
                             };
                             keranjangCabang[idCabang].jumlahSiswa++;
@@ -2962,23 +2977,23 @@
 
                         let nilaiReal = parseFloat(d.nilai_akhir || 0);
                         
-                        // Kumpulkan Nilai Siswa Per Mapel
-                        if(!keranjangCabang[idCabang].siswaList[d.username].skorPerMapel[mapelUjianIni]) {
-                            keranjangCabang[idCabang].siswaList[d.username].skorPerMapel[mapelUjianIni] = { sum: 0, count: 0 };
+                        if(!keranjangCabang[idCabang].siswaList[uname].skorPerMapel[mapelUjianIni]) {
+                            keranjangCabang[idCabang].siswaList[uname].skorPerMapel[mapelUjianIni] = { sum: 0, count: 0 };
                         }
-                        keranjangCabang[idCabang].siswaList[d.username].skorPerMapel[mapelUjianIni].sum += nilaiReal;
-                        keranjangCabang[idCabang].siswaList[d.username].skorPerMapel[mapelUjianIni].count++;
+                        keranjangCabang[idCabang].siswaList[uname].skorPerMapel[mapelUjianIni].sum += nilaiReal;
+                        keranjangCabang[idCabang].siswaList[uname].skorPerMapel[mapelUjianIni].count++;
                     });
                 });
 
                 rekapCabangGlobal = [];
                 rekapSiswaGlobal = [];
 
-                // 4. Kalkulasi Rata-Rata Matriks
+                // 4. Kalkulasi Rata-Rata Matriks (RUMUS ADIL & MUTLAK)
                 for (let idCab in keranjangCabang) {
                     let cabang = keranjangCabang[idCab];
                     cabang.avgPerMapel = {};
-                    let sumAvgCabang = 0; let countMapelCabang = 0;
+                    let sumAvgCabang = 0; 
+                    let totalSemuaMapel = window.listMapelUnik.length; // 🔥 Acuan pembagi mutlak
 
                     // Hitung Rata-Rata Cabang Tiap Mapel
                     window.listMapelUnik.forEach(m => {
@@ -2989,65 +3004,96 @@
                             if (s.skorPerMapel[m]) {
                                 let avgMapelSiswa = s.skorPerMapel[m].sum / s.skorPerMapel[m].count;
                                 sumSiswa += avgMapelSiswa; countSiswa++;
-                                s[m] = parseFloat(avgMapelSiswa.toFixed(2)); // Simpan nilai mapel di profil siswa
+                                s[m] = parseFloat(avgMapelSiswa.toFixed(2));
+                            } else {
+                                s[m] = 0; // 🔥 WAJIB 0: Beri nilai 0 jika siswa bolos/tidak ada data
                             }
                         }
 
                         if(countSiswa > 0) {
                             cabang.avgPerMapel[m] = parseFloat((sumSiswa / countSiswa).toFixed(2));
-                            sumAvgCabang += cabang.avgPerMapel[m]; countMapelCabang++;
+                            sumAvgCabang += cabang.avgPerMapel[m]; 
                         } else {
-                            cabang.avgPerMapel[m] = null; // Tidak ada siswa cabang ini yg ikut mapel ini
+                            cabang.avgPerMapel[m] = 0; // 🔥 WAJIB 0 jika cabang bolos masal
                         }
                     });
 
-                    // Rata-rata akhir sekolah
-                    cabang.rataRataSekolah = countMapelCabang > 0 ? parseFloat((sumAvgCabang / countMapelCabang).toFixed(2)) : 0;
+                    // 🔥 Rata-rata akhir sekolah dibagi TOTAL MAPEL, bukan hanya mapel yang diikuti
+                    cabang.rataRataSekolah = totalSemuaMapel > 0 ? parseFloat((sumAvgCabang / totalSemuaMapel).toFixed(2)) : 0;
                     rekapCabangGlobal.push(cabang);
 
                     // Pindahkan siswa ke rekap global untuk Top 10
                     for(let uname in cabang.siswaList) {
                         let s = cabang.siswaList[uname];
-                        let sumSkorSiswa = 0; let countMapelSiswa = 0;
-                        window.listMapelUnik.forEach(m => { if(s[m] !== undefined) { sumSkorSiswa += s[m]; countMapelSiswa++; }});
-                        s.rataRata = countMapelSiswa > 0 ? parseFloat((sumSkorSiswa / countMapelSiswa).toFixed(2)) : 0;
+                        let sumSkorSiswa = 0; 
+                        
+                        window.listMapelUnik.forEach(m => { 
+                            sumSkorSiswa += s[m]; // Ditambah semua karena yang kosong sudah jadi 0
+                        });
+                        
+                        // 🔥 Rata-rata siswa dibagi TOTAL MAPEL MUTLAK
+                        s.rataRata = totalSemuaMapel > 0 ? parseFloat((sumSkorSiswa / totalSemuaMapel).toFixed(2)) : 0;
                         rekapSiswaGlobal.push(s);
                     }
                 }
 
-                // Sorting dari yang tertinggi
+                if (rekapSiswaGlobal.length === 0) return Swal.fire('Kosong', 'Tidak ada data siswa untuk kriteria kelas/ujian tersebut.', 'info');
+
+                // Urutkan nilai total (Global)
                 rekapCabangGlobal.sort((a, b) => b.rataRataSekolah - a.rataRataSekolah);
                 rekapSiswaGlobal.sort((a, b) => b.rataRata - a.rataRata);
 
-                if (rekapSiswaGlobal.length === 0) return Swal.fire('Kosong', 'Tidak ada data siswa untuk kriteria tersebut.', 'info');
-
-                // --- 5. RENDER VISUAL KE UI ---
+                // --- 5. RENDER VISUAL UI ---
                 document.getElementById('placeholderKomparasi').classList.add('hidden');
-                document.getElementById('panelHasilKomparasi').classList.remove('hidden');
-                document.getElementById('statJmlUjian').innerText = daftarUjianTerpilih.length;
-                document.getElementById('statJmlSiswa').innerText = rekapSiswaGlobal.length;
+                let panelHasil = document.getElementById('panelHasilKomparasi');
+                panelHasil.classList.remove('hidden');
 
-                // 🌟 VISUALISASI TOP CABANG (TABEL MATRIKS MAPEL)
-                let htmlCabang = `
-                <div class="overflow-x-auto p-4">
-                    <table class="w-full text-sm text-left border border-indigo-200 rounded-xl overflow-hidden shadow-sm">
-                        <thead class="bg-indigo-100 text-indigo-800 uppercase text-[10px] font-black tracking-widest border-b border-indigo-200">
-                            <tr>
-                                <th class="px-4 py-3 w-10 text-center border-r border-indigo-200">#</th>
-                                <th class="px-4 py-3 border-r border-indigo-200">Nama Cabang Sekolah</th>`;
+                // 🌟 HEADER STATISTIK & EXPORT
+                let htmlVisual = `
+                    <div class="flex flex-col md:flex-row justify-between items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm mb-6 gap-4">
+                        <div class="flex space-x-6">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-xl">👨‍🎓</div>
+                                <div><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Siswa Teranalisis</p><h4 class="text-xl font-black text-gray-800">${rekapSiswaGlobal.length}</h4></div>
+                            </div>
+                            <div class="w-px h-10 bg-gray-200 hidden md:block"></div>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center text-xl">📝</div>
+                                <div><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ujian Digabung</p><h4 class="text-xl font-black text-gray-800">${daftarUjianTerpilih.length}</h4></div>
+                            </div>
+                        </div>
+                        <button onclick="unduhExcelRaporGabungan()" class="w-full md:w-auto bg-indigo-600 text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md transition flex items-center justify-center">
+                            <span class="mr-2 text-lg">📥</span> Export Excel Rapor
+                        </button>
+                    </div>
+                `;
+
+                // 🌟 BAGIAN 1: KLASEMEN TOTAL CABANG (MATRIKS)
+                htmlVisual += `
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-6">
+                    <div class="bg-indigo-50 border-b border-indigo-100 p-4">
+                        <h3 class="font-black text-indigo-900 text-base tracking-widest uppercase">🏫 Klasemen Total: Peringkat Cabang</h3>
+                        <p class="text-[10px] text-indigo-600 font-bold mt-0.5">Rata-Rata Kolektif Seluruh Siswa di Semua Ujian</p>
+                    </div>
+                    <div class="overflow-x-auto p-4">
+                        <table class="w-full text-sm text-left border border-indigo-200 rounded-xl overflow-hidden shadow-sm">
+                            <thead class="bg-indigo-100 text-indigo-800 uppercase text-[10px] font-black tracking-widest border-b border-indigo-200">
+                                <tr>
+                                    <th class="px-4 py-3 w-10 text-center border-r border-indigo-200">#</th>
+                                    <th class="px-4 py-3 border-r border-indigo-200">Nama Cabang Sekolah</th>`;
                 
-                window.listMapelUnik.forEach(m => { htmlCabang += `<th class="px-4 py-3 text-center border-r border-indigo-200 whitespace-nowrap">${m}</th>`; });
+                window.listMapelUnik.forEach(m => { htmlVisual += `<th class="px-4 py-3 text-center border-r border-indigo-200 whitespace-nowrap">${m}</th>`; });
 
-                htmlCabang += `<th class="px-4 py-3 text-center bg-indigo-200 text-indigo-900">Avg. Akhir</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">`;
+                htmlVisual += `<th class="px-4 py-3 text-center bg-indigo-200 text-indigo-900">Avg. Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">`;
 
                 rekapCabangGlobal.forEach((c, i) => {
                     let medali = i === 0 ? '🏆' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : i+1));
                     let rowClass = i === 0 ? 'bg-yellow-50' : 'bg-white hover:bg-indigo-50/50';
                     
-                    htmlCabang += `<tr class="${rowClass} transition">
+                    htmlVisual += `<tr class="${rowClass} transition">
                         <td class="px-4 py-3 text-center border-r font-bold text-gray-500">${medali}</td>
                         <td class="px-4 py-3 border-r">
                             <b class="text-gray-800 uppercase tracking-wide">${c.nama}</b><br>
@@ -3058,20 +3104,27 @@
                         let val = c.avgPerMapel[m];
                         let teksVal = val !== null ? val : '-';
                         let classVal = val !== null ? 'font-bold text-slate-700' : 'text-gray-300';
-                        htmlCabang += `<td class="px-4 py-3 text-center border-r ${classVal}">${teksVal}</td>`;
+                        htmlVisual += `<td class="px-4 py-3 text-center border-r ${classVal}">${teksVal}</td>`;
                     });
 
-                    htmlCabang += `<td class="px-4 py-3 text-center font-black text-indigo-600 bg-indigo-50/30">${c.rataRataSekolah}</td></tr>`;
+                    htmlVisual += `<td class="px-4 py-3 text-center font-black text-indigo-600 bg-indigo-50/30">${c.rataRataSekolah}</td></tr>`;
                 });
+                htmlVisual += `</tbody></table></div></div>`;
 
-                htmlCabang += `</tbody></table></div>`;
-                document.getElementById('kontainerTopCabang').innerHTML = htmlCabang; // Timpa progress bar lama dengan tabel matriks
-
-                // 🌟 VISUALISASI TOP SISWA
-                let htmlSiswa = '';
+                // 🌟 BAGIAN 2: KLASEMEN TOTAL SISWA (TOP 10)
+                htmlVisual += `
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden mb-8">
+                    <div class="bg-slate-50 border-b border-slate-200 p-4">
+                        <h3 class="font-black text-slate-800 text-base tracking-widest uppercase">🏆 Klasemen Total: Top 10 Siswa Nasional</h3>
+                        <p class="text-[10px] text-slate-500 font-bold mt-0.5">Berdasarkan Rata-Rata Nilai Tertinggi Keseluruhan</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <tbody class="divide-y divide-gray-100">`;
+                
                 rekapSiswaGlobal.slice(0, 10).forEach((s, i) => {
                     let wBdg = i === 0 ? 'bg-yellow-100 text-yellow-700' : (i === 1 ? 'bg-gray-200 text-gray-700' : (i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-white text-gray-500 border'));
-                    htmlSiswa += `
+                    htmlVisual += `
                     <tr class="hover:bg-indigo-50/50 transition group">
                         <td class="px-4 py-3 w-12 text-center"><div class="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs ${wBdg} mx-auto">${i+1}</div></td>
                         <td class="px-4 py-3">
@@ -3082,11 +3135,82 @@
                         <td class="px-4 py-3 text-right"><span class="text-lg font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">${s.rataRata}</span></td>
                     </tr>`;
                 });
-                document.getElementById('kontainerTopSiswa').innerHTML = htmlSiswa;
+                htmlVisual += `</tbody></table></div></div>`;
 
+                // 🌟 BAGIAN 3: KLASEMEN SPESIFIK PER MAPEL
+                let htmlRankingMapel = `
+                    <div class="mt-8 pt-6 border-t border-gray-300">
+                        <div class="mb-6">
+                            <h2 class="text-xl font-black text-slate-800 tracking-tight flex items-center"><span class="mr-2">🎯</span> Analisis Spesifik Per Mapel</h2>
+                            <p class="text-slate-500 text-sm font-medium mt-1">Pemetaan kekuatan tiap cabang dan penemuan bakat siswa pada mata pelajaran tertentu.</p>
+                        </div>
+                `;
+                
+                window.listMapelUnik.forEach(mapel => {
+                    let cabangMapel = rekapCabangGlobal.filter(c => c.avgPerMapel[mapel] !== null).sort((a,b) => b.avgPerMapel[mapel] - a.avgPerMapel[mapel]);
+                    let siswaMapel = rekapSiswaGlobal.filter(s => s[mapel] !== undefined).sort((a,b) => b[mapel] - a[mapel]).slice(0, 5);
+
+                    let htmlListCabang = cabangMapel.length === 0 ? '<p class="text-gray-400 text-sm">Tidak ada data.</p>' : cabangMapel.map((c, idx) => {
+                        let medali = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `<span class="text-gray-400 text-xs">${idx+1}</span>`));
+                        let bgRow = idx === 0 ? 'bg-white shadow-sm border border-indigo-100 ring-1 ring-indigo-50' : 'border-b border-gray-100 border-dashed';
+                        return `
+                        <div class="flex items-center justify-between p-3 rounded-lg ${bgRow} transition hover:bg-indigo-50/50">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-6 h-6 flex items-center justify-center font-black">${medali}</div>
+                                <div>
+                                    <p class="text-sm font-bold text-gray-800 leading-tight">${c.nama}</p>
+                                    <p class="text-[10px] text-gray-500 uppercase mt-0.5">${c.jumlahSiswa} Peserta</p>
+                                </div>
+                            </div>
+                            <span class="text-base font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">${c.avgPerMapel[mapel]}</span>
+                        </div>`;
+                    }).join('');
+
+                    let htmlListSiswa = siswaMapel.length === 0 ? '<p class="text-gray-400 text-sm">Tidak ada data.</p>' : siswaMapel.map((s, idx) => {
+                        let medali = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `<span class="text-gray-400 text-xs">${idx+1}</span>`));
+                        let bgRow = idx === 0 ? 'bg-white shadow-sm border border-emerald-100 ring-1 ring-emerald-50' : 'border-b border-gray-100 border-dashed';
+                        return `
+                        <div class="flex items-center justify-between p-3 rounded-lg ${bgRow} transition hover:bg-emerald-50/50">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-6 h-6 flex items-center justify-center font-black">${medali}</div>
+                                <div>
+                                    <p class="text-sm font-bold text-gray-800 leading-tight">${s.nama}</p>
+                                    <p class="text-[10px] text-gray-500 uppercase mt-0.5 line-clamp-1">${s.nama_cabang} | KLS ${s.kelas}</p>
+                                </div>
+                            </div>
+                            <span class="text-base font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">${s[mapel]}</span>
+                        </div>`;
+                    }).join('');
+
+                    htmlRankingMapel += `
+                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-6">
+                        <div class="bg-slate-50 border-b border-slate-200 p-4 flex items-center">
+                            <span class="text-2xl mr-3">📘</span>
+                            <div>
+                                <h3 class="font-black text-slate-800 text-base tracking-widest uppercase">KLASEMEN MAPEL: ${mapel}</h3>
+                                <p class="text-[10px] text-slate-500 font-bold mt-0.5">Ranking Sekolah vs Top 5 Siswa</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+                            <div class="p-5 bg-slate-50/30">
+                                <h4 class="text-xs font-black text-indigo-800 uppercase tracking-widest mb-4 border-b border-indigo-100 pb-2 flex items-center"><span class="mr-2">🏫</span> Ranking Cabang</h4>
+                                <div class="space-y-1">${htmlListCabang}</div>
+                            </div>
+                            <div class="p-5">
+                                <h4 class="text-xs font-black text-emerald-800 uppercase tracking-widest mb-4 border-b border-emerald-100 pb-2 flex items-center"><span class="mr-2">🏆</span> Top 5 Siswa</h4>
+                                <div class="space-y-1">${htmlListSiswa}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                
+                htmlRankingMapel += `</div>`;
+
+                // Suntikkan seluruh UI ke Panel Hasil
+                panelHasil.innerHTML = htmlVisual + htmlRankingMapel;
                 Swal.close();
             } catch (error) {
-                console.error(error); Swal.fire('Error', 'Gagal memproses data.', 'error');
+                console.error(error); Swal.fire('Error', 'Sistem gagal merespon atau koneksi terputus.', 'error');
             }
         };
 
