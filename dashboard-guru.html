@@ -1094,7 +1094,139 @@
         // ==========================================
         // (Fungsi Manajemen Soal, Import, dan Master Kurikulum yang sama persis tidak saya ubah, cukup diload di latar belakang)
         window.muatPengumumanGuru=async()=>{let k=document.getElementById('kontainerPengumuman');try{const s=await getDocs(collection(db,"pengumuman"));let l=[];s.forEach(d=>{let x=d.data();if(x.target==="GLOBAL"||x.target===profilGuru.sekolah_id)l.push(x);});l.sort((a,b)=>b.dibuat_pada.toDate()-a.dibuat_pada.toDate());if(l.length>0){let h='';l.forEach(p=>{let wBg=p.tipe==='warning'?'bg-yellow-50 border-yellow-300':(p.tipe==='success'?'bg-emerald-50 border-emerald-300':'bg-blue-50 border-blue-300'),wJ=p.tipe==='warning'?'text-yellow-800':(p.tipe==='success'?'text-emerald-800':'text-blue-800');h+=`<div class="${wBg} border p-4 rounded-xl shadow-sm"><h4 class="${wJ} font-black">${p.judul} <span class="text-[9px] text-gray-500 font-normal ml-2">${p.pembuat}</span></h4><p class="text-sm text-gray-700 mt-1">${p.isi}</p></div>`;});k.innerHTML=h;k.classList.remove('hidden');}}catch(e){}};
-        window.muatMasterKurikulum=async()=>{const s=await getDocs(collection(db,"kurikulum"));dataKurikulumGlobal=[];let o='<option value="">-- Mapel --</option>';s.forEach(d=>{let m=d.data();dataKurikulumGlobal.push(m);o+=`<option value="${m.nama_mapel}">${m.nama_mapel}</option>`;});document.querySelectorAll('.dinamis-mapel').forEach(el=>el.innerHTML=o);};
+        // ==========================================
+        // MESIN WALI KELAS (YANG SEMPAT HILANG)
+        // ==========================================
+        window.cekStatusWaliKelas = async () => {
+            try {
+                // Cek apakah email guru ini terdaftar sebagai wali kelas di koleksi rombel
+                const snap = await getDocs(query(collection(db, "rombel"), where("sekolah_id", "==", profilGuru.sekolah_id), where("wali_kelas_email", "==", profilGuru.email)));
+                if(!snap.empty) {
+                    let r = snap.docs[0].data();
+                    profilGuru.is_wali = true;
+                    profilGuru.rombel_id = snap.docs[0].id;
+                    profilGuru.rombel_nama = r.nama_rombel;
+                    profilGuru.rombel_tingkat = r.tingkat;
+                    profilGuru.rombel_siswa = r.siswa_usernames || []; // Array username siswa
+                    
+                    // Tampilkan menu Wali Kelas di Navigasi Kiri
+                    let menuContainer = document.getElementById('menuWaliKelasContainer');
+                    if(menuContainer) menuContainer.classList.remove('hidden');
+                    
+                    // Update Teks di Tab Wali Kelas
+                    let infoRombel = document.getElementById('infoWaliRombel');
+                    if(infoRombel) infoRombel.innerHTML = `Anda adalah Wali Kelas <b>${r.nama_rombel} (Tingkat ${r.tingkat})</b> dengan total <b>${profilGuru.rombel_siswa.length}</b> Siswa.`;
+                } else {
+                    profilGuru.is_wali = false;
+                }
+            } catch(e) { console.error("Gagal cek wali kelas", e); }
+        };
+
+        window.muatDataWaliKelas = async () => {
+            let tb = document.getElementById('tabelWaliKelas');
+            if(!tb || !profilGuru.is_wali) return;
+            
+            tb.innerHTML = '<tr><td colspan="3" class="text-center py-8 animate-pulse text-amber-600 font-bold">Menarik data rapor kelas Anda...</td></tr>';
+            try {
+                // Tarik semua hasil ujian di sekolah ini
+                const snapHasil = await getDocs(query(collection(db, "hasil_ujian"), where("asal_sekolah_siswa", "==", profilGuru.sekolah_id)));
+                let keranjangSiswa = {};
+                
+                // Siapkan wadah hanya untuk anak-anak di kelas ini
+                profilGuru.rombel_siswa.forEach(uname => { keranjangSiswa[uname] = { nama: uname, username: uname, totalSkor: 0, jumlahUjian: 0 }; });
+
+                // Tarik nama asli siswa dari koleksi users
+                const snapUsers = await getDocs(query(collection(db, "users"), where("sekolah_id", "==", profilGuru.sekolah_id), where("role", "==", "siswa")));
+                snapUsers.forEach(d => { 
+                    let u = d.data().email.split('@')[0];
+                    if(keranjangSiswa[u]) keranjangSiswa[u].nama = d.data().nama;
+                });
+
+                snapHasil.forEach(doc => {
+                    let d = doc.data();
+                    let uname = d.username;
+                    if(keranjangSiswa[uname]) {
+                        keranjangSiswa[uname].totalSkor += parseFloat(d.nilai_akhir || 0);
+                        keranjangSiswa[uname].jumlahUjian++;
+                    }
+                });
+
+                let arrRapor = [];
+                for(let u in keranjangSiswa) {
+                    let s = keranjangSiswa[u];
+                    s.rata = s.jumlahUjian > 0 ? parseFloat((s.totalSkor / s.jumlahUjian).toFixed(2)) : 0;
+                    arrRapor.push(s);
+                }
+                
+                // Urutkan berdasarkan rata-rata tertinggi
+                arrRapor.sort((a,b) => b.rata - a.rata);
+                window.dataRaporWaliKelasLokal = arrRapor; // Simpan untuk Excel
+                
+                let h = '';
+                arrRapor.forEach((s, i) => {
+                    let piala = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : `${i+1}.`));
+                    h += `<tr class="border-b hover:bg-amber-50/30 transition">
+                        <td class="px-6 py-4 font-bold text-gray-800"><span class="mr-2">${piala}</span> ${s.nama}<br><span class="text-[10px] text-gray-400 font-normal ml-6">${s.username}</span></td>
+                        <td class="px-6 py-4 text-center"><span class="bg-gray-100 px-3 py-1 rounded-lg text-xs font-bold border border-gray-200">${s.jumlahUjian} Mapel</span></td>
+                        <td class="px-6 py-4 text-center"><span class="text-lg font-black text-amber-600 bg-amber-50 px-4 py-1.5 rounded-xl border border-amber-200 shadow-sm">${s.rata}</span></td>
+                    </tr>`;
+                });
+                tb.innerHTML = h || '<tr><td colspan="3" class="text-center py-8 text-gray-500">Belum ada data ujian siswa kelas Anda.</td></tr>';
+            } catch(e) { tb.innerHTML = '<tr><td colspan="3" class="text-center py-8 text-red-500">Gagal memuat rapor.</td></tr>'; }
+        };
+
+        window.unduhRaporWaliKelas = () => {
+            if(typeof XLSX === 'undefined') return Swal.fire('Error', 'Library Excel belum siap', 'error');
+            if(!window.dataRaporWaliKelasLokal || window.dataRaporWaliKelasLokal.length === 0) return Swal.fire('Kosong', 'Tidak ada data siswa.', 'info');
+            
+            Swal.fire({title: 'Membuat Excel...', didOpen: ()=>Swal.showLoading()});
+            let dataEx = window.dataRaporWaliKelasLokal.map((s, i) => ({ "Ranking": i+1, "Nama Siswa": s.nama, "Username": s.username, "Jumlah Ujian Diikuti": s.jumlahUjian, "Rata-Rata Akhir": s.rata }));
+            const wb = XLSX.utils.book_new(); const ws = XLSX.utils.json_to_sheet(dataEx);
+            ws['!cols'] = [{wch:10}, {wch:35}, {wch:20}, {wch:25}, {wch:20}];
+            XLSX.utils.book_append_sheet(wb, ws, "Rapor Wali Kelas");
+            XLSX.writeFile(wb, `Rapor_Kelas_${profilGuru.rombel_nama.replace(/[^a-zA-Z0-9]/g,'_')}.xlsx`);
+            Swal.close();
+        };
+        
+        // ==========================================
+        // PERBAIKAN: MUAT MASTER KURIKULUM (GURU)
+        // ==========================================
+        window.muatMasterKurikulum = async () => {
+            try {
+                const s = await getDocs(collection(db, "kurikulum"));
+                dataKurikulumGlobal = [];
+                
+                // 1. Tarik semua kurikulum dari pusat, KECUALI yang statusnya 'nonaktif'
+                s.forEach(d => {
+                    let m = d.data();
+                    if (m.status !== 'nonaktif') {
+                        dataKurikulumGlobal.push(m);
+                    }
+                });
+
+                let o = '<option value="">-- Pilih Mapel --</option>';
+                
+                // 2. Filter: Guru HANYA melihat mapel spesialisasi yang dia ampu (dan yang masih aktif di pusat)
+                if (profilGuru.mapel_diampu && profilGuru.mapel_diampu.length > 0) {
+                    dataKurikulumGlobal.forEach(m => {
+                        // Jika mapel aktif ini ada di dalam daftar spesialisasi guru
+                        if (profilGuru.mapel_diampu.includes(m.nama_mapel)) {
+                            o += `<option value="${m.nama_mapel}">${m.nama_mapel}</option>`;
+                        }
+                    });
+                } else {
+                    // Fallback: Jika admin belum mengatur mapel guru ini, tampilkan semua mapel aktif
+                    dataKurikulumGlobal.forEach(m => {
+                        o += `<option value="${m.nama_mapel}">${m.nama_mapel}</option>`;
+                    });
+                }
+
+                // 3. Tembak ke semua dropdown mapel di UI Guru (Buat Soal, Rakit Paket, Kuis, dll)
+                document.querySelectorAll('.dinamis-mapel').forEach(el => el.innerHTML = o);
+            } catch (e) {
+                console.error("Gagal memuat kurikulum:", e);
+            }
+        };
         document.getElementById('inputMapel')?.addEventListener('change',e=>{const m=e.target.value,sb=document.getElementById('inputBab');if(!m){sb.innerHTML='<option value="">Pilih Mapel Dulu</option>';sb.disabled=true;}else{sb.disabled=false;sb.innerHTML='<option value="">-- Sub Bab --</option>';let ob=dataKurikulumGlobal.find(x=>x.nama_mapel===m);if(ob?.sub_bab)ob.sub_bab.forEach(b=>sb.innerHTML+=`<option value="${b}">${b}</option>`);}});
         document.getElementById('formTulisSoal')?.addEventListener('submit', async e => {
             e.preventDefault();
