@@ -224,20 +224,58 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-3xl shadow-sm border border-indigo-100 flex flex-col h-full">
-                        <div class="flex justify-between items-center mb-5 border-b border-indigo-100 pb-3">
-                            <h3 class="font-black text-indigo-900 text-lg">👥 Calon Santri</h3>
-                            <div class="flex space-x-2">
-                                <button onclick="cetakKartuPPDB()" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-3 py-2 rounded-lg text-xs font-bold transition shadow-sm">🖨️ Cetak Kartu</button>
-                                <button onclick="bukaImportPPDB()" class="bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-2 rounded-lg text-xs font-bold transition shadow-sm">📥 Import Excel</button>
-                            </div>
+                        <div class="mb-5 border-b border-indigo-100 pb-4">
+                            <h3 class="font-black text-indigo-900 text-lg flex items-center"><span class="mr-2">👥</span> Calon Santri / Peserta</h3>
+                            <p class="text-xs text-indigo-500 font-medium mt-1">Kelola data pendaftar seleksi ujian masuk.</p>
                         </div>
                         
-                        <div id="areaImportPPDB" class="hidden bg-indigo-50 p-4 rounded-xl border border-indigo-200 mb-4 transition-all">
-                            <p class="text-xs font-bold text-indigo-800 mb-2">Upload Excel (Kolom: No_Pendaftaran | Nama_Lengkap | L/P | Asal_Sekolah)</p>
-                            <input type="file" id="filePPDB" accept=".xlsx, .xls" class="w-full text-xs bg-white border border-indigo-300 rounded p-1.5 mb-2">
-                            <div class="flex space-x-2">
-                                <button onclick="prosesImportPPDB()" class="bg-indigo-600 text-white px-4 py-1.5 rounded text-xs font-bold">🚀 Upload Data</button>
-                                <button onclick="document.getElementById('areaImportPPDB').classList.add('hidden')" class="bg-gray-200 text-gray-700 hover:bg-gray-300 px-4 py-1.5 rounded text-xs font-bold">Batal</button>
+                        <div class="grid grid-cols-3 gap-3 mb-6">
+                            <button onclick="cetakKartuPPDB()" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 p-3 rounded-xl text-xs font-bold transition shadow-sm flex flex-col items-center justify-center text-center"><span class="text-xl mb-1">🖨️</span> Cetak Kartu</button>
+                            <button onclick="bukaTambahPPDB()" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 p-3 rounded-xl text-xs font-bold transition shadow-sm flex flex-col items-center justify-center text-center"><span class="text-xl mb-1">➕</span> Tambah Manual</button>
+                            <button onclick="bukaImportPPDB()" class="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 p-3 rounded-xl text-xs font-bold transition shadow-sm flex flex-col items-center justify-center text-center"><span class="text-xl mb-1">📥</span> Import Excel</button>
+                        </div>
+                        
+                        <div id="areaTambahPPDB" class="hidden bg-emerald-50 p-5 rounded-2xl border border-emerald-200 mb-5 transition-all shadow-inner">
+                            <p class="text-sm font-black text-emerald-800 mb-3 border-b border-emerald-200 pb-2">Input 1 Calon Santri</p>
+                            <div class="space-y-3 mb-4">
+                                <div>
+                                    <label class="text-[10px] font-bold text-emerald-600 uppercase">No. Daftar / PIN</label>
+                                    <input type="text" id="ppdbManualPIN" class="w-full text-sm border border-emerald-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-emerald-500 font-bold bg-white">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-emerald-600 uppercase">Nama Lengkap</label>
+                                    <input type="text" id="ppdbManualNama" class="w-full text-sm border border-emerald-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                                </div>
+                                <div class="flex gap-3">
+                                    <div class="w-1/3">
+                                        <label class="text-[10px] font-bold text-emerald-600 uppercase">L/P</label>
+                                        <select id="ppdbManualJK" class="w-full text-sm border border-emerald-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-bold">
+                                            <option value="L">L</option><option value="P">P</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex-1">
+                                        <label class="text-[10px] font-bold text-emerald-600 uppercase">Asal Sekolah</label>
+                                        <input type="text" id="ppdbManualAsal" placeholder="Cth: SD Al-Falah" class="w-full text-sm border border-emerald-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex space-x-3 mt-2">
+                                <button onclick="document.getElementById('areaTambahPPDB').classList.add('hidden')" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">Batal</button>
+                                <button onclick="simpanManualPPDB()" class="bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm flex-1">💾 Simpan Pendaftar</button>
+                            </div>
+                        </div>
+
+                        <div id="areaImportPPDB" class="hidden bg-blue-50 p-5 rounded-2xl border border-blue-200 mb-5 transition-all shadow-inner">
+                            <div class="flex justify-between items-end mb-3 border-b border-blue-200 pb-2">
+                                <p class="text-sm font-black text-blue-800">Upload Data Massal</p>
+                                <button onclick="unduhTemplatePPDB()" class="text-xs font-bold bg-white text-blue-600 border border-blue-300 px-3 py-1.5 rounded-lg shadow-sm hover:bg-blue-100 flex items-center transition"><span class="mr-1">⬇️</span> Unduh Template</button>
+                            </div>
+                            <label class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1 block">Pilih File Excel (.xlsx)</label>
+                            <input type="file" id="filePPDB" accept=".xlsx, .xls" class="w-full text-sm bg-white border border-blue-300 rounded-lg p-2 mb-4 font-medium text-blue-900">
+                            
+                            <div class="flex space-x-3">
+                                <button onclick="document.getElementById('areaImportPPDB').classList.add('hidden')" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">Batal</button>
+                                <button onclick="prosesImportPPDB()" class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm flex-1">🚀 Upload ke Server</button>
                             </div>
                         </div>
 
@@ -3390,8 +3428,24 @@
                 jadwalPPDBArr.sort((a,b) => new Date(b.waktu_mulai) - new Date(a.waktu_mulai));
 
                 jadwalPPDBArr.forEach(j => {
-                    let st = j.status === 'aktif' ? '<span class="text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-black border border-emerald-200">AKTIF</span>' : '<span class="text-[9px] bg-red-100 text-red-700 px-2 py-0.5 rounded font-black border border-red-200">SUSPEND</span>';
-                    hJadwal += `<div class="p-3 border border-emerald-100 rounded-xl bg-emerald-50/30 flex justify-between items-center"><div class="flex-1"><b class="text-sm text-emerald-900">${j.nama_ujian}</b><br><span class="text-xs text-gray-500">${j.waktu_mulai.replace('T',' ')}</span></div><div>${st}</div></div>`;
+                    let st = j.status === 'aktif' ? '<span class="text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-black border border-emerald-200 shadow-sm">🟢 AKTIF</span>' : '<span class="text-[9px] bg-red-100 text-red-700 px-2 py-0.5 rounded font-black border border-red-200 shadow-sm">🔴 SUSPEND</span>';
+                    
+                    // Tombol Aksi
+                    let btnToggle = `<button onclick="toggleStatusJadwalPPDB('${j.id}', '${j.status}')" class="text-[10px] font-black px-2 py-1 rounded-md border shadow-sm transition ${j.status === 'aktif' ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'}">${j.status === 'aktif' ? 'Tutup' : 'Buka'}</button>`;
+                    let btnEdit = `<button onclick="editJadwalPPDB('${j.id}')" class="text-[10px] font-black px-2 py-1 rounded-md border shadow-sm transition bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100">Edit</button>`;
+
+                    hJadwal += `
+                    <div class="p-3 border border-emerald-100 rounded-xl bg-white shadow-sm flex justify-between items-center mb-2 hover:border-emerald-300 transition">
+                        <div class="flex-1">
+                            <b class="text-sm text-emerald-900">${j.nama_ujian}</b><br>
+                            <span class="text-[10px] font-bold text-gray-500">Mulai: ${j.waktu_mulai.replace('T',' ')}</span>
+                        </div>
+                        <div class="flex flex-col items-end space-y-1.5 shrink-0">
+                            ${st}
+                            <div class="flex space-x-1">${btnEdit}${btnToggle}</div>
+                        </div>
+                    </div>`;
+                    
                     opsiHasil += `<option value="${j.id}">${j.nama_ujian}</option>`;
                 });
                 document.getElementById('listJadwalPPDB').innerHTML = hJadwal || '<p class="text-xs text-gray-400 text-center py-4">Belum ada jadwal PPDB.</p>';
@@ -3400,7 +3454,80 @@
             } catch (e) { console.error(e); }
         };
 
-        window.bukaImportPPDB = () => document.getElementById('areaImportPPDB').classList.toggle('hidden');
+        window.bukaImportPPDB = () => {
+            document.getElementById('areaTambahPPDB').classList.add('hidden');
+            document.getElementById('areaImportPPDB').classList.toggle('hidden');
+        };
+
+        window.bukaTambahPPDB = () => {
+            document.getElementById('areaImportPPDB').classList.add('hidden');
+            // Auto-generate PIN acak 6 digit saat tombol ditekan
+            document.getElementById('ppdbManualPIN').value = Math.floor(100000 + Math.random() * 900000).toString();
+            document.getElementById('areaTambahPPDB').classList.toggle('hidden');
+        };
+
+        // MESIN DOWNLOAD TEMPLATE EXCEL PPDB
+        window.unduhTemplatePPDB = () => {
+            if(typeof XLSX === 'undefined') return Swal.fire('Error', 'Library Excel belum dimuat.', 'error');
+            
+            // Siapkan header sesuai sistem pembacaan
+            const headerRow = ["No_Pendaftaran", "Nama_Lengkap", "L/P", "Asal_Sekolah"];
+            const contohData1 = ["123456", "Ahmad Fulan Al-Fatih", "L", "SD IT Khairunnas"];
+            const contohData2 = ["123457", "Siti Aisyah", "P", "MI Muhammadiyah 1"];
+
+            const dataTemplate = [headerRow, contohData1, contohData2]; 
+            const sheetTemplate = XLSX.utils.aoa_to_sheet(dataTemplate); 
+            
+            // Percantik lebar kolom biar admin senang melihatnya
+            sheetTemplate['!cols'] = [ { wch: 20 }, { wch: 35 }, { wch: 10 }, { wch: 30 } ];
+
+            const wb = XLSX.utils.book_new(); 
+            XLSX.utils.book_append_sheet(wb, sheetTemplate, "Data Peserta PPDB");
+            
+            Swal.fire({title: 'Mengunduh Template...', timer: 1000, didOpen: () => Swal.showLoading()});
+            XLSX.writeFile(wb, "Template_Upload_Santri_PPDB.xlsx");
+        };
+
+        window.simpanManualPPDB = async () => {
+            let pin = document.getElementById('ppdbManualPIN').value.trim();
+            let nama = document.getElementById('ppdbManualNama').value.trim();
+            let jk = document.getElementById('ppdbManualJK').value;
+            let asal = document.getElementById('ppdbManualAsal').value.trim();
+
+            if(!pin || !nama) return Swal.fire('Oops', 'Nomor Pendaftaran (PIN) dan Nama wajib diisi!', 'warning');
+
+            Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
+            try {
+                // Cek apakah PIN sudah dipakai agar tidak bentrok
+                const qCek = query(collection(db, "pendaftaran_ppdb"), where("no_pendaftaran", "==", pin));
+                const snapCek = await getDocs(qCek);
+                
+                if (!snapCek.empty) return Swal.fire('Gagal', 'Nomor Pendaftaran / PIN ini sudah digunakan oleh peserta lain.', 'error');
+
+                let payload = { 
+                    no_pendaftaran: pin, 
+                    nama: nama, 
+                    jk: jk, 
+                    asal_sekolah: asal || "-", 
+                    sekolah_id: idSekolahGlobal, 
+                    dibuat_pada: new Date() 
+                };
+
+                await addDoc(collection(db, "pendaftaran_ppdb"), payload);
+                
+                // Bersihkan Form
+                document.getElementById('ppdbManualPIN').value = '';
+                document.getElementById('ppdbManualNama').value = '';
+                document.getElementById('ppdbManualAsal').value = '';
+                document.getElementById('areaTambahPPDB').classList.add('hidden');
+
+                window.muatPortalPPDB();
+                Swal.fire('Berhasil', 'Calon santri berhasil didaftarkan.', 'success');
+            } catch(e) {
+                console.error(e);
+                Swal.fire('Error', 'Gagal menyimpan ke server.', 'error');
+            }
+        };
 
         window.prosesImportPPDB = () => {
             let f = document.getElementById('filePPDB');
@@ -3513,6 +3640,82 @@
             }
         };
 
+        // FITUR UBAH STATUS (AKTIF/NONAKTIF) JADWAL PPDB
+        window.toggleStatusJadwalPPDB = async (id, statusSaatIni) => {
+            let statusTujuan = statusSaatIni === 'aktif' ? 'nonaktif' : 'aktif';
+            Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
+            try {
+                await updateDoc(doc(db, "jadwal_ujian", id), { status: statusTujuan });
+                window.muatPortalPPDB();
+                Swal.close();
+            } catch(e) { Swal.fire('Error', 'Gagal merubah status jadwal.', 'error'); }
+        };
+
+        // FITUR EDIT JADWAL PPDB (MUNCULKAN POP-UP DENGAN DATA LAMA)
+        window.editJadwalPPDB = async (idJadwal) => {
+            Swal.fire({title: 'Menyiapkan Data...', didOpen: () => Swal.showLoading()});
+            await window.muatDaftarPaketLokal(); // Pastikan data paket soal sudah dimuat
+            
+            try {
+                // Tarik data jadwal lama
+                const docRef = await getDoc(doc(db, "jadwal_ujian", idJadwal));
+                if(!docRef.exists()) return Swal.fire('Error', 'Jadwal tidak ditemukan di database', 'error');
+                let j = docRef.data();
+
+                let opsiPkt = '<select id="swal-paket-ppdb" class="w-full p-3 border rounded-xl mb-4 text-sm font-bold bg-white outline-none focus:ring-2 focus:ring-emerald-500">';
+                dataPaketLokal.forEach(p => {
+                    let isSelected = (p.id === j.id_paket) ? 'selected' : '';
+                    opsiPkt += `<option value="${p.id}" ${isSelected}>${p.nama_paket}</option>`;
+                });
+                opsiPkt += '</select>';
+
+                Swal.close();
+
+                const {value: f} = await Swal.fire({
+                    title: '✏️ Edit Jadwal PPDB',
+                    html: `
+                        <div class="text-left mt-2">
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Nama Seleksi</label>
+                            <input type="text" id="swal-nama-ppdb" value="${j.nama_ujian}" class="w-full p-3 border rounded-xl mb-4 text-sm font-bold bg-white outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Ganti Paket Soal</label>
+                            ${opsiPkt}
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <div><label class="block text-xs font-bold text-gray-500 mb-1">Mulai</label><input type="datetime-local" id="swal-mulai-ppdb" value="${j.waktu_mulai}" class="w-full p-2 text-xs border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                                <div><label class="block text-xs font-bold text-gray-500 mb-1">Berakhir</label><input type="datetime-local" id="swal-akhir-ppdb" value="${j.waktu_selesai}" class="w-full p-2 text-xs border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                            </div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Durasi (Menit)</label>
+                            <input type="number" id="swal-durasi-ppdb" value="${j.durasi_menit}" class="w-full p-3 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    `,
+                    showCancelButton: true, confirmButtonText: 'Simpan Perubahan', confirmButtonColor: '#059669', focusConfirm: false,
+                    preConfirm: () => {
+                        let n = document.getElementById('swal-nama-ppdb').value, pk = document.getElementById('swal-paket-ppdb').value, wm = document.getElementById('swal-mulai-ppdb').value, wa = document.getElementById('swal-akhir-ppdb').value, du = document.getElementById('swal-durasi-ppdb').value;
+                        if(!n || !pk || !wm || !wa) { Swal.showValidationMessage('Isi semua form jadwal!'); return false; }
+                        return { n, pk, wm, wa, du };
+                    }
+                });
+
+                if(f) {
+                    Swal.fire({title: 'Menyimpan Perubahan...', didOpen: () => Swal.showLoading()});
+                    let pktTerpilih = dataPaketLokal.find(x => x.id === f.pk);
+                    
+                    let payloadUpdate = { 
+                        nama_ujian: f.n, 
+                        id_paket: f.pk, 
+                        nama_paket: pktTerpilih.nama_paket, 
+                        jumlah_soal: pktTerpilih.soal_ids.length, 
+                        waktu_mulai: f.wm, 
+                        waktu_selesai: f.wa, 
+                        durasi_menit: parseInt(f.du) 
+                    };
+                    
+                    await updateDoc(doc(db, "jadwal_ujian", idJadwal), payloadUpdate);
+                    window.muatPortalPPDB(); 
+                    Swal.fire('Sukses', 'Jadwal seleksi PPDB berhasil diperbarui.', 'success');
+                }
+            } catch(er) { Swal.fire('Error', 'Gagal memuat atau menyimpan data edit.', 'error'); }
+        };
+
         window.muatHasilPPDB = async () => {
             let idJadwal = document.getElementById('filterHasilPPDB').value;
             let tb = document.getElementById('tabelHasilPPDB');
@@ -3531,7 +3734,7 @@
                 let h = '';
                 hasilArr.forEach((r, i) => {
                     let wBdg = i === 0 ? 'bg-yellow-100 text-yellow-700' : (i === 1 ? 'bg-gray-200 text-gray-700' : (i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-white text-gray-500 border'));
-                    let asal = r.asal_sekolah_siswa && r.asal_sekolah_siswa !== "Tanpa_Cabang" ? r.asal_sekolah_siswa : "Luar Sistem";
+                    let asal = r.asal_sekolah_luar || "Luar Sistem"; 
                     h += `<tr class="border-b hover:bg-indigo-50/30">
                             <td class="px-4 py-3 text-center"><div class="w-6 h-6 rounded-full flex items-center justify-center font-black text-xs ${wBdg} mx-auto">${i+1}</div></td>
                             <td class="px-4 py-3"><p class="font-bold text-gray-800 text-sm">${r.nama_siswa || r.username}</p><p class="text-[9px] text-gray-500 uppercase mt-0.5">Asal: ${asal}</p></td>
@@ -3567,7 +3770,7 @@
 
                 // Siapkan format data untuk Excel
                 let dataExcel = hasilArr.map((r, i) => {
-                    let asal = r.asal_sekolah_siswa && r.asal_sekolah_siswa !== "Tanpa_Cabang" ? r.asal_sekolah_siswa : "Luar Sistem";
+                    let asal = r.asal_sekolah_luar || "Luar Sistem"; // 🔥 BACA DARI SINI JUGA
                     return {
                         "Peringkat": i + 1,
                         "No. Daftar / PIN": r.username,
