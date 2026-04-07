@@ -1296,18 +1296,30 @@
                 // PENGAMAN STRING UNTUK ONCLICK (Cegah error jika nama mapel pakai spasi/tanda kutip)
                 let safeNama = m.nama_mapel.replace(/'/g, "\\'");
 
+                // 🔥 LOGIKA STATUS AKTIF/NONAKTIF
+                let isAktif = m.status !== 'nonaktif';
+                let trClass = isAktif ? 'hover:bg-slate-50 transition group' : 'bg-slate-50 opacity-70 transition group';
+                let badgeStatus = isAktif ? '<span class="bg-green-100 text-green-700 border border-green-200 text-[9px] px-1.5 py-0.5 rounded font-black ml-2 uppercase">Aktif</span>' : '<span class="bg-red-100 text-red-700 border border-red-200 text-[9px] px-1.5 py-0.5 rounded font-black ml-2 uppercase">Nonaktif</span>';
+                
+                let btnAksi = isAktif ? 
+                    `<button onclick="toggleStatusMapel('${m.id}', 'nonaktif')" class="bg-red-50 text-red-500 hover:bg-red-600 hover:text-white px-2.5 py-1.5 rounded-lg text-xs transition border border-transparent hover:border-red-200" title="Nonaktifkan Mapel">🛑 Suspend</button>` : 
+                    `<button onclick="toggleStatusMapel('${m.id}', 'aktif')" class="bg-green-50 text-green-600 hover:bg-green-600 hover:text-white px-2.5 py-1.5 rounded-lg text-xs transition border border-transparent hover:border-green-200" title="Aktifkan Mapel">✅ Aktifkan</button>`;
+
                 h += `
-                <tr class="hover:bg-slate-50 transition group">
+                <tr class="${trClass}">
                     <td class="px-5 py-3">
-                        <p class="font-bold text-slate-800 text-sm group-hover:text-teal-700 transition">${m.nama_mapel}</p>
-                        <div class="mt-1">${badgeJenjang}</div>
+                        <div class="flex items-center">
+                            <p class="font-bold text-slate-800 text-sm group-hover:text-teal-700 transition">${m.nama_mapel}</p>
+                            ${badgeStatus}
+                        </div>
+                        <div class="mt-1.5">${badgeJenjang}</div>
                     </td>
                     <td class="px-5 py-3 text-center">
                         <span class="bg-teal-50 text-teal-700 font-black px-3 py-1 rounded-lg text-xs border border-teal-100">${jmlBab} Bab</span>
                     </td>
                     <td class="px-5 py-3 text-center space-x-2">
                         <button onclick="kelolaBabMapel('${m.id}', '${safeNama}')" class="bg-white border border-slate-200 text-slate-600 hover:text-teal-600 hover:border-teal-300 hover:bg-teal-50 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm" title="Kelola Materi Bab">✏️ Edit Bab</button>
-                        <button onclick="hapusMapel('${m.id}', '${safeNama}')" class="bg-red-50 text-red-500 hover:bg-red-600 hover:text-white px-2.5 py-1.5 rounded-lg text-xs transition" title="Hapus Mapel">🗑️</button>
+                        ${btnAksi}
                     </td>
                 </tr>`;
             });
@@ -1339,7 +1351,7 @@
                     if(jenjangList.length === 0) { Swal.showValidationMessage('Pilih minimal 1 jenjang!'); return false; }
                     // Bersihkan embel-embel jenjang jika admin bandel
                     nama = nama.replace(/\s+(SD|SMP|SMA|sd|smp|sma)$/i, ''); 
-                    return { nama_mapel: nama, jenjang: jenjangList, sub_bab: [] };
+                    return { nama_mapel: nama, jenjang: jenjangList, sub_bab: [], status: 'aktif' };
                 }
             });
 
@@ -1351,10 +1363,18 @@
             }
         };
 
-        window.hapusMapel = async (id, nama) => {
-            if((await Swal.fire({title: `Hapus ${nama}?`, text: "Bank soal yang menggunakan mapel ini tidak akan terhapus, tapi kategorinya akan menjadi 'Kosong'.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33'})).isConfirmed) {
-                await deleteDoc(doc(db, "kurikulum", id));
+        window.toggleStatusMapel = async (id, statusBaru) => {
+            let teksJudul = statusBaru === 'nonaktif' ? 'Nonaktifkan Mapel?' : 'Aktifkan Mapel?';
+            let teksHtml = statusBaru === 'nonaktif' ? 
+                'Mapel ini akan disembunyikan dari opsi pembuatan Soal dan Jadwal Ujian. Namun, <b>Data Rapor lama tetap aman</b>.' : 
+                'Mapel ini akan kembali muncul di semua pilihan.';
+            let btnWarna = statusBaru === 'nonaktif' ? '#d33' : '#10b981';
+
+            if((await Swal.fire({title: teksJudul, html: teksHtml, icon: 'warning', showCancelButton: true, confirmButtonColor: btnWarna})).isConfirmed) {
+                Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
+                await updateDoc(doc(db, "kurikulum", id), { status: statusBaru });
                 window.muatKurikulum();
+                Swal.close();
             }
         };
 
@@ -1453,7 +1473,9 @@
         // --- UPDATE PENGISI DROPDOWN DINAMIS ---
         window.perbaruiSemuaDropdownMapel = () => {
             let o = '<option value="">-- Pilih Mata Pelajaran --</option>';
-            dataKurikulumGlobal.forEach(m => o += `<option value="${m.nama_mapel}">${m.nama_mapel}</option>`);
+            dataKurikulumGlobal.filter(m => m.status !== 'nonaktif').forEach(m => {
+                o += `<option value="${m.nama_mapel}">${m.nama_mapel}</option>`;
+            });
             document.querySelectorAll('.dinamis-mapel').forEach(el => {
                 let v = el.value; el.innerHTML = o; el.value = v; // Pertahankan pilihan lama jika ada
             });
