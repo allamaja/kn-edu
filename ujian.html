@@ -157,40 +157,79 @@
             } catch (err) { console.error('Wake Lock error:', err.message); }
         };
 
-       onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                usernameSiswaAktif = user.email.split('@')[0];
-                
-                // 🐛 FIX: Gunakan Query berdasarkan email, BUKAN menggunakan user.uid!
-                const qSiswa = query(collection(db, "users"), where("email", "==", user.email));
-                const snapSiswa = await getDocs(qSiswa);
-                
-                if (!snapSiswa.empty) {
-                    let d = snapSiswa.docs[0].data();
-                    namaSiswaAsli = d.nama || usernameSiswaAktif;
-                    asalSekolahSiswa = d.sekolah_id || "Pusat";
-                    kelasSiswaAsli = d.kelas || "Umum";
-                    jenjangSiswa = d.jenjang || "SMA";
-                    document.getElementById('namaSiswaHeader').innerText = `${namaSiswaAsli}`;
+       // ====================================================
+        // 🔥 LOGIKA PINTU GANDA (REGULER vs PPDB)
+        // ====================================================
+        let modeUjian = sessionStorage.getItem('mode_ujian') || 'REGULER';
+        let dataPPDB = sessionStorage.getItem('sesi_ppdb_user');
+
+        if (modeUjian === 'PPDB' && dataPPDB) {
+            // 🚪 PINTU 2: PESERTA PPDB (Tanpa Akun Firebase)
+            let parsedPPDB = JSON.parse(dataPPDB);
+            usernameSiswaAktif = parsedPPDB.no_pendaftaran;
+            namaSiswaAsli = parsedPPDB.nama;
+            
+            // 🔥 PERBAIKAN: Kembalikan identitas cabang, tapi simpan sekolah aslinya
+            asalSekolahSiswa = parsedPPDB.sekolah_id || "Pusat"; 
+            window.sekolahAsalPPDB = parsedPPDB.asal_sekolah || "Luar Sistem"; 
+            
+            kelasSiswaAsli = "PPDB"; 
+            jenjangSiswa = "Umum";
+            
+            document.getElementById('namaSiswaHeader').innerText = `[SELEKSI] ${namaSiswaAsli}`;
+            document.getElementById('namaSiswaHeader').classList.replace('text-gray-400', 'text-amber-500'); 
+            
+            inisialisasiUjian();
+        } else {
+            // 🚪 PINTU 1: SANTRI REGULER (Wajib Punya Akun)
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    usernameSiswaAktif = user.email.split('@')[0];
+                    
+                    const qSiswa = query(collection(db, "users"), where("email", "==", user.email));
+                    const snapSiswa = await getDocs(qSiswa);
+                    
+                    if (!snapSiswa.empty) {
+                        let d = snapSiswa.docs[0].data();
+                        namaSiswaAsli = d.nama || usernameSiswaAktif;
+                        asalSekolahSiswa = d.sekolah_id || "Pusat";
+                        kelasSiswaAsli = d.kelas || "Umum";
+                        jenjangSiswa = d.jenjang || "SMA";
+                        document.getElementById('namaSiswaHeader').innerText = `${namaSiswaAsli}`;
+                    } else {
+                        namaSiswaAsli = usernameSiswaAktif; 
+                    }
+                    
+                    inisialisasiUjian();
                 } else {
-                    console.warn("Data user tidak ditemukan di koleksi users!");
-                    namaSiswaAsli = usernameSiswaAktif; // Fallback jika data tidak ada
+                    // Kalau bukan mode PPDB dan tidak punya akun, TENDANG KELUAR!
+                    window.location.replace("index.html");
                 }
-                
-                inisialisasiUjian();
-            } else {
-                window.location.replace("index.html");
-            }
-        });
+            });
+        }
 
         async function inisialisasiUjian() {
             let idTitipan = sessionStorage.getItem('id_jadwal_aktif');
-            if(!idTitipan) return Swal.fire('Akses Ditolak', 'Masuklah melalui Pintu Dashboard!', 'error').then(()=>window.location.replace("dashboard.html"));
+            
+            // Kalau tidak ada jadwal, kembalikan ke tempat asalnya
+            if(!idTitipan) {
+                return Swal.fire('Akses Ditolak', 'Silakan masuk melalui pintu yang benar!', 'error').then(() => {
+                    if (modeUjian === 'PPDB') window.location.replace("ppdb.html");
+                    else window.location.replace("dashboard.html");
+                });
+            }
 
             Swal.fire({ title: 'Menyiapkan Ujian...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             try {
                 const jDoc = await getDoc(doc(db, "jadwal_ujian", idTitipan));
-                if (!jDoc.exists() || jDoc.data().status !== 'aktif') return Swal.fire('Ditutup', 'Jadwal ujian ini sudah tidak aktif.', 'error').then(()=>window.location.replace("dashboard.html"));
+                
+                if (!jDoc.exists() || jDoc.data().status !== 'aktif') {
+                    return Swal.fire('Ditutup', 'Jadwal ujian ini sudah tidak aktif.', 'error').then(() => {
+                        if (modeUjian === 'PPDB') window.location.replace("ppdb.html");
+                        else window.location.replace("dashboard.html");
+                    });
+                }
+                
                 detailJadwal = { id: jDoc.id, ...jDoc.data() };
 
                 const qH = query(collection(db, "hasil_ujian"), where("username", "==", usernameSiswaAktif), where("id_jadwal", "==", detailJadwal.id));
@@ -199,13 +238,18 @@
                 let dHasil = null;
                 if (!snapH.empty) {
                     dHasil = snapH.docs[0].data();
-                    if (dHasil.status_pengerjaan === 'selesai') return Swal.fire('Selesai', 'Anda sudah menyelesaikan ujian ini.', 'info').then(()=>window.location.replace("dashboard.html"));
+                    if (dHasil.status_pengerjaan === 'selesai') {
+                        return Swal.fire('Selesai', 'Anda sudah menyelesaikan ujian ini.', 'info').then(() => {
+                            if (modeUjian === 'PPDB') window.location.replace("ppdb.html");
+                            else window.location.replace("dashboard.html");
+                        });
+                    }
                 }
 
                 let arrIdSoal = [];
 
                 if (!dHasil) {
-                    // 🎲 SISWA BARU: AMBIL DARI PAKET LALU ACAK URUTANNYA
+                    // 🎲 PESERTA BARU: AMBIL DARI PAKET LALU ACAK URUTANNYA
                     const pDoc = await getDoc(doc(db, "paket_soal", detailJadwal.id_paket));
                     if (!pDoc.exists()) return Swal.fire('Error', 'Paket soal hilang dari server.', 'error');
                     
@@ -217,7 +261,7 @@
                         [arrIdSoal[i], arrIdSoal[j]] = [arrIdSoal[j], arrIdSoal[i]];
                     }
                 } else {
-                    // 🔄 SISWA MELANJUTKAN (RESUME)
+                    // 🔄 PESERTA MELANJUTKAN (RESUME)
                     arrIdSoal = dHasil.urutan_id_soal || [];
                     idDokumenHasilAktif = snapH.docs[0].id;
                     
@@ -227,13 +271,13 @@
                     let durasiAsliDetik = detailJadwal.durasi_menit * 60;
                     
                     sisaWaktuDetik = durasiAsliDetik - selisihDetik;
-                    if (sisaWaktuDetik < 0) sisaWaktuDetik = 0; // Jika sudah minus, langsung 0
+                    if (sisaWaktuDetik < 0) sisaWaktuDetik = 0; 
                 }
 
                 // Simpan ke memori lokal untuk dipush ke Firebase nanti
                 window.urutanSoalSiswaIni = arrIdSoal;
 
-                // Fetch Soal Asli Berdasarkan Urutan Acakan Siswa Tersebut
+                // Fetch Soal Asli Berdasarkan Urutan Acakan Peserta Tersebut
                 daftarSoal = [];
                 for (let i = 0; i < arrIdSoal.length; i++) {
                     const sDoc = await getDoc(doc(db, "bank_soal", arrIdSoal[i]));
@@ -253,6 +297,7 @@
                 let kunciSave = `ujian_${usernameSiswaAktif}_${detailJadwal.id}`;
                 let dataLokal = localStorage.getItem(kunciSave);
                 let pesanPemulihan = "";
+                
                 if (dataLokal) {
                     let s = JSON.parse(dataLokal);
                     jawabanSiswa = s.jawabanSiswa || jawabanSiswa;
@@ -273,8 +318,12 @@
                     ${pesanPemulihan}
                 `;
                 
-                Swal.close(); document.getElementById('layarGerbang').classList.remove('hidden');
-            } catch (e) { console.error(e); Swal.fire('Error', 'Gagal memuat ujian.', 'error'); }
+                Swal.close(); 
+                document.getElementById('layarGerbang').classList.remove('hidden');
+            } catch (e) { 
+                console.error(e); 
+                Swal.fire('Error', 'Gagal memuat ujian.', 'error'); 
+            }
         }
 
         // TOMBOL MULAI & KONEKSI KE PROCTOR
@@ -291,7 +340,8 @@
                         username: usernameSiswaAktif, nama_siswa: namaSiswaAsli, asal_sekolah_siswa: asalSekolahSiswa, kelas: kelasSiswaAsli,
                         sekolah_id: detailJadwal.sekolah_id || "Pusat", mapel: detailJadwal.mapel || "Campuran", id_jadwal: detailJadwal.id,
                         nama_ujian: detailJadwal.nama_ujian || "Ujian", nilai_akhir: 0, status_pengerjaan: 'berjalan', waktu_mulai_pengerjaan: new Date(),
-                        urutan_id_soal: window.urutanSoalSiswaIni // 👈 SIMPAN URUTAN ACAKANNYA KE FIREBASE
+                        urutan_id_soal: window.urutanSoalSiswaIni,
+                        asal_sekolah_luar: window.sekolahAsalPPDB || null // 🔥 TAMBAHAN INI
                     });
                     idDokumenHasilAktif = docRef.id;
                 } else {
@@ -309,7 +359,7 @@
 
                 requestWakeLock(); // PANGGIL WAKE LOCK
 
-                try { if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); } catch (e) {}
+                try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(e => console.warn('Fullscreen diblokir VS Code, lanjut jalan!')); } catch (e) {}
                 document.getElementById('layarGerbang').classList.add('hidden');
                 document.getElementById('layarUjian').classList.remove('hidden');
                 document.getElementById('panelTimer').classList.remove('hidden'); 
@@ -711,7 +761,8 @@
                     nilai_akhir: nilaiAkhir, detail: { benar: b, salah: s, kosong: k }, 
                     waktu_selesai: new Date(), status_pengerjaan: 'selesai',
                     aturan_rilis_bahas: detailJadwal.aturan_rilis_bahas || "setelah_ujian_tutup", 
-                    rekam_jawaban: jawabanSiswa, rekam_soal: rekamSoalDiet 
+                    rekam_jawaban: jawabanSiswa, rekam_soal: rekamSoalDiet,
+                    asal_sekolah_luar: window.sekolahAsalPPDB || null // 🔥 TAMBAHAN INI
                 };
 
                 // CEK APAKAH INI UPDATE (Dari Resume) ATAU BARU
@@ -724,16 +775,23 @@
                 localStorage.removeItem(`ujian_${usernameSiswaAktif}_${detailJadwal.id}`); 
                 sessionStorage.removeItem('id_jadwal_aktif'); 
                 
+                // Jika PPDB, hapus juga sesi login PIN-nya agar mereka tidak bisa ngerjakan ulang
+                if(modeUjian === 'PPDB') sessionStorage.removeItem('sesi_ppdb_user');
+                
                 Swal.fire({ 
                     icon: 'success', title: 'Ujian Selesai!', 
                     html: `
                         <div class="text-left space-y-2 mt-4 text-gray-700 text-sm md:text-base border-t border-gray-200 pt-4">
-                            <p>Terkumpul: <b>${daftarSoal.length - k} Soal Terjawab</b><br>
-                            Nilai Sementara: <span class="text-3xl font-black text-blue-600 block mt-1">${nilaiAkhir}</span></p>
-                            ${infoTambahan}
+                            <p>Jawaban berhasil dikirim ke server pusat.</p>
+                            ${modeUjian === 'PPDB' ? '<p class="text-amber-600 font-bold mt-2">Terima kasih telah mengikuti seleksi. Silakan pantau pengumuman selanjutnya.</p>' : `<p>Terkumpul: <b>${daftarSoal.length - k} Soal Terjawab</b><br>Nilai Sementara: <span class="text-3xl font-black text-blue-600 block mt-1">${nilaiAkhir}</span></p>${infoTambahan}`}
                         </div>`, 
-                    confirmButtonColor: '#2563eb', confirmButtonText: 'Kembali ke Dashboard', allowOutsideClick: false
-                }).then(() => window.location.replace("dashboard.html"));
+                    confirmButtonColor: '#2563eb', 
+                    confirmButtonText: modeUjian === 'PPDB' ? 'Selesai & Keluar' : 'Kembali ke Dashboard', 
+                    allowOutsideClick: false
+                }).then(() => {
+                    if(modeUjian === 'PPDB') window.location.replace("ppdb.html");
+                    else window.location.replace("dashboard.html");
+                });
                 
             } catch (error) { 
                 Swal.fire({
