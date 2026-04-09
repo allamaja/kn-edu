@@ -110,6 +110,12 @@
                 <button onclick="bukaTab('tabRombel')" id="menuRombel" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent mt-0.5">
                     <span class="w-5 text-center mr-2 text-emerald-400">🏢</span> Master Rombel
                 </button>
+                <div class="flex flex-col gap-0.5 mt-2">
+                <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Bantuan</p>
+                <button onclick="bukaTab('tabPanduan')" id="menuPanduan" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2 text-rose-500">📺</span> Pusat Panduan
+                </button>
+                </div>
             </div>
         </nav>
         <div class="p-3 border-t border-slate-800 bg-slate-900/50 shrink-0">
@@ -596,6 +602,18 @@
             </div>
         </div>
     </div>
+            <div id="tabPanduan" class="space-y-6 hidden animate-fade-in">
+                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+                    <div class="mb-6 border-b pb-4">
+                        <h2 class="text-2xl font-black text-slate-800 flex items-center"><span class="mr-3">📺</span> Akademi KN-Edu</h2>
+                        <p class="text-slate-500 text-sm mt-1 font-medium">Pelajari cara menggunakan fitur-fitur SmartKhairunnas V2 melalui video panduan singkat ini.</p>
+                    </div>
+                    
+                    <div id="gridVideoTutorial" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="col-span-full text-center py-10 text-slate-400 font-bold animate-pulse">Menarik data dari pusat...</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
     <div id="modalEditor" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[100] p-4 overflow-y-auto">
@@ -1185,8 +1203,8 @@
             });
         };
         window.bukaTab = async (idTab) => {
-            let tabs = ['tabDashboard','tabAnalitik','tabEvaluasiSoal','tabVerifikasi','tabSemuaSoal','tabUser','tabJadwal','tabRuanganMaster','tabRombel','tabPaket','tabLaporan','tabPPDB'];
-            let menus = ['menuDashboard','menuAnalitik','menuEvaluasiSoal','menuVerifikasi','menuSemuaSoal','menuUser','menuJadwal','menuRuanganMaster','menuRombel','menuPaket','menuLaporan','menuPPDB'];
+            let tabs = ['tabDashboard','tabAnalitik','tabEvaluasiSoal','tabVerifikasi','tabSemuaSoal','tabUser','tabJadwal','tabRuanganMaster','tabRombel','tabPaket','tabLaporan','tabPPDB','tabPanduan'];
+            let menus = ['menuDashboard','menuAnalitik','menuEvaluasiSoal','menuVerifikasi','menuSemuaSoal','menuUser','menuJadwal','menuRuanganMaster','menuRombel','menuPaket','menuLaporan','menuPPDB','menuPanduan'];
             tabs.forEach(t => { let e = document.getElementById(t); if(e) e.classList.add('hidden'); });
             menus.forEach(m => { 
                 let e = document.getElementById(m); 
@@ -1219,6 +1237,7 @@
             if(idTab === 'tabRuanganMaster') window.muatDaftarSemuaRuangan();
             if(idTab === 'tabRombel') window.muatMasterRombel();
             if(idTab === 'tabPPDB') window.muatPortalPPDB();
+            if(idTab === 'tabPanduan') window.muatVideoTutorial();
         };
         window.muatDashboardLokal = async () => {
             if(!idSekolahGlobal) return;
@@ -3381,6 +3400,111 @@
                 console.error(e);
                 Swal.fire('Error', 'Gagal mengunduh data nilai.', 'error');
             }
+        };
+        // ==========================================
+        // LOGIKA BIOSKOP PANDUAN (YOUTUBE EMBED)
+        // ==========================================
+        // Pengekstrak ID YouTube otomatis
+        const ekstrakIdYoutube = (url) => {
+            let regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+            let match = url.match(regExp);
+            return (match && match[7].length === 11) ? match[7] : false;
+        };
+
+        // Penarik Data Video dari Firebase (Anti-Loading Terus)
+        window.muatVideoTutorial = async () => {
+            let kontainer = document.getElementById('gridVideoTutorial');
+            if(!kontainer) return;
+            
+            // 1. Tampilkan loading animasi di awal
+            kontainer.innerHTML = '<div class="col-span-full text-center py-10 text-indigo-500 font-bold animate-pulse">Menarik data dari pusat...</div>';
+            
+            try {
+                // Tarik data dengan 1 filter saja agar tidak kena error Index Firebase
+                const q = query(collection(db, "manajemen_video"), where("kategori_utama", "==", "Tutorial"));
+                const snap = await getDocs(q);
+                
+                // 2. Jika database KOSONG, langsung tampilkan pesan ini
+                if(snap.empty) {
+                    kontainer.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-16 bg-white border border-slate-200 rounded-3xl shadow-sm">
+                        <span class="text-6xl mb-4">📭</span>
+                        <h3 class="text-xl font-black text-slate-700">Belum Ada Video Tutorial</h3>
+                        <p class="text-sm font-medium text-slate-500 mt-2">Pusat belum mengunggah video panduan untuk saat ini.</p>
+                    </div>`;
+                    return; // Hentikan proses
+                }
+
+                // 3. Jika ADA data, susun HTML-nya
+                let html = '';
+                snap.forEach(doc => {
+                    let d = doc.data();
+                    
+                    // Filter manual untuk target Admin
+                    if(d.sub_kategori !== "Admin Sekolah" && d.sub_kategori !== "Admin") return; 
+
+                    let yId = ekstrakIdYoutube(d.url_youtube);
+                    if(!yId) return; 
+
+                    let embedUrl = `https://www.youtube.com/embed/${yId}`;
+                    let thumbUrl = `https://img.youtube.com/vi/${yId}/maxresdefault.jpg`;
+
+                    html += `
+                    <div onclick="putarVideoTutorial('${embedUrl}')" class="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition group cursor-pointer transform hover:-translate-y-1">
+                        <div class="h-44 bg-slate-800 relative overflow-hidden">
+                            <img src="${thumbUrl}" alt="Thumbnail" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.src='https://img.youtube.com/vi/${yId}/hqdefault.jpg'">
+                            <div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition duration-500"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="w-14 h-14 bg-red-600/90 backdrop-blur-md text-white rounded-full flex items-center justify-center text-2xl shadow-lg border border-red-500/50 group-hover:bg-red-600 group-hover:scale-110 transition duration-300">▶️</div>
+                            </div>
+                            <span class="absolute top-2 left-2 bg-indigo-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded shadow uppercase tracking-widest">${d.kategori_utama}</span>
+                        </div>
+                        <div class="p-5 relative bg-white">
+                            <h3 class="font-black text-slate-800 mb-2 line-clamp-2 group-hover:text-red-600 transition">${d.judul}</h3>
+                            <p class="text-xs text-slate-500 font-medium line-clamp-2">${d.deskripsi}</p>
+                        </div>
+                    </div>`;
+                });
+                
+                // Jika isinya ternyata kosong (karena video yang ada cuma untuk Admin)
+                if (html === '') {
+                    kontainer.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-16 bg-white border border-slate-200 rounded-3xl shadow-sm">
+                        <span class="text-6xl mb-4">📭</span>
+                        <h3 class="text-xl font-black text-slate-700">Belum Ada Video Khusus Admin</h3>
+                        <p class="text-sm font-medium text-slate-500 mt-2">Pusat belum mengunggah video panduan operasional untuk Admin Cabang.</p>
+                    </div>`;
+                } else {
+                    kontainer.innerHTML = html;
+                }
+
+            } catch(e) {
+                // 4. Jika ERROR Koneksi / Database, tampilkan UI aman (BUKAN loading)
+                console.error(e);
+                kontainer.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-16 bg-white border border-rose-200 rounded-3xl shadow-sm">
+                        <span class="text-6xl mb-4">📭</span>
+                        <h3 class="text-xl font-black text-slate-700">Belum Ada Video Tutorial</h3>
+                        <p class="text-sm font-medium text-slate-500 mt-2">Silakan hubungi Admin Yayasan untuk menambahkan panduan.</p>
+                    </div>`;
+            }
+        };
+        window.putarVideoTutorial = (url) => {
+            let m = document.getElementById('modalVideoPlayer');
+            // Inject URL dengan perintah autoplay agar tidak perlu diklik 2 kali
+            document.getElementById('iframeTutorial').src = url + "?autoplay=1&rel=0";
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.remove('opacity-0'), 50); // Efek memudar halus
+        };
+
+        window.tutupVideoTutorial = () => {
+            let m = document.getElementById('modalVideoPlayer');
+            m.classList.add('opacity-0');
+            setTimeout(() => {
+                m.classList.add('hidden');
+                // PENTING: Kosongkan SRC agar suara video terhenti di background!
+                document.getElementById('iframeTutorial').src = ""; 
+            }, 300);
         };
     </script>
 </body>
