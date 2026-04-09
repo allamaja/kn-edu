@@ -73,6 +73,10 @@
                 <button onclick="bukaTab('tabKurikulum')" id="menuKurikulum" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs">
                     <span class="w-5 text-center mr-2 text-yellow-500">📖</span> Kurikulum
                 </button>
+                <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 mt-3">Konten & Media</p>
+                <button onclick="bukaTab('tabVideo')" id="menuVideo" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2 text-rose-500">🎬</span> Kelola Video
+                </button>
             </div>
             <div class="flex flex-col gap-0.5">
                 <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Bank Soal</p>
@@ -339,6 +343,72 @@
                                 <tbody id="tabelEvaluasiButir" class="divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tabVideo" class="space-y-6 hidden animate-fade-in">
+                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+                    <div class="mb-6 border-b pb-4 flex justify-between items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800 flex items-center"><span class="mr-3">🎬</span> Pusat Manajemen Video</h2>
+                            <p class="text-slate-500 text-sm mt-1 font-medium">Unggah video edukasi atau panduan tutorial untuk seluruh ekosistem SmartKhairunnas.</p>
+                        </div>
+                    </div>
+
+                    <form id="formUploadVideo" class="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100 mb-8 shadow-inner">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-indigo-900 mb-1.5 uppercase tracking-widest">Judul Video</label>
+                                <input type="text" id="videoJudul" placeholder="Cth: Cara Import Excel Soal" required class="w-full px-4 py-3 border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold bg-white shadow-sm text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-900 mb-1.5 uppercase tracking-widest">Kategori Utama</label>
+                                <select id="videoKategori" required class="w-full px-4 py-3 border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold bg-white shadow-sm text-sm">
+                                    <option value="Tutorial">Tutorial / Panduan Sistem</option>
+                                    <option value="Pendidikan">Materi Pendidikan / Belajar</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-indigo-900 mb-1.5 uppercase tracking-widest">Link YouTube (URL)</label>
+                                <input type="url" id="videoLink" placeholder="Cth: https://www.youtube.com/watch?v=M7lc1UVf-VE" required class="w-full px-4 py-3 border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-blue-600 bg-white shadow-sm text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-900 mb-1.5 uppercase tracking-widest">Target Penonton</label>
+                                <select id="videoTarget" required class="w-full px-4 py-3 border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold bg-white shadow-sm text-sm">
+                                    <option value="Guru">Guru (Menu Pendidik)</option>
+                                    <option value="Admin Sekolah">Admin Cabang Sekolah</option>
+                                    <option value="Siswa">Siswa</option>
+                                    <option value="Umum">Umum / Bebas</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-xs font-bold text-indigo-900 mb-1.5 uppercase tracking-widest">Deskripsi Singkat</label>
+                                <textarea id="videoDeskripsi" placeholder="Tuliskan keterangan singkat tentang isi video ini..." required rows="2" class="w-full px-4 py-3 border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium bg-white shadow-sm text-sm"></textarea>
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-4 mt-2 border-t border-indigo-200/50">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-8 py-3 rounded-xl shadow-md transition transform hover:-translate-y-1 flex items-center">
+                                <span class="mr-2 text-lg">🚀</span> Publikasikan Video
+                            </button>
+                        </div>
+                    </form>
+
+                    <h3 class="text-lg font-black text-slate-700 mb-4">Daftar Video Tayang</h3>
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b font-black tracking-widest">
+                                <tr>
+                                    <th class="px-6 py-4 w-24">Thumbnail</th>
+                                    <th class="px-6 py-4">Judul & Info</th>
+                                    <th class="px-6 py-4 text-center">Kategori / Target</th>
+                                    <th class="px-6 py-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelVideoYayasan" class="divide-y divide-slate-100">
+                                <tr><td colspan="4" class="text-center py-8 text-slate-400">Menarik data dari database...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1177,8 +1247,8 @@
 
         window.bukaTab = (t) => {
             // 🔥 UPDATE: TAB BARU DITAMBAHKAN KE DAFTAR 🔥
-            let tabs = ['tabDashboard','tabKomparasi','tabEvaluasiSoal','tabReview','tabSemuaSoal','tabKurikulum','tabSekolah','tabJadwal','tabPaket', 'tabUserYayasan', 'tabEditorSoal', 'tabImportSoal'];
-            let menus = ['menuDashboard','menuKomparasi','menuEvaluasiSoal','menuReview','menuSemuaSoal','menuKurikulum','menuSekolah','menuJadwal','menuPaket', 'menuUserYayasan', 'menuEditorSoal', 'menuImportSoal'];
+            let tabs = ['tabDashboard','tabKomparasi','tabEvaluasiSoal','tabReview','tabSemuaSoal','tabKurikulum','tabSekolah','tabJadwal','tabPaket', 'tabUserYayasan', 'tabEditorSoal', 'tabImportSoal', 'tabVideo'];
+            let menus = ['menuDashboard','menuKomparasi','menuEvaluasiSoal','menuReview','menuSemuaSoal','menuKurikulum','menuSekolah','menuJadwal','menuPaket', 'menuUserYayasan', 'menuEditorSoal', 'menuImportSoal', 'menuVideo'];
             
             tabs.forEach(x => { let e = document.getElementById(x); if(e) e.classList.add('hidden'); });
             
@@ -1221,6 +1291,7 @@
             // Jika buka tab Editor dari menu (kosong), arahkan ke fungsi Tambah
             if(t === 'tabEvaluasiSoal') window.muatFilterEvaluasiSoal();
             if(t === 'tabEditorSoal' && document.getElementById('editIdSoal').value === "") window.bukaModalTambahSoal();
+            if(t === 'tabVideo') window.muatDaftarVideoYayasan()
         };
 
         
@@ -3592,7 +3663,106 @@
                 customClass: { popup: 'rounded-3xl' }
             });
         };
+        // ==========================================
+        // MESIN CMS MANAJEMEN VIDEO (YAYASAN)
+        // ==========================================
+        
+        // Pengekstrak ID YouTube
+        const ekstrakIdYoutubeVideo = (url) => {
+            let regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+            let match = url.match(regExp);
+            return (match && match[7].length === 11) ? match[7] : false;
+        };
+
+        let fVideo = document.getElementById('formUploadVideo');
+        if(fVideo) {
+            fVideo.addEventListener('submit', async e => {
+                e.preventDefault();
+                let urlYoutube = document.getElementById('videoLink').value;
+                let yId = ekstrakIdYoutubeVideo(urlYoutube);
+
+                if(!yId) return Swal.fire('Format Salah', 'Link YouTube tidak valid! Pastikan Anda menyalin URL video YouTube yang benar.', 'warning');
+
+                Swal.fire({title: 'Mengunggah Video...', didOpen: () => Swal.showLoading()});
+                try {
+                    await addDoc(collection(db, "manajemen_video"), {
+                        judul: document.getElementById('videoJudul').value,
+                        url_youtube: urlYoutube,
+                        id_youtube: yId, // Simpan ID untuk mempermudah render thumbnail nanti
+                        deskripsi: document.getElementById('videoDeskripsi').value,
+                        kategori_utama: document.getElementById('videoKategori').value,
+                        sub_kategori: document.getElementById('videoTarget').value,
+                        dibuat_pada: new Date(),
+                        pengunggah: "Pusat Yayasan" // Bisa diganti profil auth jika ada
+                    });
+                    
+                    fVideo.reset();
+                    Swal.fire('Berhasil!', 'Video sudah tayang di dashboard tujuan.', 'success');
+                    window.muatDaftarVideoYayasan();
+                } catch(er) {
+                    Swal.fire('Error', 'Gagal mempublikasikan video.', 'error');
+                }
+            });
+        }
+
+        window.muatDaftarVideoYayasan = async () => {
+            let tb = document.getElementById('tabelVideoYayasan');
+            if(!tb) return;
+            
+            try {
+                const snap = await getDocs(query(collection(db, "manajemen_video")));
+                let html = '';
+                let arrVid = [];
+                snap.forEach(d => arrVid.push({id: d.id, ...d.data()}));
+
+                if(arrVid.length === 0) {
+                    tb.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-500 font-bold">Belum ada video yang diunggah.</td></tr>';
+                    return;
+                }
+
+                // Urutkan dari yang paling baru
+                arrVid.sort((a,b) => b.dibuat_pada.toDate() - a.dibuat_pada.toDate()).forEach(v => {
+                    let thumb = `https://img.youtube.com/vi/${v.id_youtube}/mqdefault.jpg`;
+                    let wKategori = v.kategori_utama === 'Tutorial' ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-teal-700 bg-teal-50 border-teal-200';
+                    
+                    html += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-6 py-4">
+                            <div class="w-24 h-16 bg-black rounded-lg overflow-hidden relative shadow-sm border border-slate-300">
+                                <img src="${thumb}" class="w-full h-full object-cover opacity-90">
+                                <div class="absolute inset-0 flex items-center justify-center"><span class="bg-red-600 text-white text-[8px] px-1.5 py-0.5 rounded-sm">▶️</span></div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <h4 class="font-black text-slate-800 text-sm mb-1">${v.judul}</h4>
+                            <p class="text-xs text-slate-500 line-clamp-1">${v.deskripsi}</p>
+                        </td>
+                        <td class="px-6 py-4 text-center space-y-1.5">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase border block w-max mx-auto shadow-sm ${wKategori}">${v.kategori_utama}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 block w-max mx-auto">Target: ${v.sub_kategori}</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="hapusVideoYayasan('${v.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-2 rounded-lg text-xs font-black transition shadow-sm border border-rose-100">🗑️ Hapus</button>
+                        </td>
+                    </tr>`;
+                });
+                tb.innerHTML = html;
+            } catch(e) {
+                tb.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-rose-500 font-bold">Gagal menarik data.</td></tr>';
+            }
+        };
+
+        window.hapusVideoYayasan = (id) => {
+            Swal.fire({title: 'Hapus Video?', text: "Video akan ditarik dari semua layar pengguna.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48'})
+            .then(async r => {
+                if(r.isConfirmed) {
+                    Swal.fire({title: 'Menghapus...', didOpen: () => Swal.showLoading()});
+                    await deleteDoc(doc(db, "manajemen_video", id));
+                    Swal.fire('Terhapus', 'Video berhasil ditarik.', 'success');
+                    window.muatDaftarVideoYayasan();
+                }
+            });
+        };
     </script>
 </body>
-
 </html>
