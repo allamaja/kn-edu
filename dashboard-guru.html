@@ -648,10 +648,19 @@
         // STATE GURU SPESIALIS
         let profilGuru = { email: "", nama: "", sekolah_id: "", jenjang: "SMA", mapel_diampu: [] };
         let dataKurikulumGlobal=[], soalPribadi=[], dataSoalSeluruhnya=[], dataPaketLokal=[], pilihanSoalSementara=new Set(), dataNilaiLokal=[];
-
+        let modeStudioActive = false;
+        let studioData = { idPaketDraft: null, namaPaket: '', mapel: '', kelas: '', total: 0, current: 1, soalIds: [] };
         // ==========================================
         // 1. INIT QUILL, MATHLIVE & AUTO-COMPRESSOR V2
         // ==========================================
+        // FUNGSI PEMBERSIH TEKS (SIDIK JARI SOAL ANTI-DUPLIKAT)
+        const buatSidikJariTeks = (teksHtml) => {
+            if(!teksHtml) return "";
+            // Hapus semua tag HTML dan gambar
+            let teksBersih = teksHtml.replace(/<[^>]*>?/gm, ''); 
+            // Hapus spasi berlebih, tanda baca, lalu ubah ke huruf kecil
+            return teksBersih.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+        };
         
         Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
 
@@ -1238,8 +1247,35 @@
             let kB = quillPembahasan.root.innerHTML;
             let tk = document.getElementById('inputKesulitan').value; 
             
+            // 👇 INI DIA VARIABEL YANG HILANG 👇
+            let id = document.getElementById('inputIdSoal').value;
+            
             if (quillPertanyaan.getText().trim().length === 0 && !kT.includes('<img') && !kT.includes('<span class="ql-formula"')) 
                 return Swal.fire('Oops', 'Pertanyaan kosong!', 'warning');
+
+            // 🛡️ FITUR SILUMAN 1: CEK DUPLIKASI SOAL DI BANK SOAL GURU INI
+            if(id === "") { // Hanya cek duplikat jika ini soal baru, bukan edit
+                let sidikJariBaru = buatSidikJariTeks(kT);
+                let apakahDuplikat = false;
+                
+                // Bandingkan dengan bank soal pribadi yang sudah dimuat
+                for(let s of soalPribadi) {
+                    let sidikJariLama = buatSidikJariTeks(s.pertanyaan);
+                    if(sidikJariBaru !== "" && sidikJariLama === sidikJariBaru) {
+                        apakahDuplikat = true;
+                        break;
+                    }
+                }
+                
+                if(apakahDuplikat) {
+                    return Swal.fire({
+                        title: 'Soal Duplikat!',
+                        html: 'Sepertinya Anda <b>sudah pernah</b> membuat pertanyaan ini sebelumnya.<br>Silakan cek kembali Bank Soal Anda.',
+                        icon: 'error',
+                        confirmButtonColor: '#f97316'
+                    });
+                }
+            }
 
             let aO = []; let vD = false; let huruf = ['A','B','C','D','E'];
             
@@ -1265,23 +1301,87 @@
             } 
             else if (t === 'essay') { vD = true; aO = []; }
 
-            let id = document.getElementById('inputIdSoal').value;
+            // 🚀 FITUR SILUMAN 2: JALUR TOL BYPASS REVIEW UNTUK SOAL LOKAL
+            let targetKuadran = document.getElementById('inputKuadran').value;
+            let statusAkhir = targetKuadran === 'Lokal' ? 'aktif' : 'pending_review'; 
+
             let py = {
                 tipe_soal: t, kesulitan: tk, pertanyaan: kT, opsi: aO, pembahasan: kB,
-                kuadran: document.getElementById('inputKuadran').value, status: 'pending_review',
+                kuadran: targetKuadran, status: statusAkhir, // <-- Tembakan status yang sudah dimodifikasi
                 pembuat_id: profilGuru.nama, pembuat_email: profilGuru.email, sekolah_id: profilGuru.sekolah_id,
                 metadata: { mapel: document.getElementById('inputMapel').value, sub_bab: document.getElementById('inputBab').value, kelas: document.getElementById('inputKelas').value, jenjang: profilGuru.jenjang }
             };
 
-            Swal.fire({ title: 'Mengirim...', didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
             try {
-                if (id === "") { py.dibuat_pada = new Date(); await addDoc(collection(db, "bank_soal"), py); Swal.fire('Terkirim!', 'Menunggu Review Admin.', 'success'); } 
-                else { await updateDoc(doc(db, "bank_soal", id), py); Swal.fire('Diperbarui!', 'Masuk antrean Review.', 'success'); }
+                if (id === "") { 
+                    py.dibuat_pada = new Date(); 
+                    let docRef = await addDoc(collection(db, "bank_soal"), py); 
+                    
+                    // 🚀 INTERUPSI MODE STUDIO (AUTO-SAVE)
+                    if (modeStudioActive) {
+                        studioData.soalIds.push(docRef.id);
+                        
+                        let pyPaket = {
+                            nama_paket: studioData.current < studioData.total ? `[DRAFT] ${studioData.namaPaket}` : studioData.namaPaket,
+                            soal_ids: studioData.soalIds,
+                            sekolah_id: profilGuru.sekolah_id,
+                            mapel: studioData.mapel,
+                            kelas: studioData.kelas,
+                            pembuat_nama: profilGuru.nama,
+                            status_paket: studioData.current < studioData.total ? 'draft' : 'menunggu', // <--- Disini ubah jadi menunggu agar masuk antrean admin!
+                            total_target: studioData.total,
+                            update_terakhir: new Date()
+                        };
+                        
+                        if (!studioData.idPaketDraft) {
+                            pyPaket.dibuat_pada = new Date();
+                            let dRef = await addDoc(collection(db, "paket_soal"), pyPaket);
+                            studioData.idPaketDraft = dRef.id;
+                        } else {
+                            await updateDoc(doc(db, "paket_soal", studioData.idPaketDraft), pyPaket);
+                        }
+
+                        if (studioData.current < studioData.total) {
+                            studioData.current++;
+                            Swal.fire({title: 'Tersimpan!', text: `Lanjut ke soal ${studioData.current}...`, icon: 'success', timer: 1000, showConfirmButton: false});
+                            window.bukaEditorStudio();
+                        } else {
+                            modeStudioActive = false;
+                            Swal.fire('Selesai! 🎉', 'Paket ujian berhasil diterbitkan.', 'success');
+                            window.batalEditForm();
+                            window.muatDaftarPaketLokal();
+                            window.bukaTab('tabPaket');
+                        }
+                        return; // Hentikan eksekusi standar
+                    }
+
+                    Swal.fire('Terkirim!', 'Soal berhasil disimpan.', 'success'); 
+                } 
+                else { 
+                    await updateDoc(doc(db, "bank_soal", id), py); 
+                    Swal.fire('Diperbarui!', 'Masuk antrean Review.', 'success'); 
+                }
                 window.batalEditForm(); window.muatBankSoalPribadi();
             } catch (er) { Swal.fire('Error', 'Gagal menyimpan.', 'error'); }
         });
         
         window.batalEditForm = () => {
+            if(modeStudioActive) {
+                Swal.fire({
+                    title: 'Jeda Merakit?', text: 'Progress Anda aman tersimpan di Draft Paket.', icon: 'info',
+                    showCancelButton: true, confirmButtonText: 'Ya, Keluar', confirmButtonColor: '#f97316'
+                }).then((res) => {
+                    if(res.isConfirmed) {
+                        modeStudioActive = false;
+                        window.muatDaftarPaketLokal();
+                        window.batalEditForm(); // Panggil ulang untuk bersihkan UI
+                        window.bukaTab('tabPaket');
+                    }
+                });
+                return;
+            }
+
             document.getElementById('formTulisSoal').reset();
             document.getElementById('inputIdSoal').value = "";
             
@@ -1293,14 +1393,13 @@
             document.querySelectorAll('.input-matriks-kiri, .input-matriks-kanan').forEach(el => el.checked = false);
             
             let sb = document.getElementById('inputBab'); if(sb) { sb.innerHTML = '<option value="">Pilih Mapel</option>'; sb.disabled = true; }
-            
             if(document.getElementById('inputKesulitan')) document.getElementById('inputKesulitan').value = "Sedang"; 
             if(document.getElementById('inputJumlahOpsi')) document.getElementById('inputJumlahOpsi').value = "4"; 
             if(document.getElementById('inputHeaderMatriks')) document.getElementById('inputHeaderMatriks').value = "Benar|Salah";
             
             document.getElementById('judulFormSoal').innerText = "✨ Tulis Pertanyaan Baru V2";
-            document.getElementById('btnKirimSoal').innerHTML = "🚀 Kirim Soal";
-            let btnBatal = document.getElementById('btnBatalEdit'); if(btnBatal) btnBatal.classList.add('hidden');
+            document.getElementById('btnKirimSoal').innerHTML = "🚀 Kirim Soal ke Admin";
+            let btnBatal = document.getElementById('btnBatalEdit'); if(btnBatal) { btnBatal.classList.add('hidden'); btnBatal.innerText = "Batal Edit"; }
             window.ubahUIJenisSoal();
         };
 
@@ -1542,6 +1641,14 @@
                 if(item && item.valid) {
                     let py = item.data;
                     py.dibuat_pada = new Date();
+                    
+                    // 🚀 FITUR SILUMAN 2: JALUR TOL IMPORT EXCEL LOKAL
+                    if(py.kuadran === 'Lokal') {
+                        py.status = 'aktif';
+                    } else {
+                        py.status = 'pending_review';
+                    }
+
                     try { await addDoc(collection(db, "bank_soal"), py); suksesCount++; } 
                     catch(er) { failCount++; }
                 }
@@ -1553,8 +1660,132 @@
             window.muatBankSoalPribadi(); // Segarkan tabel karya soal
         };
         window.muatBankSoalGlobalLokal=async()=>{const sg=await getDocs(query(collection(db,"bank_soal"),where("kuadran","==","Global"),where("status","==","aktif"))),sl=await getDocs(query(collection(db,"bank_soal"),where("sekolah_id","==",profilGuru.sekolah_id),where("status","==","aktif")));dataSoalSeluruhnya=[];sg.forEach(d=>dataSoalSeluruhnya.push({id:d.id,...d.data()}));sl.forEach(d=>dataSoalSeluruhnya.push({id:d.id,...d.data()}));};
-        window.muatDaftarPaketLokal=async()=>{const s=await getDocs(query(collection(db,"paket_soal"),where("sekolah_id","==",profilGuru.sekolah_id)));dataPaketLokal=[];let h='';s.forEach(d=>{let p=d.data();p.id=d.id;dataPaketLokal.push(p);h+=`<div class="bg-white border border-gray-200 p-6 rounded-3xl relative group hover:shadow-md transition"><button onclick="hapusPaket('${p.id}')" class="absolute top-4 right-4 text-red-400 hover:text-red-600 hidden group-hover:block transition">&times;</button><h3 class="text-lg font-black text-gray-800">${p.nama_paket}</h3><p class="text-sm mt-2 text-gray-600"><b>${p.soal_ids?.length||0}</b> Butir Soal</p></div>`;});let k=document.getElementById('kontainerPaket');if(k)k.innerHTML=h||'<p class="col-span-3 text-center text-gray-400 border-2 border-dashed rounded-xl py-10">Belum ada paket ujian yang dirakit.</p>';};
-        window.bukaModalBuatPaket=()=>{document.getElementById('namaPaketBaru').value="";pilihanSoalSementara.clear();window.renderPilihanSoal();document.getElementById('modalPaket').classList.remove('hidden');};window.tutupModalPaket=()=>{document.getElementById('modalPaket').classList.add('hidden');};
+        window.muatDaftarPaketLokal = async () => { 
+            const s = await getDocs(query(collection(db, "paket_soal"), where("sekolah_id", "==", profilGuru.sekolah_id))); 
+            dataPaketLokal = []; let h = ''; 
+            
+            s.forEach(d => { 
+                let p = d.data(); p.id = d.id; 
+                dataPaketLokal.push(p); 
+
+                if (p.status_paket === 'draft') {
+                    h += `<div class="bg-orange-50 border border-orange-200 p-6 rounded-3xl relative group hover:shadow-md transition">
+                            <button onclick="hapusPaket('${p.id}')" class="absolute top-4 right-4 text-red-400 hover:text-red-600 hidden group-hover:block transition">&times;</button>
+                            <span class="bg-orange-200 text-orange-800 text-[10px] font-black px-2 py-0.5 rounded shadow-sm">⏳ DRAFT (${p.soal_ids.length}/${p.total_target || '?'})</span>
+                            <h3 class="text-lg font-black text-gray-800 mt-2">${p.nama_paket.replace('[DRAFT] ', '')}</h3>
+                            <p class="text-sm mt-1 text-gray-600 border-b border-orange-200/50 pb-3 mb-3">Belum selesai dirakit.</p>
+                            <button onclick="lanjutkanStudio('${p.id}')" class="w-full bg-orange-500 text-white font-bold py-2 rounded-xl shadow-sm hover:bg-orange-600 transition">✏️ Lanjutkan Merakit</button>
+                          </div>`;
+                } else {
+                    h += `<div class="bg-white border border-gray-200 p-6 rounded-3xl relative group hover:shadow-md transition">
+                            <button onclick="hapusPaket('${p.id}')" class="absolute top-4 right-4 text-red-400 hover:text-red-600 hidden group-hover:block transition">&times;</button>
+                            <span class="bg-emerald-100 text-emerald-700 text-[10px] font-black px-2 py-0.5 rounded shadow-sm">✅ SIAP UJIAN</span>
+                            <h3 class="text-lg font-black text-gray-800 mt-2">${p.nama_paket}</h3>
+                            <p class="text-sm mt-2 text-gray-600"><b>${p.soal_ids?.length || 0}</b> Butir Soal</p>
+                          </div>`;
+                }
+            }); 
+            
+            let k = document.getElementById('kontainerPaket'); 
+            if(k) k.innerHTML = h || '<p class="col-span-3 text-center text-gray-400 border-2 border-dashed rounded-xl py-10">Belum ada paket ujian yang dirakit.</p>'; 
+            
+            // Update Dropdown Kuis (Sembunyikan Draft)
+            let sPaket = document.getElementById('kuisPaket');
+            if(sPaket) {
+                sPaket.innerHTML = '<option value="">-- Pilih Paket Soal --</option>';
+                dataPaketLokal.filter(x => x.status_paket !== 'draft').forEach(p => sPaket.innerHTML += `<option value="${p.id}">${p.nama_paket}</option>`);
+            }
+        };
+        window.bukaModalBuatPaket = async () => {
+            const { value: mode } = await Swal.fire({
+                title: 'Pilih Metode Rakit Paket',
+                text: 'Bagaimana Anda ingin menyusun ujian ini?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '📝 Ketik Baru Massal (Mode Studio)',
+                cancelButtonText: '🗃️ Pilih dari Bank Soal',
+                confirmButtonColor: '#f97316', // Oranye khas Guru
+                cancelButtonColor: '#64748b',
+                reverseButtons: true
+            });
+
+            if (mode) {
+                window.mulaiModeStudio();
+            } else if (mode === false) {
+                document.getElementById('namaPaketBaru').value = ""; 
+                pilihanSoalSementara.clear(); 
+                window.renderPilihanSoal(); 
+                document.getElementById('modalPaket').classList.remove('hidden'); 
+            }
+        };
+
+        // --- ENGINE MODE STUDIO ---
+        window.mulaiModeStudio = async () => {
+            let optMapel = document.getElementById('inputMapel').innerHTML;
+            let optKelas = document.getElementById('inputKelas').innerHTML;
+
+            const { value: fValues } = await Swal.fire({
+                title: '🎬 Setup Studio Ujian',
+                html: `
+                    <div class="space-y-4 mt-4 text-left">
+                        <div><label class="text-xs font-bold text-gray-500 uppercase">Nama Paket Ujian</label><input id="studio-nama" class="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-bold" placeholder="Cth: Ulangan Harian 1"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-xs font-bold text-gray-500 uppercase">Mapel</label><select id="studio-mapel" class="w-full px-3 py-3 border border-gray-300 rounded-xl outline-none font-bold">${optMapel}</select></div>
+                            <div><label class="text-xs font-bold text-gray-500 uppercase">Kelas Target</label><select id="studio-kelas" class="w-full px-3 py-3 border border-gray-300 rounded-xl outline-none font-bold">${optKelas}</select></div>
+                        </div>
+                        <div><label class="text-xs font-bold text-gray-500 uppercase">Total Butir Soal</label><input id="studio-total" type="number" min="1" max="100" class="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-black text-orange-600" placeholder="Cth: 10"></div>
+                    </div>
+                `,
+                showCancelButton: true, confirmButtonText: 'Mulai Mengetik 🚀', confirmButtonColor: '#f97316', focusConfirm: false,
+                preConfirm: () => {
+                    let n = document.getElementById('studio-nama').value, m = document.getElementById('studio-mapel').value, k = document.getElementById('studio-kelas').value, t = parseInt(document.getElementById('studio-total').value);
+                    if(!n || !m || !k || isNaN(t) || t < 1) { Swal.showValidationMessage('Lengkapi semua data!'); return false; }
+                    return { nama: n, mapel: m, kelas: k, total: t };
+                }
+            });
+
+            if(fValues) {
+                modeStudioActive = true;
+                studioData = { idPaketDraft: null, namaPaket: fValues.nama, mapel: fValues.mapel, kelas: fValues.kelas, total: fValues.total, current: 1, soalIds: [] };
+                window.bukaEditorStudio();
+            }
+        };
+
+        window.lanjutkanStudio = (idPaket) => {
+            let p = dataPaketLokal.find(x => x.id === idPaket);
+            if(!p) return;
+            modeStudioActive = true;
+            studioData = { idPaketDraft: p.id, namaPaket: p.nama_paket.replace('[DRAFT] ', ''), mapel: p.mapel, kelas: p.kelas, total: p.total_target || 0, current: (p.soal_ids?.length || 0) + 1, soalIds: p.soal_ids || [] };
+            window.bukaEditorStudio();
+        };
+
+        window.bukaEditorStudio = () => {
+            document.getElementById('inputIdSoal').value = ""; 
+            document.getElementById('judulFormSoal').innerHTML = `🎬 <span class="text-orange-600">Mode Studio:</span> Soal ${studioData.current} / ${studioData.total}`; 
+            
+            // Kunci Metadata sesuai Setup
+            document.getElementById('inputMapel').value = studioData.mapel;
+            document.getElementById('inputMapel').dispatchEvent(new Event('change'));
+            document.getElementById('inputKelas').value = studioData.kelas;
+            document.getElementById('inputKuadran').value = "Lokal";
+            
+            // Bersihkan kanvas editor
+            quillPertanyaan.root.innerHTML = ""; quillPembahasan.root.innerHTML = "";
+            ['A','B','C','D','E'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; });
+            document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = false);
+            document.querySelectorAll('.input-matriks-kiri, .input-matriks-kanan').forEach(el => el.checked = false);
+            
+            document.getElementById('inputTipeSoal').value = "pg"; 
+            if(document.getElementById('inputKesulitan')) document.getElementById('inputKesulitan').value = "Sedang";
+            window.ubahUIJenisSoal();
+
+            document.getElementById('btnKirimSoal').innerText = studioData.current < studioData.total ? `💾 Simpan & Lanjut No ${studioData.current + 1} ➡️` : "🚀 Terbitkan Paket Sekarang";
+            document.getElementById('btnBatalEdit').innerText = "⏸️ Jeda (Simpan Draft)";
+            document.getElementById('btnBatalEdit').classList.remove('hidden');
+            
+            window.bukaTab('tabBuatSoal');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        };
         window.renderPilihanSoal=()=>{let kw=(document.getElementById('filterCariPaket')?.value||"").toLowerCase(),k=document.getElementById('filterKelasPaket')?.value||"",m=(document.getElementById('filterMapelPaket')?.value||"").toLowerCase(),sm=document.getElementById('filterSumberPaket')?.value||"Lokal",h='';dataSoalSeluruhnya.filter(s=>sm==="Global"?s.kuadran==="Global":s.kuadran==="Lokal").forEach(s=>{let dm=(s.metadata?.mapel||"").toLowerCase(),sk=s.metadata?.kelas||"";let dt=document.createElement('div');dt.innerHTML=s.pertanyaan;let dp=(dt.innerText||"").toLowerCase();if((dm.includes(kw)||dp.includes(kw))&&(k===""||sk==k)&&(m===""||dm===m)){let c=pilihanSoalSementara.has(s.id)?'checked':'';h+=`<label class="flex items-start p-4 border border-gray-200 rounded-2xl cursor-pointer mb-2 transition ${c?'bg-orange-50 border-orange-300':'bg-white hover:bg-gray-50'}"><input type="checkbox" value="${s.id}" class="mt-1 w-5 h-5 text-orange-600 rounded cursor-pointer" onchange="toggleSoalPaket(this)" ${c}><div class="ml-4"><p class="text-[10px] font-black text-orange-700 bg-orange-100 px-2 py-0.5 rounded w-max mb-1 uppercase">${s.metadata?.mapel||'-'} | Kls ${sk} <span class="text-gray-400 font-normal">(${s.kuadran})</span></p><p class="text-sm line-clamp-2 text-gray-700 font-medium">${dt.innerText}</p></div></label>`;}});let l=document.getElementById('listPilihanSoal');if(l)l.innerHTML=h||'<p class="text-center text-sm py-4 text-gray-400">Soal tidak ditemukan.</p>';document.getElementById('counterSoalPaket').innerText=`${pilihanSoalSementara.size} TERPILIH`;};
         window.toggleSoalPaket=c=>{if(c.checked)pilihanSoalSementara.add(c.value);else pilihanSoalSementara.delete(c.value);document.getElementById('counterSoalPaket').innerText=`${pilihanSoalSementara.size} TERPILIH`;};
         window.simpanPaketBaru=async()=>{let n=document.getElementById('namaPaketBaru').value;if(!n||pilihanSoalSementara.size===0)return Swal.fire('Oops','Isi nama dan pilih soal!','warning');Swal.fire({title:'Merakit...',didOpen:()=>Swal.showLoading()});await addDoc(collection(db,"paket_soal"),{nama_paket:n,soal_ids:Array.from(pilihanSoalSementara),sekolah_id:profilGuru.sekolah_id,dibuat_pada:new Date()});window.tutupModalPaket();Swal.fire({title:'Berhasil!',icon:'success',timer:1000,showConfirmButton:false});window.muatDaftarPaketLokal();};
@@ -1790,7 +2021,7 @@
         }
 
         // Pastikan fungsi-fungsi ini tersedia secara global jika Anda tidak menggunakan sistem modul
-        window.triggerFileInput = triggerFileInput;
+        // window.triggerFileInput = triggerFileInput;
 
         // Tambahkan event listener untuk input file
         document.getElementById('fileImportSoal').addEventListener('change', () => {
