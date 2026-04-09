@@ -444,12 +444,49 @@
             </div>
 
             <div id="tabPaket" class="space-y-6 hidden">
-                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
                     <div class="flex justify-between items-center mb-6 pb-4 border-b gap-4">
-                        <div><h2 class="text-2xl font-bold text-gray-800">Rakit Paket Ujian</h2></div>
-                        <button onclick="bukaModalBuatPaket()" class="bg-orange-500 text-white font-bold px-6 py-3 rounded-xl shadow-md transition">+ Buat Paket</button>
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800 flex items-center"><span class="mr-3">📦</span> Rakit Paket Ujian</h2>
+                            <p class="text-slate-500 text-sm mt-1 font-medium">Kelola, saring, dan intip isi paket soal yang telah Anda buat.</p>
+                        </div>
+                        <button onclick="bukaModalBuatPaket()" class="bg-orange-500 hover:bg-orange-600 text-white font-black px-6 py-3.5 rounded-xl shadow-md transition transform hover:-translate-y-1 flex items-center">
+                            <span class="mr-2">➕</span> Buat Paket
+                        </button>
                     </div>
-                    <div id="kontainerPaket" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-inner">
+                        <div>
+                            <input type="text" id="filterCariDaftarPaket" placeholder="🔍 Cari nama paket..." oninput="renderTabelPaket()" class="px-4 py-2.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 w-full text-sm font-medium bg-white">
+                        </div>
+                        <div>
+                            <select id="filterMapelDaftarPaket" onchange="renderTabelPaket()" class="px-4 py-2.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 w-full bg-white text-sm font-bold text-slate-600 dinamis-mapel">
+                                </select>
+                        </div>
+                        <div>
+                            <select id="filterStatusDaftarPaket" onchange="renderTabelPaket()" class="px-4 py-2.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 w-full bg-white text-sm font-bold text-slate-600">
+                                <option value="">-- Semua Status --</option>
+                                <option value="draft">⏳ Draft (Belum Selesai)</option>
+                                <option value="ready">✅ Siap Ujian</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-500 uppercase bg-slate-100 border-b font-black tracking-widest">
+                                <tr>
+                                    <th class="px-6 py-4 w-1/2">Nama Paket & Info</th>
+                                    <th class="px-6 py-4 text-center">Jml Soal</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelDaftarPaket" class="divide-y divide-slate-100">
+                                <tr><td colspan="4" class="text-center py-8 text-slate-400 font-bold animate-pulse">Menarik data paket...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div id="tabAnalitik" class="space-y-6 hidden">
@@ -698,6 +735,25 @@
             </div>
             <div class="bg-black rounded-2xl overflow-hidden shadow-2xl relative w-full border border-slate-700" style="padding-top: 56.25%;"> 
                 <iframe id="iframeTutorial" class="absolute top-0 left-0 w-full h-full" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalPreviewPaket" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center z-[110] p-4 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="bg-orange-500 p-6 flex justify-between items-center text-white shrink-0">
+                <div>
+                    <h3 class="text-xl font-black flex items-center"><span class="mr-2">👁️</span> Preview Isi Paket Soal</h3>
+                    <p class="text-xs text-indigo-200 mt-1 font-medium" id="judulPreviewPaket">Memuat nama paket...</p>
+                </div>
+                <button onclick="tutupPreviewPaket()" class="text-indigo-300 hover:text-white text-4xl font-black focus:outline-none transition transform hover:rotate-90">&times;</button>
+            </div>
+            
+            <div class="p-6 md:p-8 overflow-y-auto flex-1 bg-slate-50 space-y-4" id="kontainerIsiPreviewPaket">
+                </div>
+            
+            <div class="p-5 border-t flex justify-end bg-white shrink-0">
+                <button onclick="tutupPreviewPaket()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-8 py-3 rounded-xl transition">Tutup Preview</button>
             </div>
         </div>
     </div>
@@ -1726,41 +1782,95 @@
             window.muatBankSoalPribadi(); // Segarkan tabel karya soal
         };
         window.muatBankSoalGlobalLokal=async()=>{const sg=await getDocs(query(collection(db,"bank_soal"),where("kuadran","==","Global"),where("status","==","aktif"))),sl=await getDocs(query(collection(db,"bank_soal"),where("sekolah_id","==",profilGuru.sekolah_id),where("status","==","aktif")));dataSoalSeluruhnya=[];sg.forEach(d=>dataSoalSeluruhnya.push({id:d.id,...d.data()}));sl.forEach(d=>dataSoalSeluruhnya.push({id:d.id,...d.data()}));};
+        // ==========================================
+        // MESIN MANAJEMEN PAKET UJIAN (TABEL & FILTER)
+        // ==========================================
+        
+        // 1. Fungsi penarik data dari Firebase (Kini lebih ringkas)
         window.muatDaftarPaketLokal = async () => { 
             const s = await getDocs(query(collection(db, "paket_soal"), where("sekolah_id", "==", profilGuru.sekolah_id))); 
-            dataPaketLokal = []; let h = ''; 
+            dataPaketLokal = []; 
             
             s.forEach(d => { 
                 let p = d.data(); p.id = d.id; 
                 dataPaketLokal.push(p); 
-
-                if (p.status_paket === 'draft') {
-                    h += `<div class="bg-orange-50 border border-orange-200 p-6 rounded-3xl relative group hover:shadow-md transition">
-                            <button onclick="hapusPaket('${p.id}')" class="absolute top-4 right-4 text-red-400 hover:text-red-600 hidden group-hover:block transition">&times;</button>
-                            <span class="bg-orange-200 text-orange-800 text-[10px] font-black px-2 py-0.5 rounded shadow-sm">⏳ DRAFT (${p.soal_ids.length}/${p.total_target || '?'})</span>
-                            <h3 class="text-lg font-black text-gray-800 mt-2">${p.nama_paket.replace('[DRAFT] ', '')}</h3>
-                            <p class="text-sm mt-1 text-gray-600 border-b border-orange-200/50 pb-3 mb-3">Belum selesai dirakit.</p>
-                            <button onclick="lanjutkanStudio('${p.id}')" class="w-full bg-orange-500 text-white font-bold py-2 rounded-xl shadow-sm hover:bg-orange-600 transition">✏️ Lanjutkan Merakit</button>
-                          </div>`;
-                } else {
-                    h += `<div class="bg-white border border-gray-200 p-6 rounded-3xl relative group hover:shadow-md transition">
-                            <button onclick="hapusPaket('${p.id}')" class="absolute top-4 right-4 text-red-400 hover:text-red-600 hidden group-hover:block transition">&times;</button>
-                            <span class="bg-emerald-100 text-emerald-700 text-[10px] font-black px-2 py-0.5 rounded shadow-sm">✅ SIAP UJIAN</span>
-                            <h3 class="text-lg font-black text-gray-800 mt-2">${p.nama_paket}</h3>
-                            <p class="text-sm mt-2 text-gray-600"><b>${p.soal_ids?.length || 0}</b> Butir Soal</p>
-                          </div>`;
-                }
             }); 
             
-            let k = document.getElementById('kontainerPaket'); 
-            if(k) k.innerHTML = h || '<p class="col-span-3 text-center text-gray-400 border-2 border-dashed rounded-xl py-10">Belum ada paket ujian yang dirakit.</p>'; 
-            
-            // Update Dropdown Kuis (Sembunyikan Draft)
+            // Panggil mesin render tabel setelah data selesai ditarik
+            window.renderTabelPaket(); 
+
+            // Update Dropdown Kuis Mandiri (Sembunyikan Draft dari pilihan Kuis)
             let sPaket = document.getElementById('kuisPaket');
             if(sPaket) {
                 sPaket.innerHTML = '<option value="">-- Pilih Paket Soal --</option>';
                 dataPaketLokal.filter(x => x.status_paket !== 'draft').forEach(p => sPaket.innerHTML += `<option value="${p.id}">${p.nama_paket}</option>`);
             }
+        };
+
+        // 2. FUNGSI BARU: Mesin Render Tabel & Algoritma Filter
+        window.renderTabelPaket = () => {
+            let tb = document.getElementById('tabelDaftarPaket');
+            if(!tb) return;
+
+            // Ambil kata kunci dari form pencarian di atas tabel
+            let kw = (document.getElementById('filterCariDaftarPaket')?.value || "").toLowerCase();
+            let mapel = (document.getElementById('filterMapelDaftarPaket')?.value || "").toLowerCase();
+            let status = document.getElementById('filterStatusDaftarPaket')?.value || "";
+
+            // Proses Penyaringan Data
+            let filtered = dataPaketLokal.filter(p => {
+                let n = (p.nama_paket || "").toLowerCase();
+                let m = (p.mapel || "").toLowerCase();
+                let s = p.status_paket; 
+                
+                let matchKw = n.includes(kw);
+                let matchMapel = mapel === "" || m === mapel;
+                let matchStatus = true;
+                
+                if(status === 'draft') matchStatus = s === 'draft';
+                if(status === 'ready') matchStatus = s !== 'draft';
+
+                return matchKw && matchMapel && matchStatus;
+            });
+
+            // Urutkan dari paket yang paling baru diupdate
+            filtered.sort((a,b) => b.update_terakhir?.toDate() - a.update_terakhir?.toDate());
+
+            let html = '';
+            filtered.forEach(p => {
+                let isDraft = p.status_paket === 'draft';
+                
+                // Label Status
+                let badgeStatus = isDraft 
+                    ? '<span class="bg-orange-100 text-orange-700 text-[10px] font-black px-2 py-1 rounded shadow-sm w-max mx-auto block">⏳ DRAFT</span>'
+                    : '<span class="bg-emerald-100 text-emerald-700 text-[10px] font-black px-2 py-1 rounded shadow-sm w-max mx-auto block">✅ SIAP UJIAN</span>';
+                
+                // Tombol Aksi (Menyesuaikan Status)
+                let aksiBtns = isDraft
+                    ? `<div class="flex justify-center space-x-1.5">
+                         <button onclick="previewPaket('${p.id}')" class="bg-white border border-orange-200 text-orange-600 hover:bg-orange-50 px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm" title="Preview">👁️</button>
+                         <button onclick="lanjutkanStudio('${p.id}')" class="bg-orange-500 text-white hover:bg-orange-600 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">✏️ Lanjut</button>
+                         <button onclick="hapusPaket('${p.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm" title="Hapus">🗑️</button>
+                       </div>`
+                    : `<div class="flex justify-center space-x-1.5">
+                         <button onclick="previewPaket('${p.id}')" class="bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">👁️ Intip Isi</button>
+                         <button onclick="hapusPaket('${p.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm" title="Hapus">🗑️</button>
+                       </div>`;
+
+                html += `<tr class="border-b hover:bg-slate-50 transition">
+                        <td class="px-6 py-4">
+                            <h4 class="text-sm font-black text-slate-800 leading-tight">${p.nama_paket.replace('[DRAFT] ', '')}</h4>
+                            <p class="text-[11px] text-slate-500 mt-1.5 font-bold uppercase tracking-widest">MAPEL: <span class="text-indigo-600">${p.mapel || '-'}</span> <span class="mx-1 text-slate-300">|</span> KLS: ${p.kelas || '-'}</p>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="font-black text-slate-700 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-200">${p.soal_ids?.length || 0} Soal</span>
+                        </td>
+                        <td class="px-6 py-4 align-middle">${badgeStatus}</td>
+                        <td class="px-6 py-4 align-middle">${aksiBtns}</td>
+                      </tr>`;
+            });
+
+            tb.innerHTML = html || '<tr><td colspan="4" class="text-center py-10 text-slate-400 font-bold">Pencarian kosong atau Anda belum merakit paket.</td></tr>';
         };
         window.bukaModalBuatPaket = async () => {
             const result = await Swal.fire({
@@ -2519,6 +2629,68 @@
                 // PENTING: Kosongkan SRC agar suara video terhenti di background!
                 document.getElementById('iframeTutorial').src = ""; 
             }, 300);
+        };
+        // ==========================================
+        // FITUR PREVIEW ISI PAKET SOAL
+        // ==========================================
+        window.previewPaket = (idPaket) => {
+            let p = dataPaketLokal.find(x => x.id === idPaket);
+            if(!p) return;
+            
+            document.getElementById('judulPreviewPaket').innerText = p.nama_paket;
+            let kontainer = document.getElementById('kontainerIsiPreviewPaket');
+            
+            // Buka modal dengan loading state
+            kontainer.innerHTML = '<div class="text-center py-12"><div class="text-4xl animate-bounce mb-3">🔍</div><p class="text-indigo-500 font-bold animate-pulse">Menyelami brankas soal...</p></div>';
+            document.getElementById('modalPreviewPaket').classList.remove('hidden');
+
+            let html = '';
+            if(!p.soal_ids || p.soal_ids.length === 0) {
+                html = '<div class="text-center py-12"><span class="text-4xl block mb-3">📭</span><p class="text-slate-500 font-bold">Paket ini masih kosong melompong.</p></div>';
+            } else {
+                // Loop ID Soal dan cari teks aslinya
+                p.soal_ids.forEach((idSoal, index) => {
+                    // Cari di memori Global/Lokal atau Draft Pribadi
+                    let soal = dataSoalSeluruhnya.find(x => x.id === idSoal) || soalPribadi.find(x => x.id === idSoal);
+                    
+                    if(soal) {
+                        let tipeBadge = soal.tipe_soal === 'essay' ? '📝 Esai' : (soal.tipe_soal === 'pgk_matriks' ? '🔢 Matriks' : '🔘 PG');
+                        
+                        // Render langsung HTML editor agar gambar ikut muncul
+                        html += `
+                        <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 md:gap-6 hover:border-indigo-300 transition">
+                            <div class="font-black text-slate-300 text-4xl hidden md:block">#${index + 1}</div>
+                            <div class="flex-1 overflow-hidden">
+                                <div class="flex items-center mb-3">
+                                    <span class="md:hidden font-black text-slate-400 mr-2">#${index + 1}</span>
+                                    <span class="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-black px-2 py-0.5 rounded shadow-sm uppercase tracking-widest">${tipeBadge}</span>
+                                    <span class="ml-2 text-[10px] font-bold text-slate-400 uppercase">${soal.metadata?.mapel || '-'}</span>
+                                </div>
+                                <div class="text-sm text-slate-800 font-medium ql-editor p-0">${soal.pertanyaan}</div>
+                            </div>
+                        </div>`;
+                    } else {
+                        html += `
+                        <div class="bg-rose-50 p-5 rounded-2xl border border-rose-200 flex gap-4 opacity-80">
+                            <div class="font-black text-rose-300 text-2xl">#${index + 1}</div>
+                            <div class="flex-1 text-sm text-rose-700 font-bold mt-1">⚠️ Butir soal ini telah dihapus permanen dari Bank Soal.</div>
+                        </div>`;
+                    }
+                });
+            }
+            
+            // Masukkan HTML dan panggil KaTeX untuk merender rumus matematika
+            setTimeout(() => {
+                kontainer.innerHTML = html;
+                kontainer.querySelectorAll('.ql-formula').forEach(el => { 
+                    let latex = el.getAttribute('data-value'); 
+                    if(latex) { try { katex.render(latex, el, {throwOnError: false}); } catch(e){} } 
+                });
+            }, 300);
+        };
+
+        window.tutupPreviewPaket = () => {
+            document.getElementById('modalPreviewPaket').classList.add('hidden');
         };
     </script>
 </body>
