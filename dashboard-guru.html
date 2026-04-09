@@ -85,6 +85,12 @@
                 <button onclick="bukaTab('tabAnalitik')" id="menuAnalitik" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
                     <span class="w-5 text-center mr-2">📊</span> Analisis Kelas
                 </button>
+                <div class="flex flex-col gap-0.5 mt-2">
+                <p class="px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Bantuan</p>
+                <button onclick="bukaTab('tabPanduan')" id="menuPanduan" class="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition flex items-center text-xs border border-transparent">
+                    <span class="w-5 text-center mr-2 text-rose-500">📺</span> Pusat Panduan
+                </button>
+                </div>
             </div>
         </nav>
         <div class="p-3 border-t border-slate-800 bg-slate-900/50 shrink-0">
@@ -536,6 +542,18 @@
                     </div>
                 </div>
             </div>
+            <div id="tabPanduan" class="space-y-6 hidden animate-fade-in">
+                <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+                    <div class="mb-6 border-b pb-4">
+                        <h2 class="text-2xl font-black text-slate-800 flex items-center"><span class="mr-3">📺</span> Akademi KN-Edu</h2>
+                        <p class="text-slate-500 text-sm mt-1 font-medium">Pelajari cara menggunakan fitur-fitur SmartKhairunnas V2 melalui video panduan singkat ini.</p>
+                    </div>
+                    
+                    <div id="gridVideoTutorial" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="col-span-full text-center py-10 text-slate-400 font-bold animate-pulse">Menarik data dari pusat...</div>
+                    </div>
+                </div>
+            </div>
 
         </div>
     </main>
@@ -633,6 +651,16 @@
             <div class="p-6 bg-white border-t flex justify-end space-x-3 shrink-0 hidden" id="footerStep2">
                 <button onclick="kembaliStep1Import()" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold transition">Batal</button>
                 <button onclick="eksekusiSimpanImport()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md flex-1 transition transform hover:-translate-y-1">🚀 Upload Terpilih</button>
+            </div>
+        </div>
+    </div>
+    <div id="modalVideoPlayer" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md hidden flex items-center justify-center z-[150] p-4 opacity-0 transition-opacity duration-300">
+        <div class="w-full max-w-4xl flex flex-col relative">
+            <div class="flex justify-end mb-3">
+                <button onclick="tutupVideoTutorial()" class="w-10 h-10 bg-white/10 hover:bg-rose-600 text-white rounded-full flex items-center justify-center text-2xl font-bold transition shadow-lg border border-white/20">&times;</button>
+            </div>
+            <div class="bg-black rounded-2xl overflow-hidden shadow-2xl relative w-full border border-slate-700" style="padding-top: 56.25%;"> 
+                <iframe id="iframeTutorial" class="absolute top-0 left-0 w-full h-full" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
         </div>
     </div>
@@ -882,8 +910,8 @@
         });
 
     window.bukaTab = (t) => {
-    let tabs = ['tabDashboard','tabPengawasan','tabKuisGuru','tabWaliKelas','tabBuatSoal','tabBankSoal','tabPaket','tabNilai','tabAnalitik'];
-    let menus = ['menuDashboard','menuPengawasan','menuKuisGuru','menuWaliKelas','menuBuatSoal','menuBankSoal','menuPaket','menuNilai','menuAnalitik'];
+    let tabs = ['tabDashboard','tabPengawasan','tabKuisGuru','tabWaliKelas','tabBuatSoal','tabBankSoal','tabPaket','tabNilai','tabAnalitik', 'tabPanduan'];
+    let menus = ['menuDashboard','menuPengawasan','menuKuisGuru','menuWaliKelas','menuBuatSoal','menuBankSoal','menuPaket','menuNilai','menuAnalitik', 'menuPanduan'];
 
     tabs.forEach(id => { let e = document.getElementById(id); if(e) e.classList.add('hidden'); });
     
@@ -908,6 +936,7 @@
     if(t === 'tabAnalitik') window.muatDataAnalitikGuru();
     if(t === 'tabKuisGuru') window.muatDaftarKuisGuru();
     if(t === 'tabWaliKelas') window.muatDataWaliKelas();
+    if(t === 'tabPanduan') window.muatVideoTutorial();
 };
 
         // ==========================================
@@ -2343,6 +2372,111 @@
 
         window.toggleStatusKuis = async (id, status) => { await updateDoc(doc(db, "jadwal_ujian", id), { status: status === 'aktif' ? 'nonaktif' : 'aktif' }); window.muatDaftarKuisGuru(); };
         window.hapusKuisGuru = id => { Swal.fire({title: 'Hapus Kuis?', icon: 'warning', showCancelButton: true}).then(async r => { if(r.isConfirmed) { await deleteDoc(doc(db, "jadwal_ujian", id)); window.muatDaftarKuisGuru(); } }); };
+        // ==========================================
+        // LOGIKA BIOSKOP PANDUAN (YOUTUBE EMBED)
+        // ==========================================
+        // Pengekstrak ID YouTube otomatis
+        const ekstrakIdYoutube = (url) => {
+            let regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+            let match = url.match(regExp);
+            return (match && match[7].length === 11) ? match[7] : false;
+        };
+
+        // Penarik Data Video dari Firebase (Anti-Loading Terus)
+        window.muatVideoTutorial = async () => {
+            let kontainer = document.getElementById('gridVideoTutorial');
+            if(!kontainer) return;
+            
+            // 1. Tampilkan loading animasi di awal
+            kontainer.innerHTML = '<div class="col-span-full text-center py-10 text-indigo-500 font-bold animate-pulse">Menarik data dari pusat...</div>';
+            
+            try {
+                // Tarik data dengan 1 filter saja agar tidak kena error Index Firebase
+                const q = query(collection(db, "manajemen_video"), where("kategori_utama", "==", "Tutorial"));
+                const snap = await getDocs(q);
+                
+                // 2. Jika database KOSONG, langsung tampilkan pesan ini
+                if(snap.empty) {
+                    kontainer.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-16 bg-white border border-slate-200 rounded-3xl shadow-sm">
+                        <span class="text-6xl mb-4">📭</span>
+                        <h3 class="text-xl font-black text-slate-700">Belum Ada Video Tutorial</h3>
+                        <p class="text-sm font-medium text-slate-500 mt-2">Pusat belum mengunggah video panduan untuk saat ini.</p>
+                    </div>`;
+                    return; // Hentikan proses
+                }
+
+                // 3. Jika ADA data, susun HTML-nya
+                let html = '';
+                snap.forEach(doc => {
+                    let d = doc.data();
+                    
+                    // Filter manual untuk target Guru (menghindari error index Firebase)
+                    if(d.sub_kategori !== "Guru") return; 
+
+                    let yId = ekstrakIdYoutube(d.url_youtube);
+                    if(!yId) return; 
+
+                    let embedUrl = `https://www.youtube.com/embed/${yId}`;
+                    let thumbUrl = `https://img.youtube.com/vi/${yId}/maxresdefault.jpg`;
+
+                    html += `
+                    <div onclick="putarVideoTutorial('${embedUrl}')" class="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition group cursor-pointer transform hover:-translate-y-1">
+                        <div class="h-44 bg-slate-800 relative overflow-hidden">
+                            <img src="${thumbUrl}" alt="Thumbnail" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.src='https://img.youtube.com/vi/${yId}/hqdefault.jpg'">
+                            <div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition duration-500"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="w-14 h-14 bg-red-600/90 backdrop-blur-md text-white rounded-full flex items-center justify-center text-2xl shadow-lg border border-red-500/50 group-hover:bg-red-600 group-hover:scale-110 transition duration-300">▶️</div>
+                            </div>
+                            <span class="absolute top-2 left-2 bg-indigo-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded shadow uppercase tracking-widest">${d.kategori_utama}</span>
+                        </div>
+                        <div class="p-5 relative bg-white">
+                            <h3 class="font-black text-slate-800 mb-2 line-clamp-2 group-hover:text-red-600 transition">${d.judul}</h3>
+                            <p class="text-xs text-slate-500 font-medium line-clamp-2">${d.deskripsi}</p>
+                        </div>
+                    </div>`;
+                });
+                
+                // Jika isinya ternyata kosong (karena video yang ada cuma untuk Admin)
+                if (html === '') {
+                    kontainer.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-16 bg-white border border-slate-200 rounded-3xl shadow-sm">
+                        <span class="text-6xl mb-4">📭</span>
+                        <h3 class="text-xl font-black text-slate-700">Belum Ada Video Khusus Guru</h3>
+                        <p class="text-sm font-medium text-slate-500 mt-2">Pusat belum mengunggah video panduan untuk menu pendidik.</p>
+                    </div>`;
+                } else {
+                    kontainer.innerHTML = html;
+                }
+
+            } catch(e) {
+                // 4. Jika ERROR Koneksi / Database, tampilkan UI aman (BUKAN loading)
+                console.error(e);
+                kontainer.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-16 bg-white border border-rose-200 rounded-3xl shadow-sm">
+                        <span class="text-6xl mb-4">📭</span>
+                        <h3 class="text-xl font-black text-slate-700">Belum Ada Video Tutorial</h3>
+                        <p class="text-sm font-medium text-slate-500 mt-2">Silakan hubungi Admin Yayasan untuk menambahkan panduan.</p>
+                    </div>`;
+            }
+        };
+        window.putarVideoTutorial = (url) => {
+            let m = document.getElementById('modalVideoPlayer');
+            // Inject URL dengan perintah autoplay agar tidak perlu diklik 2 kali
+            document.getElementById('iframeTutorial').src = url + "?autoplay=1&rel=0";
+            m.classList.remove('hidden');
+            setTimeout(() => m.classList.remove('opacity-0'), 50); // Efek memudar halus
+        };
+
+        window.tutupVideoTutorial = () => {
+            let m = document.getElementById('modalVideoPlayer');
+            m.classList.add('opacity-0');
+            setTimeout(() => {
+                m.classList.add('hidden');
+                // PENTING: Kosongkan SRC agar suara video terhenti di background!
+                document.getElementById('iframeTutorial').src = ""; 
+            }, 300);
+        };
     </script>
 </body>
 </html>
