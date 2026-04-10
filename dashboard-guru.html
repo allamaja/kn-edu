@@ -676,55 +676,64 @@
             
         </div>
     </div>
-    <div id="modalImportSoal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[55] p-4 transition-opacity">
-        <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col relative overflow-hidden max-h-[90vh]">
+    <div id="modalImportSoal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[55] p-4 transition-all duration-300">
+        <div id="kotakModalImport" class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col relative overflow-hidden max-h-[90vh] transition-all duration-300">
             <div class="bg-indigo-600 p-6 flex justify-between items-center text-white shrink-0">
-                <h3 class="text-xl font-bold">📥 Import Soal PG (Excel)</h3>
-                <button onclick="tutupModalImportSoal()" class="hover:text-indigo-200 text-3xl font-bold focus:outline-none">&times;</button>
+                <h3 class="text-xl font-bold flex items-center"><span class="mr-2">📥</span> Import Soal (Excel)</h3>
+                <button onclick="tutupModalImportSoal()" class="hover:text-indigo-200 text-3xl font-bold focus:outline-none transition">&times;</button>
             </div>
+            
             <div class="p-6 space-y-4 bg-gray-50 flex-1 overflow-y-auto">
                 <div id="step1Import">
-                    <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl mb-4">
-                        <h4 class="font-bold text-indigo-800 mb-2">Panduan Import:</h4>
-                        <ol class="list-decimal ml-5 text-sm text-indigo-700 space-y-1.5 font-medium mb-3">
+                    <div class="bg-indigo-50 border border-indigo-200 p-4 md:p-5 rounded-xl mb-4 shadow-inner">
+                        <h4 class="font-bold text-indigo-800 mb-3 flex items-center"><span class="mr-2">💡</span> Panduan Import:</h4>
+                        <ol class="list-decimal ml-5 text-sm text-indigo-700 space-y-2 font-medium mb-4">
                             <li>Mendukung 4 Tipe Soal: <b>PG, PG Kompleks, Matriks (B-S), & Esai</b>.</li>
                             <li>Bisa menyisipkan <b>Rumus (LaTeX)</b> dan <b>Link Gambar</b> otomatis.</li>
-                            <li>Mendukung <b>Mode Hybrid</b> (Kosongkan sel Excel jika ingin <i>copas</i> soal bergambar rumit dari Word ke Web Editor).</li>
+                            <li>Mendukung <b>Mode Hybrid</b> (Kosongkan sel Excel jika ingin <i>copas</i> soal bergambar dari Word ke Editor Web nanti).</li>
                             <li>Wajib membaca aturan pengisian di <b>Sheet 2</b> pada file template.</li>
                         </ol>
-                        <button onclick="downloadTemplateSoal()" class="mt-4 text-xs font-bold bg-white text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg hover:bg-indigo-100 transition shadow-sm">⬇️ Download Template</button>
+                        <button onclick="downloadTemplateSoal()" class="text-xs md:text-sm font-bold bg-white text-indigo-600 border border-indigo-200 px-4 py-2.5 rounded-lg hover:bg-indigo-100 transition shadow-sm flex items-center">
+                            <span class="mr-2">⬇️</span> Download Template Excel
+                        </button>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Upload File Excel (.xlsx)</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-widest">Upload File Excel (.xlsx)</label>
                         <div class="relative">
                             <input type="file" id="fileImportSoal" accept=".xlsx, .xls" class="opacity-0 absolute -z-10 w-full h-full cursor-pointer">
-                            
-                            <div class="w-full flex items-center border border-gray-300 rounded-xl bg-white focus-within:ring-2 focus-within:ring-indigo-500">
-                                <button type="button" onclick="triggerFileInput('fileImportSoal')" class="px-5 py-3 bg-indigo-50 text-indigo-700 rounded-l-xl text-sm font-bold border-r border-gray-300 hover:bg-indigo-100 transition shrink-0">
-                                    Pilih File
+                            <div class="w-full flex items-center border border-gray-300 rounded-xl bg-white focus-within:ring-2 focus-within:ring-indigo-500 shadow-sm transition">
+                                <button type="button" onclick="triggerFileInput('fileImportSoal')" class="px-5 py-3 bg-indigo-50 text-indigo-700 rounded-l-xl text-sm font-bold border-r border-gray-300 hover:bg-indigo-100 transition shrink-0 flex items-center">
+                                    <span class="mr-2">📁</span> Pilih File
                                 </button>
-                                <span id="fileNameDisplay" class="px-4 py-3 text-sm text-gray-500 truncate flex-1">
-                                    Tidak ada file yang dipilih
-                                </span>
+                                <span id="fileNameDisplay" class="px-4 py-3 text-sm text-gray-500 truncate flex-1 font-medium">Tidak ada file dipilih</span>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div id="step2Import" class="hidden flex flex-col h-full">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-bold text-gray-800">Preview Excel</h4>
-                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded" id="infoJumlahPreview">0 Ditemukan</span>
+                    <div class="flex justify-between items-center mb-3">
+                        <div>
+                            <h4 class="font-black text-gray-800 text-lg">Preview Data Excel</h4>
+                            <p class="text-xs text-gray-500 mt-1 font-medium">Ceklis soal yang valid untuk diunggah. Klik 🔍 Detail untuk mengecek opsi jawaban.</p>
+                        </div>
+                        <span class="text-sm font-black text-indigo-700 bg-indigo-100 px-3 py-1.5 rounded-lg shadow-sm border border-indigo-200" id="infoJumlahPreview">0 Ditemukan</span>
                     </div>
-                    <div class="border border-gray-200 rounded-xl bg-white flex-1 overflow-y-auto p-2 space-y-2 max-h-72" id="listPreviewImport">  
-                    </div>
+                    <div class="border border-gray-200 rounded-xl bg-white flex-1 overflow-y-auto p-3 space-y-3 max-h-[500px] shadow-inner" id="listPreviewImport">  
+                        </div>
                 </div>
             </div>
+
             <div class="p-6 bg-white border-t flex justify-end shrink-0" id="footerStep1">
-                <button onclick="prosesBacaExcel()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md w-full transition">🔍 Tampilkan Preview</button>
+                <button onclick="prosesBacaExcel()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black shadow-md w-full transition flex items-center justify-center text-lg transform hover:-translate-y-1">
+                    <span class="mr-2">🔍</span> Pindai File & Tampilkan Preview
+                </button>
             </div>
-            <div class="p-6 bg-white border-t flex justify-end space-x-3 shrink-0 hidden" id="footerStep2">
-                <button onclick="kembaliStep1Import()" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold transition">Batal</button>
-                <button onclick="eksekusiSimpanImport()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md flex-1 transition transform hover:-translate-y-1">🚀 Upload Terpilih</button>
+            <div class="p-6 bg-gray-50 border-t flex justify-end space-x-3 shrink-0 hidden" id="footerStep2">
+                <button onclick="kembaliStep1Import()" class="px-6 py-3.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl font-bold transition shadow-sm">⬅️ Batal / Ganti File</button>
+                <button onclick="eksekusiSimpanImport()" class="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black shadow-md flex-1 transition transform hover:-translate-y-1 flex items-center justify-center text-lg">
+                    <span class="mr-2">🚀</span> Upload Soal Terceklis
+                </button>
             </div>
         </div>
     </div>
@@ -1598,11 +1607,16 @@
 
         window.kembaliStep1Import = () => {
             document.getElementById('fileImportSoal').value = ''; 
+            // Kembalikan lebar kotak ke max-w-2xl
+            document.getElementById('kotakModalImport').classList.remove('max-w-4xl');
+            document.getElementById('kotakModalImport').classList.add('max-w-2xl');
+
             document.getElementById('step1Import').classList.remove('hidden');
             document.getElementById('footerStep1').classList.remove('hidden');
             document.getElementById('step2Import').classList.add('hidden');
             document.getElementById('footerStep2').classList.add('hidden');
             window.dataPreviewImport = [];
+            handleFileChange('fileImportSoal', 'fileNameDisplay'); // Reset teks file
         };
 
         window.downloadTemplateSoal = () => {
@@ -1718,29 +1732,49 @@
                                 tipe_soal: jenisSoal, pertanyaan: konversiRichText(tTanya), opsi: arrayOpsiV2, pembahasan: konversiRichText(rw["Pembahasan"]), 
                                 kuadran: rw["Target"] || rw["Target (Global/Lokal/Latihan)"] || "Lokal", 
                                 kesulitan: rw["Kesulitan"] || "Sedang",
-                                
-                                // INI KUNCI PENTING: Otomatis diset sebagai pending dan mengunci identitas Guru
-                                status: "pending_review",
-                                pembuat_id: profilGuru.nama,
-                                pembuat_email: profilGuru.email,
-                                sekolah_id: profilGuru.sekolah_id,
-                                
-                                metadata: { 
-                                    mapel: rw["Mapel"] || "", sub_bab: rw["Bab"] || "-", 
-                                    jenjang: profilGuru.jenjang || "SMA", 
-                                    kelas: (rw["Kelas"] || "10").toString() 
-                                } 
+                                status: "pending_review", pembuat_id: profilGuru.nama, pembuat_email: profilGuru.email, sekolah_id: profilGuru.sekolah_id,
+                                metadata: { mapel: rw["Mapel"] || "", sub_bab: rw["Bab"] || "-", jenjang: profilGuru.jenjang || "SMA", kelas: (rw["Kelas"] || "10").toString() } 
                             };
                             
                             window.dataPreviewImport.push({ id_temp: index, data: py, valid: true });
-                            h += `<label class="flex items-start p-3 border border-indigo-100 bg-indigo-50/30 rounded-xl cursor-pointer hover:bg-indigo-50 transition"><input type="checkbox" value="${index}" class="cek-import-soal w-5 h-5 mt-1 text-indigo-600 rounded" checked><div class="ml-3"><p class="text-sm font-bold text-gray-800 line-clamp-2">${tTanya || '(Soal Gambar/Hybrid)'}</p><p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">MAPEL: ${rw["Mapel"]||'-'} | OPSI: ${jmlOpsi} | TIPE: ${jenisSoal.replace('_', ' ')} | KUNCI: ${k || 'ESSAY'}</p></div></label>`;
+                            
+                            // DESAIN BARU YANG LEBIH LEGA + TOMBOL DETAIL
+                            h += `
+                            <div class="flex items-start p-4 border border-indigo-100 bg-white hover:bg-indigo-50/30 rounded-xl transition shadow-sm relative group">
+                                <input type="checkbox" value="${index}" class="cek-import-soal w-5 h-5 mt-1 text-indigo-600 rounded cursor-pointer shrink-0" checked>
+                                <div class="ml-4 flex-1">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <p class="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded shadow-sm">${rw["Mapel"]||'-'} | KLS ${rw["Kelas"]||'-'}</p>
+                                        <span class="text-[9px] font-bold text-gray-400 border px-1.5 py-0.5 rounded">${jenisSoal.replace('_', ' ')}</span>
+                                    </div>
+                                    <p class="text-sm font-medium text-gray-800 line-clamp-3 mb-2">"${tTanya || '(Mode Hybrid / Gambar)'}"</p>
+                                    <div class="text-[10px] text-gray-500 font-bold uppercase flex space-x-3">
+                                        <span>⚙️ Kunci: <span class="text-emerald-600">${k || '-'}</span></span>
+                                        <span>🧩 Opsi: ${jmlOpsi}</span>
+                                    </div>
+                                </div>
+                                <div class="shrink-0 ml-3">
+                                    <button onclick="lihatDetailImport(${index})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black px-3 py-2 rounded-lg transition border border-slate-200 shadow-sm flex flex-col items-center">
+                                        <span class="text-sm mb-0.5">🔍</span> Detail
+                                    </button>
+                                </div>
+                            </div>`;
                             validCount++;
                         } else {
                             window.dataPreviewImport.push({ id_temp: index, data: null, valid: false });
-                            h += `<div class="flex items-start p-3 border border-red-200 bg-red-50 rounded-xl opacity-70"><input type="checkbox" disabled class="w-5 h-5 mt-1 rounded border-red-300"><div class="ml-3"><p class="text-sm font-bold text-red-800 line-clamp-1">${tTanya || '(Baris Kosong)'}</p><p class="text-[10px] text-red-600 font-bold uppercase tracking-widest mt-1">❌ ${pesanError}</p></div></div>`;
+                            h += `
+                            <div class="flex items-start p-4 border border-red-200 bg-red-50 rounded-xl opacity-75">
+                                <input type="checkbox" disabled class="w-5 h-5 mt-1 rounded border-red-300 bg-red-100 shrink-0">
+                                <div class="ml-4">
+                                    <p class="text-sm font-bold text-red-900 line-clamp-2 mb-1">"${tTanya || '(Baris Kosong)'}"</p>
+                                    <p class="text-[10px] text-white bg-red-500 px-2 py-0.5 rounded font-bold uppercase tracking-widest inline-block mt-1 shadow-sm">❌ Error: ${pesanError}</p>
+                                </div>
+                            </div>`;
                         }
                     }
-                    
+                    // Lebarkan ukuran modal menjadi max-w-4xl agar lega membaca soal
+                    document.getElementById('kotakModalImport').classList.remove('max-w-2xl');
+                    document.getElementById('kotakModalImport').classList.add('max-w-4xl');
                     document.getElementById('listPreviewImport').innerHTML = h;
                     document.getElementById('infoJumlahPreview').innerText = `${validCount} Valid dari ${a.length} Baris`;
                     
@@ -1748,6 +1782,53 @@
                 } catch(er) { Swal.fire('Error', 'Format Excel salah atau header tabel diubah.', 'error'); }
             };
             r.readAsArrayBuffer(f.files[0]);
+        };
+
+        window.lihatDetailImport = (idx) => {
+            let item = window.dataPreviewImport.find(x => x.id_temp === idx);
+            if(!item || !item.data) return;
+            
+            let soal = item.data;
+            let htmlOpsi = '';
+            
+            if (soal.tipe_soal === 'essay') {
+                htmlOpsi = '<p class="text-sm italic text-slate-500 bg-slate-50 p-4 rounded-xl border border-slate-200">📝 Soal Uraian (Penilaian Subjektif / Manual)</p>';
+            } else if (soal.tipe_soal === 'pgk_matriks') {
+                 htmlOpsi = '<div class="bg-rose-50 p-4 rounded-xl border border-rose-100 text-sm"><p class="font-black text-rose-800 mb-3 text-xs uppercase tracking-widest border-b border-rose-200 pb-2">Pernyataan & Kunci:</p><ul class="space-y-3">';
+                 let hMatriks = (soal.opsi[0]?.header || 'Benar|Salah').split('|');
+                 soal.opsi.forEach((o, i) => {
+                     let kunciTeks = o.benar === 'Kiri' ? hMatriks[0] : hMatriks[1];
+                     htmlOpsi += `<li class="flex items-start"><span class="font-black text-rose-400 mr-2">${i+1}.</span> <div class="flex-1">${o.teks}</div> <span class="ml-3 font-black text-rose-700 bg-rose-100 px-2 py-1 rounded-md text-[10px] uppercase shadow-sm">${kunciTeks}</span></li>`;
+                 });
+                 htmlOpsi += '</ul></div>';
+            } else {
+                htmlOpsi = '<div class="space-y-2.5 mt-4">';
+                let huruf = ['A','B','C','D','E'];
+                if(soal.opsi && Array.isArray(soal.opsi)){
+                    soal.opsi.forEach((o, i) => {
+                        let bg = o.benar ? 'bg-emerald-50 border-emerald-300 shadow-sm' : 'bg-white border-slate-200';
+                        let badge = o.benar ? '<span class="ml-3 text-[10px] font-black text-white bg-emerald-500 px-2 py-1 rounded shadow uppercase tracking-widest">Kunci</span>' : '';
+                        let warnaHuruf = o.benar ? 'text-emerald-600' : 'text-slate-400';
+                        htmlOpsi += `<div class="p-3.5 border rounded-xl flex items-start ${bg} transition"><span class="font-black mr-3 text-lg ${warnaHuruf} w-6 text-center">${huruf[i]}</span> <div class="text-sm flex-1 text-slate-700">${o.teks}</div> ${badge}</div>`;
+                    });
+                }
+                htmlOpsi += '</div>';
+            }
+            
+            Swal.fire({
+                html: `
+                    <div class="text-left">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest">MAPEL: ${soal.metadata.mapel} | KLS ${soal.metadata.kelas}</span>
+                            <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest border px-2 py-1 rounded">${soal.tipe_soal.replace('_',' ')}</span>
+                        </div>
+                        <div class="p-5 border border-slate-200 rounded-2xl bg-white shadow-sm text-sm text-slate-800 leading-relaxed mb-4">${soal.pertanyaan}</div>
+                        ${htmlOpsi}
+                        ${soal.pembahasan ? `<div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-sm"><p class="text-[10px] font-black text-yellow-800 uppercase tracking-widest mb-1.5">💡 Pembahasan:</p><div class="text-yellow-900">${soal.pembahasan}</div></div>` : ''}
+                    </div>
+                `,
+                width: 700, showConfirmButton: true, confirmButtonText: 'Tutup Detail', confirmButtonColor: '#4f46e5', customClass: { popup: 'rounded-3xl' }
+            });
         };
 
         window.eksekusiSimpanImport = async () => {
