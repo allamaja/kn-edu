@@ -527,10 +527,12 @@
                                 </select>
                         </div>
                         <div>
-                            <select id="filterStatusDaftarPaket" onchange="renderTabelPaket()" class="px-4 py-2.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 w-full bg-white text-sm font-bold text-slate-600">
+                            <select id="filterStatusDaftarPaket" onchange="renderTabelPaket()" class="px-4 py-2.5 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 w-full bg-white text-sm font-bold text-slate-600">
                                 <option value="">-- Semua Status --</option>
-                                <option value="draft">⏳ Draft (Belum Selesai)</option>
-                                <option value="ready">✅ Siap Ujian</option>
+                                <option value="draft">⏳ Draft (Proses Rakit)</option>
+                                <option value="ready">✅ Ready (Siap Dipakai)</option>
+                                <option value="terjadwal">🔒 Terjadwal (Sedang Dipakai)</option>
+                                <option value="selesai">🏁 Selesai (Arsip)</option>
                             </select>
                         </div>
                     </div>
@@ -595,47 +597,64 @@
                     <div class="space-y-4" id="listLaporanSiswa"></div>
                 </div>
             </div>
-            <div id="modalImportSoal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 transition-opacity">
-        <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col relative overflow-hidden max-h-[90vh]">
+    <div id="modalImportSoal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[55] p-4 transition-all duration-300">
+        <div id="kotakModalImport" class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col relative overflow-hidden max-h-[90vh] transition-all duration-300">
             <div class="bg-indigo-600 p-6 flex justify-between items-center text-white shrink-0">
-                <h3 class="text-xl font-bold">📥 Import Soal PG (Excel)</h3>
-                <button onclick="tutupModalImportSoal()" class="hover:text-indigo-200 text-3xl font-bold focus:outline-none">&times;</button>
+                <h3 class="text-xl font-bold flex items-center"><span class="mr-2">📥</span> Import Soal (Excel)</h3>
+                <button onclick="tutupModalImportSoal()" class="hover:text-indigo-200 text-3xl font-bold focus:outline-none transition">&times;</button>
             </div>
+            
             <div class="p-6 space-y-4 bg-gray-50 flex-1 overflow-y-auto">
                 <div id="step1Import">
-                    <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl mb-4">
-                        <h4 class="font-bold text-indigo-800 mb-2">Panduan Import:</h4>
-                        <ol class="list-decimal ml-5 text-sm text-indigo-700 space-y-1.5 font-medium mb-3">
+                    <div class="bg-indigo-50 border border-indigo-200 p-4 md:p-5 rounded-xl mb-4 shadow-inner">
+                        <h4 class="font-bold text-indigo-800 mb-3 flex items-center"><span class="mr-2">💡</span> Panduan Import:</h4>
+                        <ol class="list-decimal ml-5 text-sm text-indigo-700 space-y-2 font-medium mb-4">
                             <li>Mendukung 4 Tipe Soal: <b>PG, PG Kompleks, Matriks (B-S), & Esai</b>.</li>
                             <li>Bisa menyisipkan <b>Rumus (LaTeX)</b> dan <b>Link Gambar</b> otomatis.</li>
-                            <li>Mendukung <b>Mode Hybrid</b> (Kosongkan sel Excel jika ingin <i>copas</i> soal bergambar rumit dari Word ke Web Editor).</li>
+                            <li>Mendukung <b>Mode Hybrid</b> (Kosongkan sel Excel jika ingin copas soal bergambar dari Word).</li>
                             <li>Wajib membaca aturan pengisian di <b>Sheet 2</b> pada file template.</li>
                         </ol>
-                        <button onclick="downloadTemplateSoal()" class="mt-4 text-xs font-bold bg-white text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg hover:bg-indigo-100 transition shadow-sm">
-                            ⬇️ Download Template Excel
+                        <button onclick="downloadTemplateSoal()" class="text-xs md:text-sm font-bold bg-white text-indigo-600 border border-indigo-200 px-4 py-2.5 rounded-lg hover:bg-indigo-100 transition shadow-sm flex items-center">
+                            <span class="mr-2">⬇️</span> Download Template Excel
                         </button>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Upload File Excel (.xlsx)</label>
-                        <input type="file" id="fileImportSoal" accept=".xlsx, .xls" class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <label class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-widest">Upload File Excel (.xlsx)</label>
+                        <div class="relative">
+                            <input type="file" id="fileImportSoal" accept=".xlsx, .xls" class="opacity-0 absolute -z-10 w-full h-full cursor-pointer">
+                            <div class="w-full flex items-center border border-gray-300 rounded-xl bg-white focus-within:ring-2 focus-within:ring-indigo-500 shadow-sm transition">
+                                <button type="button" onclick="triggerFileInput('fileImportSoal')" class="px-5 py-3 bg-indigo-50 text-indigo-700 rounded-l-xl text-sm font-bold border-r border-gray-300 hover:bg-indigo-100 transition shrink-0 flex items-center">
+                                    <span class="mr-2">📁</span> Pilih File
+                                </button>
+                                <span id="fileNameDisplay" class="px-4 py-3 text-sm text-gray-500 truncate flex-1 font-medium">Tidak ada file dipilih</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
                 <div id="step2Import" class="hidden flex flex-col h-full">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-bold text-gray-800">Preview Data Excel</h4>
-                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded" id="infoJumlahPreview">0 Ditemukan</span>
+                    <div class="flex justify-between items-center mb-3">
+                        <div>
+                            <h4 class="font-black text-gray-800 text-lg">Preview Data Excel</h4>
+                            <p class="text-xs text-gray-500 mt-1 font-medium">Ceklis soal yang valid untuk diunggah. Klik 🔍 Detail untuk mengecek opsi jawaban.</p>
+                        </div>
+                        <span class="text-sm font-black text-indigo-700 bg-indigo-100 px-3 py-1.5 rounded-lg shadow-sm border border-indigo-200" id="infoJumlahPreview">0 Ditemukan</span>
                     </div>
-                    <p class="text-xs text-gray-500 mb-2">Ceklis soal yang ingin di-upload ke database. Soal yang formatnya salah tidak bisa di-ceklis.</p>
-                    <div class="border border-gray-200 rounded-xl bg-white flex-1 overflow-y-auto p-2 space-y-2 max-h-72" id="listPreviewImport">
+                    <div class="border border-gray-200 rounded-xl bg-white flex-1 overflow-y-auto p-3 space-y-3 max-h-[500px] shadow-inner" id="listPreviewImport">  
                         </div>
                 </div>
             </div>
+
             <div class="p-6 bg-white border-t flex justify-end shrink-0" id="footerStep1">
-                <button onclick="prosesBacaExcel()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md w-full transition">🔍 Tampilkan Preview</button>
+                <button onclick="prosesBacaExcel()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black shadow-md w-full transition flex items-center justify-center text-lg transform hover:-translate-y-1">
+                    <span class="mr-2">🔍</span> Pindai File & Tampilkan Preview
+                </button>
             </div>
-            <div class="p-6 bg-white border-t flex justify-end space-x-3 shrink-0 hidden" id="footerStep2">
-                <button onclick="kembaliStep1Import()" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold transition">Batal / Ganti File</button>
-                <button onclick="eksekusiSimpanImport()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md flex-1 transition transform hover:-translate-y-1">🚀 Upload Soal Terpilih</button>
+            <div class="p-6 bg-gray-50 border-t flex justify-end space-x-3 shrink-0 hidden" id="footerStep2">
+                <button onclick="kembaliStep1Import()" class="px-6 py-3.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl font-bold transition shadow-sm">⬅️ Batal / Ganti File</button>
+                <button onclick="eksekusiSimpanImport()" class="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black shadow-md flex-1 transition transform hover:-translate-y-1 flex items-center justify-center text-lg">
+                    <span class="mr-2">🚀</span> Upload Soal Terceklis
+                </button>
             </div>
         </div>
     </div>
@@ -664,102 +683,132 @@
             </div>            
             <div class="p-6 md:p-8 overflow-y-auto flex-1 space-y-5">
                 <input type="hidden" id="editIdSoal"><input type="hidden" id="editAsalTab">
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 bg-emerald-50 p-5 rounded-2xl border border-emerald-100">
-                    <div><label class="block text-xs font-bold text-emerald-800 mb-1">Mapel</label><select id="editMapel" class="w-full p-2 border border-emerald-200 rounded-lg dinamis-mapel text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white"></select></div>
-                    <div><label class="block text-xs font-bold text-emerald-800 mb-1">Sub Bab</label><select id="editBab" class="w-full p-2 border border-emerald-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white"><option value="-">-</option></select></div>
-                    <div><label class="block text-xs font-bold text-emerald-800 mb-1">Kelas</label><select id="editKelas" class="w-full p-2 border border-emerald-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white"></select></div>
-                    <div><label class="block text-xs font-bold text-blue-800 mb-1 border-b border-emerald-200 pb-0.5">🔥 Jenis Soal</label><select id="editTipeSoal" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-blue-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-blue-50 font-bold text-blue-800"><option value="pg">Pilihan Ganda</option><option value="pg_kompleks">PG Kompleks</option><option value="pgk_matriks">PGK Matriks (B-S / S-TS)</option><option value="essay">Uraian</option></select></div>
-                    <div><label class="block text-xs font-bold mb-1 text-emerald-600">Kuadran</label><input type="text" id="editKuadran" value="Lokal" readonly class="w-full p-2 border border-emerald-200 rounded-lg text-sm outline-none bg-emerald-100 text-emerald-800 font-bold text-center"></div>
+                
+                <div id="panelModeStudio" class="hidden mb-2 p-5 bg-emerald-50 border border-emerald-200 rounded-2xl shadow-sm transition-all">
+                    <h3 class="font-black text-emerald-900 mb-3 flex items-center"><span class="mr-2">🎯</span> Tentukan Sumber Soal <span id="studioTxtCurrent" class="mx-2 text-white bg-emerald-600 px-2 py-0.5 rounded text-sm shadow-sm"></span></h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="flex items-center p-4 bg-white border border-gray-200 rounded-xl cursor-pointer hover:bg-emerald-100 transition group radio-toggle-sumber" id="lblSumberBaru">
+                            <input type="radio" name="sumberSoalStudio" value="baru" checked onchange="toggleSumberStudio()" class="w-5 h-5 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                            <div class="ml-3"><p class="font-black text-gray-800">✍️ Tulis Pertanyaan Baru</p></div>
+                        </label>
+                        <label class="flex items-center p-4 bg-white border border-gray-200 rounded-xl cursor-pointer hover:bg-emerald-100 transition group radio-toggle-sumber" id="lblSumberBank">
+                            <input type="radio" name="sumberSoalStudio" value="bank" onchange="toggleSumberStudio()" class="w-5 h-5 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                            <div class="ml-3"><p class="font-black text-gray-800">📚 Ambil dari Bank Soal</p></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="areaNulisSoalStudio" class="space-y-5 transition-all">
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 bg-emerald-50 p-5 rounded-2xl border border-emerald-100">
+                        <div><label class="block text-xs font-bold text-emerald-800 mb-1">Mapel</label><select id="editMapel" class="w-full p-2 border border-emerald-200 rounded-lg dinamis-mapel text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white"></select></div>
+                        <div><label class="block text-xs font-bold text-emerald-800 mb-1">Sub Bab</label><select id="editBab" class="w-full p-2 border border-emerald-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white"><option value="-">-</option></select></div>
+                        <div><label class="block text-xs font-bold text-emerald-800 mb-1">Kelas</label><select id="editKelas" class="w-full p-2 border border-emerald-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white"></select></div>
+                        <div><label class="block text-xs font-bold text-blue-800 mb-1 border-b border-emerald-200 pb-0.5">🔥 Jenis Soal</label><select id="editTipeSoal" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-blue-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-blue-50 font-bold text-blue-800"><option value="pg">Pilihan Ganda</option><option value="pg_kompleks">PG Kompleks</option><option value="pgk_matriks">PGK Matriks (B-S / S-TS)</option><option value="essay">Uraian</option></select></div>
+                        <div><label class="block text-xs font-bold mb-1 text-emerald-600">Kuadran</label><input type="text" id="editKuadran" value="Lokal" readonly class="w-full p-2 border border-emerald-200 rounded-lg text-sm outline-none bg-emerald-100 text-emerald-800 font-bold text-center"></div>
+                        <div>
+                            <label class="block text-xs font-bold mb-1 text-purple-700 border-b border-emerald-200 pb-0.5">⭐ Kesulitan</label>
+                            <select id="editKesulitan" class="w-full p-2 border border-purple-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 text-sm bg-purple-50 font-bold text-purple-800">
+                                <option value="Mudah">Mudah</option>
+                                <option value="Sedang" selected>Sedang</option>
+                                <option value="Sulit">Sulit</option>
+                            </select>
+                        </div>
+                    </div>
                     <div>
-                        <label class="block text-xs font-bold mb-1 text-purple-700 border-b border-emerald-200 pb-0.5">⭐ Kesulitan</label>
-                        <select id="editKesulitan" class="w-full p-2 border border-purple-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 text-sm bg-purple-50 font-bold text-purple-800">
-                            <option value="Mudah">Mudah</option>
-                            <option value="Sedang" selected>Sedang</option>
-                            <option value="Sulit">Sulit</option>
-                        </select>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-bold text-gray-700">Teks Pertanyaan</label>
+                            <span class="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-500 font-bold">💡 Klik tombol "fx" untuk papan rumus</span>
+                        </div>
+                        <div id="editorPertanyaan" class="editor-soal"></div>
                     </div>
-                </div>
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="block text-sm font-bold text-gray-700">Teks Pertanyaan</label>
-                        <span class="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-500 font-bold">💡 Klik tombol "fx" untuk papan rumus</span>
-                    </div>
-                    <div id="editorPertanyaan" class="editor-soal"></div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 mb-4 bg-gray-100 p-4 rounded-xl border border-gray-200">
-                    <div>
-                        <label class="block text-xs font-bold mb-1 text-gray-700">Jumlah Pilihan / Pernyataan</label>
-                        <select id="editJumlahOpsi" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm">
-                            <option value="3">3 Baris (A - C)</option>
-                            <option value="4" selected>4 Baris (A - D)</option>
-                            <option value="5">5 Baris (A - E)</option>
-                        </select>
-                    </div>
-                    <div id="wadahHeaderMatriks" class="hidden">
-                        <label class="block text-xs font-bold mb-1 text-gray-700">Teks Pilihan Matriks</label>
-                        <select id="editHeaderMatriks" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm">
-                            <option value="Benar|Salah">Benar / Salah</option>
-                            <option value="Sesuai|Tidak Sesuai">Sesuai / Tidak Sesuai</option>
-                            <option value="Akurat|Tidak Akurat">Akurat / Tidak Akurat</option>
-                            <option value="Fakta|Opini">Fakta / Opini</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="areaOpsiJawaban" class="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
-                    <div class="flex justify-between items-center border-b pb-2 mb-2">
-                        <label class="block text-sm font-bold text-gray-700" id="labelJudulOpsi">Pilihan Jawaban & Kunci</label>
-                        <span class="text-xs text-white bg-blue-500 px-2 py-1 rounded font-bold shadow-sm" id="petunjukOpsi">Pilih 1 bulatan biru sebagai kunci.</span>
-                    </div>
-                    <div class="baris-opsi flex items-start space-x-3" data-idx="0" data-huruf="A">
-                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="A" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
-                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">A</span>
-                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiA" class="min-h-[60px]"></div></div>
-                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
-                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_0" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
-                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_0" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                    <div class="grid grid-cols-2 gap-4 mb-4 bg-gray-100 p-4 rounded-xl border border-gray-200">
+                        <div>
+                            <label class="block text-xs font-bold mb-1 text-gray-700">Jumlah Pilihan / Pernyataan</label>
+                            <select id="editJumlahOpsi" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm">
+                                <option value="3">3 Baris (A - C)</option>
+                                <option value="4" selected>4 Baris (A - D)</option>
+                                <option value="5">5 Baris (A - E)</option>
+                            </select>
+                        </div>
+                        <div id="wadahHeaderMatriks" class="hidden">
+                            <label class="block text-xs font-bold mb-1 text-gray-700">Teks Pilihan Matriks</label>
+                            <select id="editHeaderMatriks" onchange="ubahUIJenisSoalAdmin()" class="w-full p-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm">
+                                <option value="Benar|Salah">Benar / Salah</option>
+                                <option value="Sesuai|Tidak Sesuai">Sesuai / Tidak Sesuai</option>
+                                <option value="Akurat|Tidak Akurat">Akurat / Tidak Akurat</option>
+                                <option value="Fakta|Opini">Fakta / Opini</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="baris-opsi flex items-start space-x-3" data-idx="1" data-huruf="B">
-                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="B" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
-                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">B</span>
-                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiB" class="min-h-[60px]"></div></div>
-                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
-                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_1" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
-                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_1" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                    <div id="areaOpsiJawaban" class="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                        <div class="flex justify-between items-center border-b pb-2 mb-2">
+                            <label class="block text-sm font-bold text-gray-700" id="labelJudulOpsi">Pilihan Jawaban & Kunci</label>
+                            <span class="text-xs text-white bg-blue-500 px-2 py-1 rounded font-bold shadow-sm" id="petunjukOpsi">Pilih 1 bulatan biru sebagai kunci.</span>
+                        </div>
+                        <div class="baris-opsi flex items-start space-x-3" data-idx="0" data-huruf="A">
+                            <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="A" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
+                            <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">A</span>
+                            <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiA" class="min-h-[60px]"></div></div>
+                            <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_0" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_0" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                            </div>
+                        </div>
+                        <div class="baris-opsi flex items-start space-x-3" data-idx="1" data-huruf="B">
+                            <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="B" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
+                            <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">B</span>
+                            <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiB" class="min-h-[60px]"></div></div>
+                            <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_1" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_1" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                            </div>
+                        </div>
+                        <div class="baris-opsi flex items-start space-x-3" data-idx="2" data-huruf="C">
+                            <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="C" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
+                            <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">C</span>
+                            <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiC" class="min-h-[60px]"></div></div>
+                            <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_2" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_2" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                            </div>
+                        </div>
+                        <div class="baris-opsi flex items-start space-x-3" data-idx="3" data-huruf="D">
+                            <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="D" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
+                            <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">D</span>
+                            <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiD" class="min-h-[60px]"></div></div>
+                            <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_3" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_3" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                            </div>
+                        </div>
+                        <div class="baris-opsi flex items-start space-x-3" data-idx="4" data-huruf="E">
+                            <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="E" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
+                            <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">E</span>
+                            <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiE" class="min-h-[60px]"></div></div>
+                            <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
+                                <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_4" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
+                                <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_4" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
+                            </div>
                         </div>
                     </div>
-                    <div class="baris-opsi flex items-start space-x-3" data-idx="2" data-huruf="C">
-                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="C" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
-                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">C</span>
-                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiC" class="min-h-[60px]"></div></div>
-                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
-                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_2" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
-                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_2" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
-                        </div>
+                    <div class="mt-2 pt-4 border-t">
+                        <label class="block text-sm font-bold text-yellow-600 mb-2">💡 Pembahasan / Penjelasan</label>
+                        <div id="editorPembahasan" class="editor-bahas bg-yellow-50 border-yellow-200"></div>
                     </div>
-                    <div class="baris-opsi flex items-start space-x-3" data-idx="3" data-huruf="D">
-                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="D" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
-                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">D</span>
-                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiD" class="min-h-[60px]"></div></div>
-                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
-                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_3" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
-                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_3" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
-                        </div>
+                </div> <div id="areaPilihBankSoalStudio" class="hidden flex-col h-[500px] bg-white border border-slate-200 rounded-2xl p-4 shadow-sm transition-all">
+                    <div class="flex gap-3 mb-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <input type="text" id="cariSoalStudio" placeholder="🔍 Cari teks soal..." oninput="renderBankSoalStudio()" class="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                        <select id="sumberSoalStudioSelect" onchange="renderBankSoalStudio()" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none"><option value="Lokal">Lokal (Sekolah)</option><option value="Global">Global (Pusat)</option></select>
                     </div>
-                    <div class="baris-opsi flex items-start space-x-3" data-idx="4" data-huruf="E">
-                        <div class="pt-3 kontrol-standar"><input type="radio" name="editKunci" value="E" class="w-6 h-6 text-teal-600 cursor-pointer input-kunci-dinamis"></div>
-                        <span class="font-black text-gray-400 text-xl pt-2 label-huruf w-5 text-center">E</span>
-                        <div class="flex-1 bg-white border border-gray-300 rounded-lg overflow-hidden"><div id="editorOpsiE" class="min-h-[60px]"></div></div>
-                        <div class="pt-1 kontrol-matriks hidden flex-col space-y-2 w-32 shrink-0">
-                            <label class="text-xs font-bold text-green-700 flex items-center cursor-pointer bg-green-50 p-1.5 rounded border border-green-200 hover:bg-green-100"><input type="radio" name="matriks_4" value="Kiri" class="mr-2 mt-0.5 input-matriks-kiri"> <span class="label-kiri">Benar</span></label>
-                            <label class="text-xs font-bold text-red-700 flex items-center cursor-pointer bg-red-50 p-1.5 rounded border border-red-200 hover:bg-red-100"><input type="radio" name="matriks_4" value="Kanan" class="mr-2 mt-0.5 input-matriks-kanan"> <span class="label-kanan">Salah</span></label>
-                        </div>
+                    <div id="listBankSoalStudio" class="flex-1 overflow-y-auto bg-slate-50 border border-slate-200 rounded-xl p-2 space-y-2 shadow-inner"></div>
+                    <div class="pt-4 border-t border-slate-200 mt-3 flex justify-between items-center">
+                        <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200" id="infoSoalTerpilihStudio">Pilih 1 soal di atas.</span>
+                        <input type="hidden" id="idSoalTerpilihStudio">
+                        <button onclick="simpanSoalBankKeStudio()" id="btnLanjutBankStudio" class="px-8 py-3 bg-emerald-600 text-white rounded-xl font-black shadow-md transition opacity-50 cursor-not-allowed" disabled>Pilih & Lanjut ➡️</button>
                     </div>
                 </div>
-                <div class="mt-2 pt-4 border-t">
-                    <label class="block text-sm font-bold text-yellow-600 mb-2">💡 Pembahasan / Penjelasan</label>
-                    <div id="editorPembahasan" class="editor-bahas bg-yellow-50 border-yellow-200"></div>
-                </div>
+
             </div>            
             <div class="p-6 border-t flex justify-between bg-gray-50 rounded-b-3xl">
                 <div>
@@ -910,43 +959,30 @@
             </div>
         </div>
     </div>
-    <div id="modalPaket" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+    <div id="modalPaket" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 transition-opacity">
         <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl flex flex-col h-[90vh]">
             <div class="flex justify-between items-center p-6 border-b shrink-0">
                 <h3 class="text-xl font-bold">📦 Rakit Paket Lokal</h3>
                 <button onclick="tutupModalPaket()" class="text-3xl font-bold">&times;</button>
             </div>
             <div class="p-6 overflow-y-auto flex-1 flex flex-col space-y-4 bg-gray-50">
-                <div class="bg-white p-4 rounded-xl border grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
-                    <div class="col-span-2 md:col-span-5">
-                        <input type="text" id="namaPaketBaru" placeholder="Nama Paket" class="w-full px-4 py-2 border rounded-xl font-bold">
-                    </div>
-                    <div>
-                        <select id="filterKelasPaket" onchange="renderPilihanSoal()" class="w-full px-3 py-2 border rounded-lg text-sm"></select>
-                    </div>
-                    <div>
-                        <select id="filterMapelPaket" onchange="renderPilihanSoal()" class="w-full px-3 py-2 border rounded-lg text-sm dinamis-mapel"></select>
-                    </div>
-                    <div>
-                        <select id="filterSumberPaket" onchange="renderPilihanSoal()" class="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-blue-50 text-blue-800 font-bold">
-                            <option value="">Semua Sumber</option>
-                            <option value="Lokal">Lokal</option>
-                            <option value="Global">Global</option>
-                        </select>
-                    </div>
-                    <div>
-                        <select id="filterKesulitanPaket" onchange="renderPilihanSoal()" class="w-full px-3 py-2 border border-purple-200 rounded-lg text-sm bg-purple-50 text-purple-800 font-bold">
-                            <option value="">Semua Level</option>
-                            <option value="Mudah">Mudah</option>
-                            <option value="Sedang">Sedang</option>
-                            <option value="Sulit">Sulit</option>
-                        </select>
-                    </div>
-                    <div>
-                        <input type="text" id="filterCariPaket" placeholder="Cari..." oninput="renderPilihanSoal()" class="w-full px-3 py-2 border rounded-lg text-sm">
+                <div id="areaIdentitasPaket" class="mb-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <label class="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-widest border-b border-slate-100 pb-2">Identitas Paket Ujian</label>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="md:col-span-2"><input type="text" id="namaPaketBaru" placeholder="Nama Paket (Cth: Ulangan Harian Bab 1)" class="w-full px-4 py-3 border border-slate-300 rounded-xl font-bold outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 text-sm"></div>
+                        <div><select id="paketMapelInput" class="w-full px-4 py-3 border border-slate-300 rounded-xl font-bold outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 text-sm dinamis-mapel text-slate-600"></select></div>
+                        <div><select id="paketKelasInput" class="w-full px-4 py-3 border border-slate-300 rounded-xl font-bold outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 text-sm dinamis-kelas text-slate-600"></select></div>
                     </div>
                 </div>
-                <div class="bg-white border rounded-2xl p-4 flex-1 flex flex-col">
+
+                <div class="bg-white border rounded-2xl p-4 flex-1 flex flex-col shadow-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div class="md:col-span-1"><input type="text" id="filterCariPaket" placeholder="🔍 Cari teks soal..." oninput="renderPilihanSoal()" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none bg-white focus:ring-2 focus:ring-emerald-500 font-medium text-sm"></div>
+                        <div><select id="filterSumberPaket" class="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none bg-white focus:ring-2 focus:ring-emerald-500 font-bold text-slate-600 text-sm" onchange="renderPilihanSoal()"><option value="Lokal">Lokal (Sekolah)</option><option value="Global">Global (Pusat)</option></select></div>
+                        <div><select id="filterMapelPaket" class="w-full px-3 py-2 border border-slate-300 rounded-lg dinamis-mapel outline-none bg-white focus:ring-2 focus:ring-emerald-500 font-bold text-slate-600 text-sm" onchange="renderPilihanSoal()"></select></div>
+                        <div><select id="filterKelasPaket" class="w-full px-3 py-2 border border-slate-300 rounded-lg dinamis-kelas outline-none bg-white focus:ring-2 focus:ring-emerald-500 font-bold text-slate-600 text-sm" onchange="renderPilihanSoal()"></select></div>
+                        <div><button onclick="bukaHybridMode()" class="w-full h-full bg-emerald-600 hover:bg-emerald-700 text-white font-black px-3 py-2 rounded-lg shadow-sm transition">✍️ Buat Dadakan</button></div>
+                    </div>
                     <div class="flex justify-between border-b pb-2 mb-2">
                         <span class="font-bold text-sm">Pilih Soal:</span>
                         <span id="counterSoalPaket" class="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-black">0 TERPILIH</span>
@@ -955,7 +991,7 @@
                 </div>
             </div>
             <div class="p-6 border-t flex justify-end shrink-0">
-                <button onclick="simpanPaketBaru()" class="px-8 py-3 text-white bg-emerald-600 rounded-xl font-bold">💾 Simpan Paket</button>
+                <button onclick="simpanPaketBaru()" class="px-8 py-3 text-white bg-emerald-600 rounded-xl font-bold hover:bg-emerald-700">💾 Simpan Paket</button>
             </div>
         </div>
     </div>
@@ -1194,10 +1230,19 @@
         // 2. OTENTIKASI & SETUP DASAR
         window.setDinamisKelas = () => {
             let j = jenjangSekolahGlobal, mn = j === 'SD' ? 1 : (j === 'SMP' ? 7 : 10), mx = j === 'SD' ? 6 : (j === 'SMP' ? 9 : 12);
-            let hf = '<option value="">Semua</option>', hi = '';
-            for(let i=mn; i<=mx; i++){ hf += `<option value="${i}">${i}</option>`; hi += `<option value="${i}">${i}</option>`; }
+            
+            // 👇 Tambahkan opsi PPDB
+            let hf = '<option value="">Semua</option><option value="PPDB" class="font-bold text-indigo-600">PPDB</option>'; 
+            let hi = '<option value="">-- Pilih Kelas --</option><option value="PPDB" class="font-bold text-indigo-600">PPDB</option>';
+            
+            for(let i=mn; i<=mx; i++){ 
+                hf += `<option value="${i}">${i}</option>`; 
+                hi += `<option value="${i}">${i}</option>`; 
+            }
+            
+            // 👇 SOLUSI: Masukkan 'paketKelasInput' ke dalam array agar ikut terisi!
             ['filterKelas', 'filterKelasPaket', 'inputKelasJadwal'].forEach(id => { let e = document.getElementById(id); if(e) e.innerHTML = hf; });
-            ['editKelas', 'userKelas'].forEach(id => { let e = document.getElementById(id); if(e) e.innerHTML = hi; });
+            ['editKelas', 'userKelas', 'paketKelasInput'].forEach(id => { let e = document.getElementById(id); if(e) e.innerHTML = hi; });
         };
         onAuthStateChanged(auth, async u => {
             if(u){
@@ -1323,11 +1368,16 @@
             const s = await getDocs(collection(db, "kurikulum")); 
             dataKurikulumGlobal = []; 
             s.forEach(d => dataKurikulumGlobal.push({id: d.id, ...d.data()}));
-            let o = '<option value="">Semua Mapel</option>'; 
-            // 🔥 FILTER: Saring mapel yang statusnya bukan 'nonaktif' (termasuk yang kosong/aktif)
+            
+            let o = '<option value="">-- Pilih Mapel --</option>'; 
+            // 🔥 FILTER: Saring mapel yang statusnya bukan 'nonaktif'
             dataKurikulumGlobal.filter(m => m.status !== 'nonaktif').forEach(m => {
                 o += `<option value="${m.nama_mapel}">${m.nama_mapel}</option>`;
             });
+            
+            // 👇 Suntik opsi khusus PPDB ke semua dropdown Mapel
+            o += `<option value="PPDB" class="font-bold text-indigo-600">PPDB / Tes Masuk</option>`;
+            
             document.querySelectorAll('.dinamis-mapel').forEach(el => el.innerHTML = o);
         };
         window.muatJenisUjianDataSaja = async () => {
@@ -1852,64 +1902,72 @@
             document.getElementById('modalEditor').classList.remove('hidden');
         };
         window.tutupModalEditor = () => { 
-            document.getElementById('editIdSoal').value = ""; document.getElementById('editAsalTab').value = "";
-            quillPertanyaan.root.innerHTML = ""; quillPembahasan.root.innerHTML = "";
-            ['A','B','C','D','E'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; });
-            // Reset semua ceklis & radio
-            document.querySelectorAll('.input-kunci-dinamis').forEach(el => el.checked = false);
-            document.querySelectorAll('.input-matriks-kiri, .input-matriks-kanan').forEach(el => el.checked = false);
+            let a = document.getElementById('editAsalTab').value;
+            if(a === 'studio') {
+                Swal.fire({ title: 'Jeda Merakit?', text: 'Progress Anda aman tersimpan di Draft Paket.', icon: 'info', showCancelButton: true, confirmButtonText: 'Ya, Jeda & Keluar', confirmButtonColor: '#059669' }).then((res) => {
+                    if(res.isConfirmed) { modeStudioActive = false; document.getElementById('modalEditor').classList.add('hidden'); window.muatDaftarPaketLokal(); window.bukaTab('tabPaket'); }
+                });
+                return;
+            }
+            if(a === 'hybrid') {
+                modeHybridAktif = false; document.getElementById('modalEditor').classList.add('hidden'); document.getElementById('modalPaket').classList.remove('hidden'); return;
+            }
+            // Tutup Normal
+            let pPanel = document.getElementById('panelModeStudio'); if(pPanel) pPanel.classList.add('hidden');
+            document.getElementById('editorPertanyaan').parentElement.classList.remove('hidden'); document.getElementById('areaOpsiJawaban').classList.remove('hidden'); document.getElementById('areaPilihBankSoalStudio')?.classList.add('hidden'); document.getElementById('btnHijauModal')?.classList.remove('hidden');
             document.getElementById('modalEditor').classList.add('hidden'); 
         };
         // FUNGSI SIMPAN YANG SUDAH DIBERSIHKAN DARI DUPLIKASI
         window.aksiSimpanDariModal = async () => {
-            let tipe = document.getElementById('editTipeSoal').value;
-            let jumlahOpsi = parseInt(document.getElementById('editJumlahOpsi').value);
+            let tipe = document.getElementById('editTipeSoal').value, jumlahOpsi = parseInt(document.getElementById('editJumlahOpsi').value);
             let hMatriks = document.getElementById('editHeaderMatriks') ? document.getElementById('editHeaderMatriks').value : "Benar|Salah"; 
-            let kontenTanya = quillPertanyaan.root.innerHTML; let kontenBahas = quillPembahasan.root.innerHTML;
+            let kontenTanya = quillPertanyaan.root.innerHTML, kontenBahas = quillPembahasan.root.innerHTML;
             if(quillPertanyaan.getText().trim().length === 0 && !kontenTanya.includes('<img') && !kontenTanya.includes('<span class="ql-formula"')) return Swal.fire('Oops', 'Pertanyaan tidak boleh kosong!', 'warning');
+            
             let arrayOpsi = []; let isValid = false; let huruf = ['A','B','C','D','E'];
             if (tipe === 'pg' || tipe === 'pg_kompleks') {
-                for(let i=0; i<jumlahOpsi; i++) {
-                    let hrf = huruf[i];
-                    let isBenar = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-kunci-dinamis`).checked;
-                    if(isBenar) isValid = true;
-                    arrayOpsi.push({ label: hrf, teks: mapQuillOpsi[hrf].root.innerHTML, benar: isBenar });
-                }
+                for(let i=0; i<jumlahOpsi; i++) { let hrf = huruf[i]; let isBenar = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-kunci-dinamis`).checked; if(isBenar) isValid = true; arrayOpsi.push({ label: hrf, teks: mapQuillOpsi[hrf].root.innerHTML, benar: isBenar }); }
                 if (!isValid) return Swal.fire('Oops', 'Pilih minimal 1 kunci jawaban!', 'warning');
             } else if (tipe === 'pgk_matriks') {
-                for(let i=0; i<jumlahOpsi; i++) {
-                    let hrf = huruf[i];
-                    let radioKiri = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-matriks-kiri`);
-                    let radioKanan = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-matriks-kanan`);
-                    let kunciMatriks = radioKiri.checked ? 'Kiri' : (radioKanan.checked ? 'Kanan' : null);
-                    if(!kunciMatriks) return Swal.fire('Oops', `Tentukan kunci untuk Pernyataan ke-${i+1}`, 'warning');
-                    arrayOpsi.push({ label: (i+1).toString(), teks: mapQuillOpsi[hrf].root.innerHTML, benar: kunciMatriks, header: hMatriks });
-                }
+                for(let i=0; i<jumlahOpsi; i++) { let hrf = huruf[i]; let radioKiri = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-matriks-kiri`), radioKanan = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-matriks-kanan`); let kunciMatriks = radioKiri.checked ? 'Kiri' : (radioKanan.checked ? 'Kanan' : null); if(!kunciMatriks) return Swal.fire('Oops', `Tentukan kunci baris ${i+1}`, 'warning'); arrayOpsi.push({ label: (i+1).toString(), teks: mapQuillOpsi[hrf].root.innerHTML, benar: kunciMatriks, header: hMatriks }); }
                 isValid = true;
             } else if (tipe === 'essay') { isValid = true; arrayOpsi = []; }
+            
             let i = document.getElementById('editIdSoal').value, a = document.getElementById('editAsalTab').value;
             Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
             try {
-                let py = { 
-                    tipe_soal: tipe, pertanyaan: kontenTanya, opsi: arrayOpsi, pembahasan: kontenBahas, 
-                    kuadran: document.getElementById('editKuadran') ? document.getElementById('editKuadran').value : "Lokal", 
-                    kesulitan: document.getElementById('editKesulitan') ? document.getElementById('editKesulitan').value : "Sedang",
-                    sekolah_id: idSekolahGlobal, // Identitas Cabang
-                    metadata: { 
-                        mapel: document.getElementById('editMapel').value, sub_bab: document.getElementById('editBab').value, 
-                        jenjang: jenjangSekolahGlobal, kelas: document.getElementById('editKelas').value 
-                    } 
-                };
-                if(i === "") { 
-                    py.status = 'aktif'; py.pembuat_id = "Admin " + idSekolahGlobal; py.dibuat_pada = new Date(); 
-                    await addDoc(collection(db, "bank_soal"), py); 
-                } else { 
-                    if(a === 'review') py.status = 'aktif'; // ACC dari guru
-                    await updateDoc(doc(db, "bank_soal", i), py); 
+                let py = { tipe_soal: tipe, pertanyaan: kontenTanya, opsi: arrayOpsi, pembahasan: kontenBahas, kuadran: document.getElementById('editKuadran') ? document.getElementById('editKuadran').value : "Lokal", kesulitan: document.getElementById('editKesulitan') ? document.getElementById('editKesulitan').value : "Sedang", sekolah_id: idSekolahGlobal, metadata: { mapel: document.getElementById('editMapel').value, sub_bab: document.getElementById('editBab').value, jenjang: jenjangSekolahGlobal, kelas: document.getElementById('editKelas').value } };
+                let docRefId = i;
+                if(i === "") { py.status = 'aktif'; py.pembuat_id = "Admin " + idSekolahGlobal; py.dibuat_pada = new Date(); let res = await addDoc(collection(db, "bank_soal"), py); docRefId = res.id; } 
+                else { if(a === 'review') py.status = 'aktif'; await updateDoc(doc(db, "bank_soal", i), py); }
+                
+                // 🚀 INTERSEPTOR 1: JIKA GURU SEDANG MODE STUDIO
+                if (a === 'studio') {
+                    studioData.soalIds.push(docRefId);
+                    let pyPaket = { nama_paket: studioData.current < studioData.total ? `[DRAFT] ${studioData.namaPaket}` : studioData.namaPaket, soal_ids: studioData.soalIds, sekolah_id: idSekolahGlobal, mapel: studioData.mapel, kelas: studioData.kelas, pembuat_nama: "Admin " + idSekolahGlobal, status_paket: studioData.current < studioData.total ? 'draft' : 'ready', total_target: studioData.total, update_terakhir: new Date() };
+                    if (!studioData.idPaketDraft) { pyPaket.dibuat_pada = new Date(); let dRef = await addDoc(collection(db, "paket_soal"), pyPaket); studioData.idPaketDraft = dRef.id; } 
+                    else { await updateDoc(doc(db, "paket_soal", studioData.idPaketDraft), pyPaket); }
+                    if (studioData.current < studioData.total) { studioData.current++; Swal.fire({title: 'Tersimpan!', text: `Lanjut ke soal ${studioData.current}...`, icon: 'success', timer: 1000, showConfirmButton: false}); window.bukaEditorStudio(); } 
+                    else { modeStudioActive = false; document.getElementById('modalEditor').classList.add('hidden'); Swal.fire('Selesai! 🎉', 'Paket berhasil diterbitkan.', 'success'); window.muatDaftarPaketLokal(); window.bukaTab('tabPaket'); }
+                    return; // Stop fungsi
                 }
-                window.tutupModalEditor(); Swal.fire({title: 'Tersimpan!', icon: 'success', timer: 1000, showConfirmButton: false}); 
+
+                // 🚀 INTERSEPTOR 2: JIKA GURU SEDANG MODE HYBRID (DADAKAN)
+                if (a === 'hybrid') {
+                    pilihanSoalSementara.add(docRefId); // Masukkan ID soal baru ke keranjang pilihan
+                    await window.muatBankSoalGlobalLokal(); // Refresh data lokal
+                    document.getElementById('modalEditor').classList.add('hidden'); // Tutup editor
+                    window.renderPilihanSoal(); // Render ulang agar masuk
+                    document.getElementById('modalPaket').classList.remove('hidden'); // Buka lagi modal paket
+                    modeHybridAktif = false;
+                    Swal.fire({title: 'Soal Masuk Keranjang!', icon: 'success', timer: 1000, showConfirmButton: false});
+                    return; // Stop fungsi
+                }
+
+                // Jika simpan normal
+                document.getElementById('modalEditor').classList.add('hidden'); Swal.fire({title: 'Tersimpan!', icon: 'success', timer: 1000, showConfirmButton: false}); 
                 if(a === 'review') window.muatAntreanVerifikasi(); else window.muatBankSoalLokal();
-            } catch(e) { Swal.fire('Error', 'Gagal menyimpan data.', 'error'); }
+            } catch(e) { Swal.fire('Error', 'Gagal menyimpan.', 'error'); }
         };
         window.hapusSoalPermanen = i => { Swal.fire({title: 'Hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33'}).then(async r => { if(r.isConfirmed) { await deleteDoc(doc(db, "bank_soal", i)); window.muatBankSoalLokal(); window.muatDashboardLokal(); } }); };
         // 5. PAKET UJIAN & JADWAL
@@ -1922,143 +1980,336 @@
             sl.forEach(d => dataSoalSeluruhnya.push({id: d.id, ...d.data()})); 
         };
         // ==========================================
-        // MESIN MANAJEMEN PAKET UJIAN (TABEL & FILTER)
+        // MESIN MANAJEMEN PAKET UJIAN (SUPERUSER ADMIN)
         // ==========================================
-        
-        // 1. Fungsi penarik data dari Firebase (Kini lebih ringkas)
+        let idPaketAktifEdit = null; 
+        let modeHybridAktif = false;
+
         window.muatDaftarPaketLokal = async () => { 
             const s = await getDocs(query(collection(db, "paket_soal"), where("sekolah_id", "==", idSekolahGlobal))); 
             dataPaketLokal = []; 
             
-            s.forEach(d => { 
+            for (let d of s.docs) {
                 let p = d.data(); p.id = d.id; 
+                
+                // 🧹 PENYAPU OTOMATIS: 
+                // Jika DB bilang masih "terjadwal", minta Hakim periksa ulang (karena bisa jadi waktunya habis secara alami)
+                if (p.status_paket === 'terjadwal') {
+                    let statusSebenarnya = await window.evaluasiStatusPaketLokal(p.id);
+                    if (statusSebenarnya && statusSebenarnya !== 'terjadwal') {
+                        p.status_paket = statusSebenarnya; // Update UI langsung
+                    }
+                }
                 dataPaketLokal.push(p); 
-            }); 
-            
-            // Panggil mesin render tabel setelah data selesai ditarik
+            }
+
             window.renderTabelPaket(); 
 
-            // Update Dropdown Kuis Mandiri (Sembunyikan Draft dari pilihan Kuis)
-            let sPaket = document.getElementById('kuisPaket');
-            if(sPaket) {
-                sPaket.innerHTML = '<option value="">-- Pilih Paket Soal --</option>';
-                dataPaketLokal.filter(x => x.status_paket !== 'draft').forEach(p => sPaket.innerHTML += `<option value="${p.id}">${p.nama_paket}</option>`);
+            // Update Dropdown Jadwal
+            let selectPaket = document.getElementById('inputPaketUjian');
+            if (selectPaket) {
+                selectPaket.innerHTML = '<option value="">-- Pilih Paket Soal --</option>';
+                dataPaketLokal.filter(x => x.status_paket !== 'draft').forEach(p => {
+                    selectPaket.innerHTML += `<option value="${p.id}">${p.nama_paket} (${p.soal_ids?.length || 0} Soal)</option>`;
+                });
             }
         };
 
-        // 2. FUNGSI BARU: Mesin Render Tabel & Algoritma Filter
         window.renderTabelPaket = () => {
-            let tb = document.getElementById('tabelDaftarPaket');
-            if(!tb) return;
-
-            // Ambil kata kunci dari form pencarian di atas tabel
+            let tb = document.getElementById('tabelDaftarPaket'); if(!tb) return;
             let kw = (document.getElementById('filterCariDaftarPaket')?.value || "").toLowerCase();
             let mapel = (document.getElementById('filterMapelDaftarPaket')?.value || "").toLowerCase();
             let status = document.getElementById('filterStatusDaftarPaket')?.value || "";
 
-            // Proses Penyaringan Data
             let filtered = dataPaketLokal.filter(p => {
-                let n = (p.nama_paket || "").toLowerCase();
-                let m = (p.mapel || "").toLowerCase();
-                let s = p.status_paket; 
-                
-                let matchKw = n.includes(kw);
-                let matchMapel = mapel === "" || m === mapel;
-                let matchStatus = true;
-                
-                if(status === 'draft') matchStatus = s === 'draft';
-                if(status === 'ready') matchStatus = s !== 'draft';
-
-                return matchKw && matchMapel && matchStatus;
+                let n = (p.nama_paket || "").toLowerCase(), m = (p.mapel || "").toLowerCase(), s = p.status_paket || 'ready'; 
+                return n.includes(kw) && (mapel === "" || m === mapel) && (status === "" || s === status);
             });
-
-            // Urutkan dari paket yang paling baru diupdate
             filtered.sort((a,b) => b.update_terakhir?.toDate() - a.update_terakhir?.toDate());
 
             let html = '';
             filtered.forEach(p => {
-                let isDraft = p.status_paket === 'draft';
+                let s = p.status_paket || 'ready'; let badgeStatus = ''; let aksiBtns = '';
+                if (s === 'draft') {
+                    badgeStatus = '<span class="bg-orange-100 text-orange-700 text-[10px] font-black px-2 py-1 rounded shadow-sm">⏳ DRAFT</span>';
+                    aksiBtns = `<div class="flex justify-center space-x-1.5"><button onclick="previewPaket('${p.id}')" class="bg-white border border-orange-200 text-orange-600 px-2 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">👁️ Intip</button><button onclick="lanjutkanStudio('${p.id}')" class="bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 px-2 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">✏️ Lanjut</button><button onclick="hapusPaket('${p.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">🗑️</button></div>`;
+                } else if (s === 'ready') {
+                    badgeStatus = '<span class="bg-emerald-100 text-emerald-700 text-[10px] font-black px-2 py-1 rounded shadow-sm">✅ READY</span>';
+                    aksiBtns = `<div class="flex justify-center space-x-1.5"><button onclick="previewPaket('${p.id}')" class="bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 px-2 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">👁️ Intip</button><button onclick="editPaket('${p.id}')" class="bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 px-2 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">✏️ Edit</button><button onclick="duplikatPaket('${p.id}')" class="bg-amber-50 border border-amber-200 text-amber-600 hover:bg-amber-100 px-2 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">📑 Clone</button><button onclick="hapusPaket('${p.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">🗑️</button></div>`;
+                } else {
+                    badgeStatus = '<span class="bg-blue-100 text-blue-700 text-[10px] font-black px-2 py-1 rounded border border-blue-200 animate-pulse">🔒 TERJADWAL</span>';
+                    aksiBtns = `<div class="flex justify-center space-x-1.5"><button onclick="previewPaket('${p.id}')" class="bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">👁️ Intip</button><button onclick="duplikatPaket('${p.id}')" class="bg-amber-50 border border-amber-200 text-amber-600 hover:bg-amber-100 px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm">📑 Clone</button></div>`;
+                }
                 
-                // Label Status
-                let badgeStatus = isDraft 
-                    ? '<span class="bg-orange-100 text-orange-700 text-[10px] font-black px-2 py-1 rounded shadow-sm w-max mx-auto block">⏳ DRAFT</span>'
-                    : '<span class="bg-emerald-100 text-emerald-700 text-[10px] font-black px-2 py-1 rounded shadow-sm w-max mx-auto block">✅ SIAP UJIAN</span>';
-                
-                // Tombol Aksi (Menyesuaikan Status)
-                let aksiBtns = isDraft
-                    ? `<div class="flex justify-center space-x-1.5">
-                         <button onclick="previewPaket('${p.id}')" class="bg-white border border-orange-200 text-orange-600 hover:bg-orange-50 px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm" title="Preview">👁️</button>
-                         <button onclick="lanjutkanStudio('${p.id}')" class="bg-orange-500 text-white hover:bg-orange-600 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">✏️ Lanjut</button>
-                         <button onclick="hapusPaket('${p.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm" title="Hapus">🗑️</button>
-                       </div>`
-                    : `<div class="flex justify-center space-x-1.5">
-                         <button onclick="previewPaket('${p.id}')" class="bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">👁️ Intip Isi</button>
-                         <button onclick="hapusPaket('${p.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm" title="Hapus">🗑️</button>
-                       </div>`;
+                // DESAIN ANGKA MUNGIL ANTI TURUN BARIS (whitespace-nowrap)
+                html += `<tr class="border-b hover:bg-slate-50 transition"><td class="px-4 py-4"><h4 class="text-sm font-black text-slate-800 leading-tight">${p.nama_paket.replace('[DRAFT] ', '')}</h4><p class="text-[11px] text-slate-500 mt-1.5 font-bold uppercase tracking-widest">MAPEL: <span class="text-emerald-600">${p.mapel || '-'}</span> <span class="mx-1 text-slate-300">|</span> KLS: ${p.kelas || '-'}</p></td><td class="px-2 py-4 text-center align-middle"><span class="font-black text-slate-600 bg-slate-100/80 px-3 py-1.5 rounded-lg border border-slate-200 whitespace-nowrap text-xs shadow-sm">${p.soal_ids?.length || 0}</span></td><td class="px-4 py-4 align-middle">${badgeStatus}</td><td class="px-4 py-4 align-middle">${aksiBtns}</td></tr>`;
+            });
+            tb.innerHTML = html || '<tr><td colspan="4" class="text-center py-10 text-slate-400 font-bold">Tidak ada paket.</td></tr>';
+        };
 
-                html += `<tr class="border-b hover:bg-slate-50 transition">
-                        <td class="px-6 py-4">
-                            <h4 class="text-sm font-black text-slate-800 leading-tight">${p.nama_paket.replace('[DRAFT] ', '')}</h4>
-                            <p class="text-[11px] text-slate-500 mt-1.5 font-bold uppercase tracking-widest">MAPEL: <span class="text-indigo-600">${p.mapel || '-'}</span> <span class="mx-1 text-slate-300">|</span> KLS: ${p.kelas || '-'}</p>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="font-black text-slate-700 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-200">${p.soal_ids?.length || 0} Soal</span>
-                        </td>
-                        <td class="px-6 py-4 align-middle">${badgeStatus}</td>
-                        <td class="px-6 py-4 align-middle">${aksiBtns}</td>
-                      </tr>`;
+        window.bukaModalBuatPaket = async () => {
+            const res = await Swal.fire({ title: 'Metode Rakit Paket', text: 'Bagaimana Anda menyusun ujian ini?', icon: 'question', showCancelButton: true, confirmButtonText: '📝 Ketik Massal (Studio)', cancelButtonText: '🗃️ Pilih dari Bank', confirmButtonColor: '#059669', cancelButtonColor: '#64748b', reverseButtons: true });
+            if (res.isConfirmed) { window.mulaiModeStudio(); } 
+            else if (res.dismiss === Swal.DismissReason.cancel) {
+                idPaketAktifEdit = null; document.getElementById('namaPaketBaru').value = ""; document.getElementById('paketMapelInput').value = ""; document.getElementById('paketKelasInput').value = ""; 
+                pilihanSoalSementara.clear(); window.renderPilihanSoal(); document.getElementById('modalPaket').classList.remove('hidden'); 
+            }
+        };
+
+        window.editPaket = (id) => {
+            let p = dataPaketLokal.find(x => x.id === id); if(!p) return;
+            idPaketAktifEdit = p.id; pilihanSoalSementara.clear(); if(p.soal_ids) p.soal_ids.forEach(sid => pilihanSoalSementara.add(sid));
+            document.getElementById('namaPaketBaru').value = p.nama_paket.replace('[DRAFT] ', ''); document.getElementById('paketMapelInput').value = p.mapel || ""; document.getElementById('paketKelasInput').value = p.kelas || "";
+            if(document.getElementById('filterMapelPaket') && p.mapel) document.getElementById('filterMapelPaket').value = p.mapel;
+            window.renderPilihanSoal(); document.getElementById('modalPaket').classList.remove('hidden');
+        };
+
+        window.duplikatPaket = (idLama) => {
+            let p = dataPaketLokal.find(x => x.id === idLama); if(!p) return;
+            idPaketAktifEdit = null; pilihanSoalSementara.clear(); if(p.soal_ids) p.soal_ids.forEach(sid => pilihanSoalSementara.add(sid));
+            document.getElementById('namaPaketBaru').value = `${p.nama_paket} (Copy)`; document.getElementById('paketMapelInput').value = p.mapel || ""; document.getElementById('paketKelasInput').value = p.kelas || "";
+            if(document.getElementById('filterMapelPaket') && p.mapel) document.getElementById('filterMapelPaket').value = p.mapel;
+            window.renderPilihanSoal(); document.getElementById('modalPaket').classList.remove('hidden');
+        };
+
+        window.simpanPaketBaru = async () => {
+            let n = document.getElementById('namaPaketBaru').value, m = document.getElementById('paketMapelInput').value, k = document.getElementById('paketKelasInput').value;
+            if(!n || !m || !k || pilihanSoalSementara.size === 0) return Swal.fire('Oops','Isi identitas nama, mapel, kelas, dan pilih minimal 1 soal!','warning');
+            Swal.fire({title: 'Menyimpan Paket...', didOpen: () => Swal.showLoading()});
+            try {
+                let py = { nama_paket: n, mapel: m, kelas: k, soal_ids: Array.from(pilihanSoalSementara), sekolah_id: idSekolahGlobal, update_terakhir: new Date() };
+                if (idPaketAktifEdit) { await updateDoc(doc(db, "paket_soal", idPaketAktifEdit), py); Swal.fire('Diperbarui!', 'Paket berhasil disimpan.', 'success'); } 
+                else { py.dibuat_pada = new Date(); py.status_paket = 'ready'; await addDoc(collection(db, "paket_soal"), py); Swal.fire({title: 'Berhasil!', icon: 'success', timer: 1000, showConfirmButton: false}); }
+                window.tutupModalPaket(); window.muatDaftarPaketLokal(); 
+            } catch(e) { Swal.fire('Error', 'Gagal menyimpan.', 'error'); }
+        };
+
+        window.hapusPaket = async (i) => { if((await Swal.fire({title:'Hapus Paket?', icon:'warning', showCancelButton:true, confirmButtonColor:'#d33'})).isConfirmed){ await deleteDoc(doc(db, "paket_soal", i)); window.muatDaftarPaketLokal(); } };
+        window.tutupModalPaket = () => document.getElementById('modalPaket').classList.add('hidden');
+        
+        // RENDER KOTAK CHECKBOX DI DALAM MODAL PAKET
+        window.renderPilihanSoal = () => {
+            let kw=(document.getElementById('filterCariPaket')?.value||"").toLowerCase(), k=document.getElementById('filterKelasPaket')?.value||"", m=(document.getElementById('filterMapelPaket')?.value||"").toLowerCase(), sm=document.getElementById('filterSumberPaket')?.value||"Lokal", h='';
+            dataSoalSeluruhnya.filter(s => sm==="Global" ? s.kuadran==="Global" : s.kuadran==="Lokal").forEach(s => {
+                let dm=(s.metadata?.mapel||"").toLowerCase(), sk=s.metadata?.kelas||""; let divT=document.createElement('div'); divT.innerHTML=s.pertanyaan; let dp=(divT.innerText||"").toLowerCase();
+                if((dm.includes(kw) || dp.includes(kw)) && (k==="" || sk==k) && (m==="" || dm===m)) {
+                    let c = pilihanSoalSementara.has(s.id) ? 'checked' : '';
+                    h += `<label class="flex items-start p-3 border rounded-xl cursor-pointer mb-2 transition ${c ? 'bg-emerald-50 border-emerald-400 ring-2' : 'bg-white border-gray-200 hover:bg-slate-50'}"><input type="checkbox" value="${s.id}" class="mt-1 w-5 h-5 text-emerald-600 rounded" onchange="toggleSoalPaket(this)" ${c}><div class="ml-3 w-full"><div class="flex justify-between items-start mb-1"><p class="text-[9px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded uppercase">${s.metadata?.mapel||'-'} | Kls ${sk}</p><span class="text-[9px] font-bold text-slate-400 uppercase">${s.kuadran}</span></div><p class="text-xs text-gray-700 font-medium line-clamp-2">${divT.innerText}</p></div></label>`;
+                }
+            });
+            document.getElementById('listPilihanSoal').innerHTML = h || '<p class="text-center text-sm py-8 text-gray-400 font-bold">Tidak ada soal yang sesuai filter.</p>';
+            document.getElementById('counterSoalPaket').innerText=`${pilihanSoalSementara.size} TERPILIH`;
+        };
+        window.toggleSoalPaket = c => { if(c.checked) pilihanSoalSementara.add(c.value); else pilihanSoalSementara.delete(c.value); document.getElementById('counterSoalPaket').innerText=`${pilihanSoalSementara.size} TERPILIH`; window.renderPilihanSoal(); };
+
+        // --- MODE STUDIO (LOOPING) ---
+        window.mulaiModeStudio = async () => {
+            let optMapel = document.getElementById('paketMapelInput').innerHTML, optKelas = document.getElementById('paketKelasInput').innerHTML;
+            const { value: fV } = await Swal.fire({
+                title: '🎬 Setup Studio', html: `<div class="text-left mt-2"><label class="text-xs font-bold text-gray-600">Nama Paket</label><input id="st-n" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 mb-3" placeholder="Ulangan Harian"><div class="grid grid-cols-2 gap-3 mb-3"><div><label class="text-xs font-bold text-gray-600">Mapel</label><select id="st-m" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">${optMapel}</select></div><div><label class="text-xs font-bold text-gray-600">Kelas Target</label><select id="st-k" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">${optKelas}</select></div></div><label class="text-xs font-bold text-gray-600 mt-2 block">Total Soal</label><input id="st-t" type="number" value="10" min="1" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-2xl text-emerald-600 text-center font-black"></div>`, showCancelButton: true, confirmButtonText: 'Mulai Mengetik 🚀', confirmButtonColor: '#059669', preConfirm: () => {
+                    let n = document.getElementById('st-n').value, m = document.getElementById('st-m').value, k = document.getElementById('st-k').value, t = parseInt(document.getElementById('st-t').value);
+                    if(!n || !m || !k || !t) { Swal.showValidationMessage('Lengkapi data!'); return false; } return { n, m, k, t };
+                }
+            });
+            if(fV) { modeStudioActive = true; studioData = { idPaketDraft: null, namaPaket: fV.n, mapel: fV.m, kelas: fV.k, total: fV.t, current: 1, soalIds: [] }; window.bukaEditorStudio(); }
+        };
+
+        window.lanjutkanStudio = (id) => {
+            let p = dataPaketLokal.find(x => x.id === id); if(!p) return;
+            modeStudioActive = true; studioData = { idPaketDraft: p.id, namaPaket: p.nama_paket.replace('[DRAFT] ', ''), mapel: p.mapel, kelas: p.kelas, total: p.total_target || 0, current: (p.soal_ids?.length || 0) + 1, soalIds: p.soal_ids || [] };
+            window.bukaEditorStudio();
+        };
+
+        window.bukaEditorStudio = () => {
+            document.getElementById('editIdSoal').value = ""; document.getElementById('editAsalTab').value = "studio";
+            document.getElementById('judulModalEditor').innerHTML = `🎬 <span class="text-emerald-600">Studio:</span> Perakitan Paket`; 
+            document.getElementById('panelModeStudio').classList.remove('hidden'); // Tampilkan Toggle
+            document.getElementById('studioTxtCurrent').innerText = `No. ${studioData.current} / ${studioData.total}`;
+            
+            document.querySelector('input[name="sumberSoalStudio"][value="baru"]').checked = true; window.toggleSumberStudio();
+            document.getElementById('editMapel').value = studioData.mapel; document.getElementById('editKelas').value = studioData.kelas; document.getElementById('editKuadran').value = "Lokal";
+            quillPertanyaan.root.innerHTML = ""; quillPembahasan.root.innerHTML = ""; ['A','B','C','D','E'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; });
+            document.querySelectorAll('.input-kunci-dinamis, .input-matriks-kiri, .input-matriks-kanan').forEach(el => el.checked = false);
+            document.getElementById('editTipeSoal').value = "pg"; document.getElementById('editKesulitan').value = "Sedang"; window.ubahUIJenisSoalAdmin();
+
+            document.getElementById('btnHijauModal').innerText = studioData.current < studioData.total ? `💾 Simpan & Lanjut No ${studioData.current + 1}` : "🚀 Terbitkan Paket";
+            document.getElementById('modalEditor').classList.remove('hidden');
+        };
+
+        // --- MODE HYBRID (DADAKAN DARI KERANJANG) ---
+        window.bukaHybridMode = () => {
+            let mPaket = document.getElementById('paketMapelInput').value, kPaket = document.getElementById('paketKelasInput').value;
+            if(!mPaket || !kPaket) return Swal.fire('Oops!', 'Pilih Mapel & Kelas pada Identitas Paket terlebih dahulu!', 'warning');
+            
+            modeHybridAktif = true; document.getElementById('modalPaket').classList.add('hidden'); 
+            document.getElementById('editIdSoal').value = ""; document.getElementById('editAsalTab').value = "hybrid";
+            document.getElementById('judulModalEditor').innerHTML = `✍️ <span class="text-emerald-600">Injeksi Soal Dadakan</span>`; 
+            document.getElementById('panelModeStudio').classList.add('hidden'); // Sembunyikan Toggle
+            document.getElementById('areaNulisSoalStudio').classList.remove('hidden'); document.getElementById('btnHijauModal').classList.remove('hidden'); document.getElementById('areaPilihBankSoalStudio').classList.add('hidden');
+            
+            document.getElementById('editMapel').value = mPaket; document.getElementById('editKelas').value = kPaket; document.getElementById('editKuadran').value = "Lokal";
+            quillPertanyaan.root.innerHTML = ""; quillPembahasan.root.innerHTML = ""; ['A','B','C','D','E'].forEach(h => { if(mapQuillOpsi[h]) mapQuillOpsi[h].root.innerHTML = ""; });
+            document.querySelectorAll('.input-kunci-dinamis, .input-matriks-kiri, .input-matriks-kanan').forEach(el => el.checked = false);
+            document.getElementById('editTipeSoal').value = "pg"; document.getElementById('editKesulitan').value = "Sedang"; window.ubahUIJenisSoalAdmin();
+            
+            document.getElementById('btnHijauModal').innerText = "💾 Simpan & Kembali ke Paket";
+            document.getElementById('modalEditor').classList.remove('hidden');
+        };
+
+        // TOGGLE BUNGLON
+        window.toggleSumberStudio = () => {
+            let val = document.querySelector('input[name="sumberSoalStudio"]:checked').value;
+            let areaNulis = document.getElementById('areaNulisSoalStudio');
+            let btnHijau = document.getElementById('btnHijauModal');
+            let areaBank = document.getElementById('areaPilihBankSoalStudio');
+            let lblBaru = document.getElementById('lblSumberBaru');
+            let lblBank = document.getElementById('lblSumberBank');
+
+            // Reset warna border semua label
+            document.querySelectorAll('.radio-toggle-sumber').forEach(el => {
+                el.classList.remove('border-emerald-400', 'bg-emerald-50');
+                el.classList.add('border-gray-200', 'bg-white');
             });
 
-            tb.innerHTML = html || '<tr><td colspan="4" class="text-center py-10 text-slate-400 font-bold">Pencarian kosong atau Anda belum merakit paket.</td></tr>';
+            if (val === 'baru') {
+                if(areaNulis) areaNulis.classList.remove('hidden'); 
+                if(btnHijau) btnHijau.classList.remove('hidden');
+                if(areaBank) areaBank.classList.add('hidden');
+                if(lblBaru) { lblBaru.classList.remove('border-gray-200', 'bg-white'); lblBaru.classList.add('border-emerald-400', 'bg-emerald-50'); }
+            } else {
+                if(areaNulis) areaNulis.classList.add('hidden'); 
+                if(btnHijau) btnHijau.classList.add('hidden');
+                if(areaBank) areaBank.classList.remove('hidden');
+                if(lblBank) { lblBank.classList.remove('border-gray-200', 'bg-white'); lblBank.classList.add('border-emerald-400', 'bg-emerald-50'); }
+                window.renderBankSoalStudio();
+            }
         };
-        window.muatDropdownPaketLokal = () => { let s = document.getElementById('inputPaketUjian'); if(s) { s.innerHTML = '<option value="">-- Pilih Paket --</option>'; dataPaketLokal.forEach(p => s.innerHTML += `<option value="${p.id}">${p.nama_paket}</option>`); } };
-        window.bukaModalBuatPaket = () => { document.getElementById('namaPaketBaru').value = ""; pilihanSoalSementara.clear(); window.renderPilihanSoal(); document.getElementById('modalPaket').classList.remove('hidden'); };
-        window.tutupModalPaket = () => { document.getElementById('modalPaket').classList.add('hidden'); };
-        window.renderPilihanSoal = () => { 
-            let kw = (document.getElementById('filterCariPaket')?.value || "").toLowerCase();
-            let k = document.getElementById('filterKelasPaket')?.value || ""; 
-            let m = (document.getElementById('filterMapelPaket')?.value || "").toLowerCase(); 
-            // Tangkap nilai filter baru
-            let sm = document.getElementById('filterSumberPaket')?.value || ""; 
-            let tk = document.getElementById('filterKesulitanPaket')?.value || ""; 
-            let h = ''; 
-            dataSoalSeluruhnya.filter(s => {
-                // Logika Filter Sumber & Kesulitan (Jika kosong, tampilkan semua)
-                let matchSumber = (sm === "") ? true : (s.kuadran === sm);
-                let kesulitanSoal = s.kesulitan || "Sedang"; // Default jika ada soal lama yang belum punya status
-                let matchKesulitan = (tk === "") ? true : (kesulitanSoal === tk);
-                return matchSumber && matchKesulitan;
-            }).forEach(s => { 
-                let dm = (s.metadata?.mapel || "").toLowerCase(), sk = s.metadata?.kelas || ""; 
-                let divT = document.createElement('div'); divT.innerHTML = s.pertanyaan; let dp = (divT.innerText || "").toLowerCase(); 
-                if((dm.includes(kw) || dp.includes(kw)) && (k === "" || sk == k) && (m === "" || dm === m)){ 
-                    let c = pilihanSoalSementara.has(s.id) ? 'checked' : ''; 
-                    // UI Badge Indah
-                    let level = s.kesulitan || 'Sedang';
-                    let bgLevel = level === 'Mudah' ? 'bg-green-100 text-green-700' : (level === 'Sulit' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700');
-                    let bgSumber = s.kuadran === 'Global' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600';
-                    h += `
-                    <label class="flex items-start p-4 border rounded-2xl cursor-pointer mb-2 hover:bg-emerald-50 transition ${c ? 'bg-emerald-50 border-emerald-400 ring-2' : 'bg-white'}">
-                        <input type="checkbox" value="${s.id}" class="mt-1 w-5 h-5 text-emerald-600 rounded" onchange="toggleSoalPaket(this)" ${c}>
-                        <div class="ml-4 w-full">
-                            <div class="flex justify-between items-start mb-1">
-                                <p class="text-xs font-black text-emerald-700 uppercase">${(s.metadata?.mapel || '-')} | Kls ${sk}</p>
-                                <div class="flex space-x-1 shrink-0">
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold border border-transparent shadow-sm ${bgSumber}">${s.kuadran}</span>
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase border border-transparent shadow-sm ${bgLevel}">${level}</span>
-                                </div>
-                            </div>
-                            <p class="text-sm line-clamp-2 italic text-gray-800">"${divT.innerText}"</p>
-                        </div>
-                    </label>`; 
+
+        window.renderBankSoalStudio = () => {
+            let kw = (document.getElementById('cariSoalStudio')?.value || "").toLowerCase(), sm = document.getElementById('sumberSoalStudioSelect')?.value || "Lokal", h = '';
+            dataSoalSeluruhnya.filter(s => sm === "Global" ? s.kuadran === "Global" : s.kuadran === "Lokal").forEach(s => {
+                let dm = (s.metadata?.mapel || "").toLowerCase(), sk = s.metadata?.kelas || "";
+                let mapelP = (studioData.mapel || "").toLowerCase(), kelasP = studioData.kelas || "";
+                let dt = document.createElement('div'); dt.innerHTML = s.pertanyaan; let teks = (dt.innerText || "").toLowerCase();
+
+                if(dm === mapelP && sk === kelasP && teks.includes(kw)) {
+                    h += `<label class="flex items-start p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-emerald-400 transition radio-soal-studio" onclick="pilihSoalStudio('${s.id}')"><input type="radio" name="pilBankStudio" value="${s.id}" class="mt-1 w-4 h-4 text-emerald-600 focus:ring-emerald-500"><div class="ml-3 flex-1"><p class="text-[9px] font-black text-emerald-600 uppercase mb-1">${s.tipe_soal.replace('_',' ')} | ${s.kuadran}</p><p class="text-xs font-medium text-gray-700 line-clamp-2">${dt.innerText}</p></div></label>`;
+                }
+            });
+            let listBank = document.getElementById('listBankSoalStudio');
+            if(listBank) listBank.innerHTML = h || '<div class="text-center py-10 text-gray-400 font-bold border-2 border-dashed rounded-xl m-2">Tidak ada soal tersisa untuk Mapel ini.</div>';
+            
+            let idTerpilih = document.getElementById('idSoalTerpilihStudio'); if(idTerpilih) idTerpilih.value = ''; 
+            let infoTerpilih = document.getElementById('infoSoalTerpilihStudio'); if(infoTerpilih) infoTerpilih.innerHTML = 'Pilih 1 soal...';
+            let btn = document.getElementById('btnLanjutBankStudio'); 
+            if(btn) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); btn.innerText = studioData.current < studioData.total ? `Pilih & Lanjut ➡️` : "Terbitkan Paket"; }
+        };
+
+        window.pilihSoalStudio = (id) => {
+            document.getElementById('idSoalTerpilihStudio').value = id;
+            document.getElementById('infoSoalTerpilihStudio').innerHTML = `✅ <span class="text-emerald-700 font-black">Terpilih!</span>`;
+            document.querySelectorAll('.radio-soal-studio').forEach(el => { el.classList.remove('bg-emerald-50', 'border-emerald-400'); el.classList.add('border-gray-200'); });
+            event.currentTarget.classList.remove('border-gray-200'); event.currentTarget.classList.add('bg-emerald-50', 'border-emerald-400');
+            let btn = document.getElementById('btnLanjutBankStudio'); if(btn) { btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+        };
+
+        window.simpanSoalBankKeStudio = async () => {
+            let idSoal = document.getElementById('idSoalTerpilihStudio').value; if(!idSoal) return;
+            Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+            try {
+                studioData.soalIds.push(idSoal);
+                let py = { nama_paket: studioData.current < studioData.total ? `[DRAFT] ${studioData.namaPaket}` : studioData.namaPaket, soal_ids: studioData.soalIds, sekolah_id: idSekolahGlobal, mapel: studioData.mapel, kelas: studioData.kelas, pembuat_nama: "Admin " + idSekolahGlobal, status_paket: studioData.current < studioData.total ? 'draft' : 'ready', total_target: studioData.total, update_terakhir: new Date() };
+                if (!studioData.idPaketDraft) { py.dibuat_pada = new Date(); let dRef = await addDoc(collection(db, "paket_soal"), py); studioData.idPaketDraft = dRef.id; } 
+                else { await updateDoc(doc(db, "paket_soal", studioData.idPaketDraft), py); }
+
+                if (studioData.current < studioData.total) { 
+                    studioData.current++; 
+                    Swal.fire({title: 'Masuk!', timer: 800, showConfirmButton: false}); 
+                    window.bukaEditorStudio(); 
                 } 
-            }); 
-            document.getElementById('listPilihanSoal').innerHTML = h || '<p class="text-center text-sm py-8 text-gray-400 font-bold">Tidak ada soal yang sesuai filter.</p>'; 
-            document.getElementById('counterSoalPaket').innerText = `${pilihanSoalSementara.size} TERPILIH`; 
+                else { 
+                    modeStudioActive = false; 
+                    document.getElementById('modalEditor').classList.add('hidden'); 
+                    Swal.fire('Selesai! 🎉', 'Paket rilis.', 'success'); 
+                    window.muatDaftarPaketLokal(); 
+                    window.bukaTab('tabPaket'); 
+                }
+            } catch(e) { Swal.fire('Error', 'Gagal memproses.', 'error'); }
         };
-        window.toggleSoalPaket = c => { if(c.checked) pilihanSoalSementara.add(c.value); else pilihanSoalSementara.delete(c.value); document.getElementById('counterSoalPaket').innerText = `${pilihanSoalSementara.size} TERPILIH`; };
-        window.simpanPaketBaru = async () => { let n = document.getElementById('namaPaketBaru').value; if(!n || pilihanSoalSementara.size === 0) return Swal.fire('Oops', 'Isi nama dan pilih soal!', 'warning'); Swal.fire({title: 'Merakit...', didOpen: () => Swal.showLoading()}); await addDoc(collection(db, "paket_soal"), {nama_paket: n, soal_ids: Array.from(pilihanSoalSementara), sekolah_id: idSekolahGlobal, dibuat_pada: new Date()}); window.tutupModalPaket(); Swal.fire({title: 'Berhasil!', icon: 'success', timer: 1000, showConfirmButton: false}); window.muatDaftarPaketLokal(); };
-        window.hapusPaket = async (i) => { if((await Swal.fire({title: 'Hapus Paket?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33'})).isConfirmed) { await deleteDoc(doc(db, "paket_soal", i)); window.muatDaftarPaketLokal(); } };
+
+        window.aksiSimpanDariModal = async () => {
+            let tipe = document.getElementById('editTipeSoal').value, jumlahOpsi = parseInt(document.getElementById('editJumlahOpsi').value);
+            let hMatriks = document.getElementById('editHeaderMatriks') ? document.getElementById('editHeaderMatriks').value : "Benar|Salah"; 
+            let kontenTanya = quillPertanyaan.root.innerHTML, kontenBahas = quillPembahasan.root.innerHTML;
+            if(quillPertanyaan.getText().trim().length === 0 && !kontenTanya.includes('<img') && !kontenTanya.includes('<span class="ql-formula"')) return Swal.fire('Oops', 'Pertanyaan tidak boleh kosong!', 'warning');
+            
+            let arrayOpsi = []; let isValid = false; let huruf = ['A','B','C','D','E'];
+            if (tipe === 'pg' || tipe === 'pg_kompleks') {
+                for(let i=0; i<jumlahOpsi; i++) { let hrf = huruf[i]; let isBenar = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-kunci-dinamis`).checked; if(isBenar) isValid = true; arrayOpsi.push({ label: hrf, teks: mapQuillOpsi[hrf].root.innerHTML, benar: isBenar }); }
+                if (!isValid) return Swal.fire('Oops', 'Pilih minimal 1 kunci jawaban!', 'warning');
+            } else if (tipe === 'pgk_matriks') {
+                for(let i=0; i<jumlahOpsi; i++) { let hrf = huruf[i]; let radioKiri = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-matriks-kiri`), radioKanan = document.querySelector(`.baris-opsi[data-idx="${i}"] .input-matriks-kanan`); let kunciMatriks = radioKiri.checked ? 'Kiri' : (radioKanan.checked ? 'Kanan' : null); if(!kunciMatriks) return Swal.fire('Oops', `Tentukan kunci baris ${i+1}`, 'warning'); arrayOpsi.push({ label: (i+1).toString(), teks: mapQuillOpsi[hrf].root.innerHTML, benar: kunciMatriks, header: hMatriks }); }
+                isValid = true;
+            } else if (tipe === 'essay') { isValid = true; arrayOpsi = []; }
+            
+            let i = document.getElementById('editIdSoal').value, a = document.getElementById('editAsalTab').value;
+            Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()});
+            try {
+                let py = { tipe_soal: tipe, pertanyaan: kontenTanya, opsi: arrayOpsi, pembahasan: kontenBahas, kuadran: document.getElementById('editKuadran') ? document.getElementById('editKuadran').value : "Lokal", kesulitan: document.getElementById('editKesulitan') ? document.getElementById('editKesulitan').value : "Sedang", sekolah_id: idSekolahGlobal, metadata: { mapel: document.getElementById('editMapel').value, sub_bab: document.getElementById('editBab').value, jenjang: jenjangSekolahGlobal, kelas: document.getElementById('editKelas').value } };
+                let docRefId = i;
+                if(i === "") { py.status = 'aktif'; py.pembuat_id = "Admin " + idSekolahGlobal; py.dibuat_pada = new Date(); let res = await addDoc(collection(db, "bank_soal"), py); docRefId = res.id; } 
+                else { if(a === 'review') py.status = 'aktif'; await updateDoc(doc(db, "bank_soal", i), py); }
+                
+                if (a === 'studio') {
+                    studioData.soalIds.push(docRefId);
+                    let pyPaket = { nama_paket: studioData.current < studioData.total ? `[DRAFT] ${studioData.namaPaket}` : studioData.namaPaket, soal_ids: studioData.soalIds, sekolah_id: idSekolahGlobal, mapel: studioData.mapel, kelas: studioData.kelas, pembuat_nama: "Admin " + idSekolahGlobal, status_paket: studioData.current < studioData.total ? 'draft' : 'ready', total_target: studioData.total, update_terakhir: new Date() };
+                    if (!studioData.idPaketDraft) { pyPaket.dibuat_pada = new Date(); let dRef = await addDoc(collection(db, "paket_soal"), pyPaket); studioData.idPaketDraft = dRef.id; } 
+                    else { await updateDoc(doc(db, "paket_soal", studioData.idPaketDraft), pyPaket); }
+                    if (studioData.current < studioData.total) { studioData.current++; Swal.fire({title: 'Tersimpan!', timer: 800, showConfirmButton: false}); window.bukaEditorStudio(); } 
+                    else { modeStudioActive = false; document.getElementById('modalEditor').classList.add('hidden'); Swal.fire('Selesai! 🎉', 'Paket berhasil terbit.', 'success'); window.muatDaftarPaketLokal(); window.bukaTab('tabPaket'); }
+                    return; 
+                }
+
+                if (a === 'hybrid') {
+                    pilihanSoalSementara.add(docRefId); 
+                    await window.muatBankSoalGlobalLokal(); document.getElementById('modalEditor').classList.add('hidden'); 
+                    window.renderPilihanSoal(); document.getElementById('modalPaket').classList.remove('hidden'); 
+                    modeHybridAktif = false; Swal.fire({title: 'Soal Masuk Keranjang!', icon: 'success', timer: 1000, showConfirmButton: false});
+                    return; 
+                }
+
+                document.getElementById('modalEditor').classList.add('hidden'); Swal.fire({title: 'Tersimpan!', icon: 'success', timer: 1000, showConfirmButton: false}); 
+                if(a === 'review') window.muatAntreanVerifikasi(); else window.muatBankSoalLokal();
+            } catch(e) { Swal.fire('Error', 'Gagal menyimpan.', 'error'); }
+        };
+
+        window.tutupModalEditor = () => { 
+            let a = document.getElementById('editAsalTab').value;
+            if(a === 'studio') {
+                Swal.fire({ title: 'Jeda Merakit?', text: 'Progress Anda aman tersimpan di Draft Paket.', icon: 'info', showCancelButton: true, confirmButtonText: 'Ya, Jeda & Keluar', confirmButtonColor: '#059669' }).then((res) => {
+                    if(res.isConfirmed) { 
+                        modeStudioActive = false; 
+                        document.getElementById('modalEditor').classList.add('hidden'); 
+                        window.muatDaftarPaketLokal(); 
+                        window.bukaTab('tabPaket'); 
+                    }
+                });
+                return;
+            }
+            if(a === 'hybrid') { 
+                modeHybridAktif = false; 
+                document.getElementById('modalEditor').classList.add('hidden'); 
+                document.getElementById('modalPaket').classList.remove('hidden'); 
+                return; 
+            }
+            // Tutup Normal
+            let pPanel = document.getElementById('panelModeStudio'); if(pPanel) pPanel.classList.add('hidden');
+            let areaNulis = document.getElementById('areaNulisSoalStudio'); if(areaNulis) areaNulis.classList.remove('hidden'); 
+            let areaBank = document.getElementById('areaPilihBankSoalStudio'); if(areaBank) areaBank.classList.add('hidden'); 
+            let btnHijau = document.getElementById('btnHijauModal'); if(btnHijau) btnHijau.classList.remove('hidden');
+            document.getElementById('modalEditor').classList.add('hidden'); 
+        };
+        
         // MANAJEMEN JADWAL UJIAN & SESI (RUANGAN)
         let memorySiswaSesi = []; 
         let memoryGuruSesi = [];
@@ -2094,8 +2345,71 @@
                 if(tb) tb.innerHTML = h || '<tr><td colspan="4" class="text-center py-12 text-slate-500 font-medium">Belum ada jadwal tersedia.</td></tr>'; 
             } catch(er) { if(tb) tb.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-red-500 font-bold">Gagal memuat jadwal.</td></tr>'; } 
         };
-        window.toggleStatusJadwal = async (i, s) => { Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()}); await updateDoc(doc(db, "jadwal_ujian", i), {status: s}); window.muatDaftarJadwal(); Swal.close(); };
+        // ==========================================
+        // MESIN CERDAS EVALUASI STATUS PAKET (ANTI BOCOR + SADAR WAKTU)
+        // ==========================================
+        window.evaluasiStatusPaketLokal = async (idPaket) => {
+            if(!idPaket) return null;
+            try {
+                const qJadwalAktif = query(collection(db, "jadwal_ujian"), where("id_paket", "==", idPaket), where("status", "==", "aktif"));
+                const snapJadwalAktif = await getDocs(qJadwalAktif);
+                
+                let masihAdaJadwalBerjalan = false;
+                let waktuSekarang = new Date();
+
+                // ⏱️ MESIN WAKTU: Cek apakah jadwal tersebut BENAR-BENAR belum kedaluwarsa
+                snapJadwalAktif.forEach(doc => {
+                    let dataJadwal = doc.data();
+                    let waktuSelesaiJadwal = new Date(dataJadwal.waktu_selesai);
+                    if (waktuSelesaiJadwal >= waktuSekarang) masihAdaJadwalBerjalan = true; 
+                });
+                
+                if (masihAdaJadwalBerjalan) {
+                    await updateDoc(doc(db, "paket_soal", idPaket), { status_paket: 'terjadwal' });
+                    return 'terjadwal'; // Lapor balik ke Penyapu
+                }
+
+                // Jika sudah lewat waktu/nonaktif, cek apakah ada nilainya
+                const qSemuaJadwal = query(collection(db, "jadwal_ujian"), where("id_paket", "==", idPaket));
+                const snapSemuaJadwal = await getDocs(qSemuaJadwal);
+                
+                let sudahDikerjakan = false;
+                for (let d of snapSemuaJadwal.docs) {
+                    let idJadwal = d.id;
+                    const qHasil = query(collection(db, "hasil_ujian"), where("id_jadwal", "==", idJadwal));
+                    const snapHasil = await getDocs(qHasil);
+                    if (!snapHasil.empty) { sudahDikerjakan = true; break; }
+                }
+
+                if (sudahDikerjakan) {
+                    await updateDoc(doc(db, "paket_soal", idPaket), { status_paket: 'selesai' });
+                    return 'selesai';
+                } else {
+                    await updateDoc(doc(db, "paket_soal", idPaket), { status_paket: 'ready' });
+                    return 'ready';
+                }
+            } catch(e) { console.error("Gagal evaluasi", e); return null; }
+        };
+
+        window.toggleStatusJadwal = async (i, s) => { 
+            Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()}); 
+            try { 
+                await updateDoc(doc(db, "jadwal_ujian", i), {status: s}); 
+                
+                // Panggil Mesin Hakim untuk menentukan nasib paketnya
+                let j = dataJadwalTabel.find(x => x.id === i);
+                if(j && j.id_paket) {
+                    await window.evaluasiStatusPaketLokal(j.id_paket);
+                }
+
+                window.muatDaftarJadwal(); 
+                window.muatDaftarPaketLokal(); // Refresh layar paket di background
+                Swal.close(); 
+            } catch(e) { Swal.fire('Error', 'Gagal merubah status jadwal.', 'error'); } 
+        };
+
         window.hapusJadwal = () => { Swal.fire({title: 'Fitur Dikunci 🔒', html: 'Gunakan tombol <b>🛑 Suspend</b> untuk menyembunyikannya.', icon: 'info', confirmButtonColor: '#0f172a'}); };
+        
         window.bukaModalJadwal = () => {
             document.getElementById('formJadwal').reset();
             document.getElementById('editIdJadwal').value = "";
@@ -2103,9 +2417,11 @@
             document.getElementById('btnSubmitJadwalModal').innerText = "📢 Terbitkan Jadwal";
             document.getElementById('modalJadwal').classList.remove('hidden');
         };
+        
         window.tutupModalJadwal = () => {
             document.getElementById('modalJadwal').classList.add('hidden');
         };
+        
         window.editJadwal = i => { 
             let j = dataJadwalTabel.find(x => x.id === i); if(!j) return; 
             document.getElementById('editIdJadwal').value = j.id; 
@@ -2122,6 +2438,7 @@
             document.getElementById('btnSubmitJadwalModal').innerText = "💾 Update Jadwal"; 
             document.getElementById('modalJadwal').classList.remove('hidden'); 
         };
+
         let fj = document.getElementById('formJadwal');
         if(fj) { 
             fj.addEventListener('submit', async e => { 
@@ -2129,10 +2446,29 @@
                 let id = document.getElementById('editIdJadwal').value;
                 let p = document.getElementById('inputPaketUjian').value; 
                 if(!p) return Swal.fire('Oops', 'Pilih Paket!', 'warning'); 
+                
                 let wm = document.getElementById('inputWaktuMulai').value, ws = document.getElementById('inputWaktuSelesai').value; 
                 if(new Date(wm) >= new Date(ws)) return Swal.fire('Salah Waktu', 'Batas akhir harus lebih besar!', 'warning'); 
+                
                 Swal.fire({title: 'Menyimpan...', didOpen: () => Swal.showLoading()}); 
                 try { 
+                    // CEK APAKAH INI EDIT JADWAL DAN GANTI PAKET?
+                    let paketLamaId = null;
+                    if(id !== "") {
+                        let jadwalLama = dataJadwalTabel.find(x => x.id === id);
+                        if(jadwalLama && jadwalLama.id_paket !== p) {
+                            paketLamaId = jadwalLama.id_paket;
+                        }
+                        // 🛡️ VALIDASI KEAMANAN: Jika ganti paket, pastikan jadwal belum dikerjakan siswa
+                        if(paketLamaId) {
+                            const qHasil = query(collection(db, "hasil_ujian"), where("id_jadwal", "==", id));
+                            const snapHasil = await getDocs(qHasil);
+                            if(!snapHasil.empty) {
+                                return Swal.fire('DILARANG KERAS! 🛑', 'Jadwal ini sudah ada siswa yang mengerjakan. Anda tidak boleh mengganti Paket Soalnya di tengah jalan agar data nilai tidak hancur lebur.', 'error');
+                            }
+                        }
+                    }
+
                     let pk = dataPaketLokal.find(x => x.id === p); 
                     let py = { 
                         nama_ujian: document.getElementById('inputNamaUjian').value, 
@@ -2149,16 +2485,27 @@
                         aturan_rilis_bahas: document.getElementById('inputRilisBahas').value, 
                         sekolah_id: idSekolahGlobal 
                     }; 
+
                     if(id === "") { 
                         py.status = 'aktif'; py.dibuat_pada = new Date(); 
                         await addDoc(collection(db, "jadwal_ujian"), py); 
-                        Swal.fire({title: 'Terbit!', icon: 'success', timer: 1000}); 
+                        Swal.fire({title: 'Terbit!', icon: 'success', timer: 1000, showConfirmButton: false}); 
                     } else { 
                         await updateDoc(doc(db, "jadwal_ujian", id), py); 
-                        Swal.fire({title: 'Diperbarui!', icon: 'success', timer: 1000}); 
+                        Swal.fire({title: 'Diperbarui!', icon: 'success', timer: 1000, showConfirmButton: false}); 
                     } 
+                    
+                    // Panggil Mesin Hakim untuk paket yang baru
+                    await window.evaluasiStatusPaketLokal(p);
+
+                    // Panggil Mesin Hakim untuk paket yang lama (jika tadi ganti paket)
+                    if(paketLamaId) {
+                        await window.evaluasiStatusPaketLokal(paketLamaId);
+                    }
+
                     window.tutupModalJadwal(); 
                     window.muatDaftarJadwal(); 
+                    window.muatDaftarPaketLokal();
                 } catch(er) { Swal.fire('Error', 'Gagal memproses jadwal.', 'error'); } 
             }); 
         }
@@ -2481,13 +2828,34 @@
             document.getElementById('modalImportSoal').classList.remove('hidden'); 
         };
         window.tutupModalImportSoal = () => { document.getElementById('modalImportSoal').classList.add('hidden'); };
+        window.triggerFileInput = (id) => document.getElementById(id).click();
+        window.handleFileChange = (inputId, displayId) => {
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(displayId);
+            if (input.files && input.files[0]) {
+                display.innerText = input.files[0].name;
+                display.classList.remove('text-gray-500'); display.classList.add('text-gray-800');
+            } else {
+                display.innerText = "Tidak ada file dipilih";
+                display.classList.remove('text-gray-800'); display.classList.add('text-gray-500');
+            }
+        };
+        // Event listener saat file dipilih
+        document.getElementById('fileImportSoal').addEventListener('change', () => { handleFileChange('fileImportSoal', 'fileNameDisplay'); });
+
+        // Update fungsi kembali
         window.kembaliStep1Import = () => {
             document.getElementById('fileImportSoal').value = ''; 
+            // Kembalikan lebar kotak ke max-w-2xl
+            document.getElementById('kotakModalImport').classList.remove('max-w-4xl');
+            document.getElementById('kotakModalImport').classList.add('max-w-2xl');
+
             document.getElementById('step1Import').classList.remove('hidden');
             document.getElementById('footerStep1').classList.remove('hidden');
             document.getElementById('step2Import').classList.add('hidden');
             document.getElementById('footerStep2').classList.add('hidden');
             window.dataPreviewImport = [];
+            handleFileChange('fileImportSoal', 'fileNameDisplay'); // Reset teks nama file
         };
         // EXCEL DOWNLOAD V2 (PRAKTIS & OPERASIONAL LOKAL)
         window.downloadTemplateSoal = () => {
@@ -2566,18 +2934,97 @@
                                 metadata: { mapel: rw["Mapel"] || "", sub_bab: rw["Bab"] || "-", jenjang: jenjangSekolahGlobal, kelas: (rw["Kelas"] || "10").toString() } 
                             };
                             window.dataPreviewImport.push({ id_temp: index, data: py, valid: true });
-                            h += `<label class="flex items-start p-3 border border-indigo-100 bg-indigo-50/30 rounded-xl cursor-pointer hover:bg-indigo-50 transition"><input type="checkbox" value="${index}" class="cek-import-soal w-5 h-5 mt-1 text-indigo-600 rounded" checked><div class="ml-3"><p class="text-sm font-bold text-gray-800 line-clamp-2">${tTanya || '(Soal Hybrid)'}</p><p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">MAPEL: ${rw["Mapel"]||'-'} | OPSI: ${jmlOpsi} | KUNCI: ${k}</p></div></label>`;
+                            
+                            // DESAIN BARU YANG LEBIH LEGA + TOMBOL DETAIL
+                            h += `
+                            <div class="flex items-start p-4 border border-indigo-100 bg-white hover:bg-indigo-50/30 rounded-xl transition shadow-sm relative group">
+                                <input type="checkbox" value="${index}" class="cek-import-soal w-5 h-5 mt-1 text-indigo-600 rounded cursor-pointer shrink-0" checked>
+                                <div class="ml-4 flex-1">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <p class="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded shadow-sm">${rw["Mapel"]||'-'} | KLS ${rw["Kelas"]||'-'}</p>
+                                        <span class="text-[9px] font-bold text-gray-400 border px-1.5 py-0.5 rounded">${jenisSoal.replace('_', ' ')}</span>
+                                    </div>
+                                    <p class="text-sm font-medium text-gray-800 line-clamp-3 mb-2">"${tTanya || '(Mode Hybrid / Gambar)'}"</p>
+                                    <div class="text-[10px] text-gray-500 font-bold uppercase flex space-x-3">
+                                        <span>⚙️ Kunci: <span class="text-emerald-600">${k || '-'}</span></span>
+                                        <span>🧩 Opsi: ${jmlOpsi}</span>
+                                    </div>
+                                </div>
+                                <div class="shrink-0 ml-3">
+                                    <button onclick="lihatDetailImport(${index})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black px-3 py-2 rounded-lg transition border border-slate-200 shadow-sm flex flex-col items-center">
+                                        <span class="text-sm mb-0.5">🔍</span> Detail
+                                    </button>
+                                </div>
+                            </div>`;
                             validCount++;
                         } else {
                             window.dataPreviewImport.push({ id_temp: index, data: null, valid: false });
-                            h += `<div class="flex items-start p-3 border border-red-200 bg-red-50 rounded-xl opacity-70"><input type="checkbox" disabled class="w-5 h-5 mt-1 rounded border-red-300"><div class="ml-3"><p class="text-sm font-bold text-red-800 line-clamp-1">${tTanya || '(Baris Kosong)'}</p><p class="text-[10px] text-red-600 font-bold uppercase tracking-widest mt-1">❌ ${pesanError}</p></div></div>`;
+                            h += `
+                            <div class="flex items-start p-4 border border-red-200 bg-red-50 rounded-xl opacity-75">
+                                <input type="checkbox" disabled class="w-5 h-5 mt-1 rounded border-red-300 bg-red-100 shrink-0">
+                                <div class="ml-4">
+                                    <p class="text-sm font-bold text-red-900 line-clamp-2 mb-1">"${tTanya || '(Baris Kosong)'}"</p>
+                                    <p class="text-[10px] text-white bg-red-500 px-2 py-0.5 rounded font-bold uppercase tracking-widest inline-block mt-1 shadow-sm">❌ Error: ${pesanError}</p>
+                                </div>
+                            </div>`;
                         }
                     }
                     document.getElementById('listPreviewImport').innerHTML = h; document.getElementById('infoJumlahPreview').innerText = `${validCount} Valid dari ${a.length} Baris`;
+                    
+                    // Lebarkan ukuran modal menjadi max-w-4xl agar lega membaca soal
+                    document.getElementById('kotakModalImport').classList.remove('max-w-2xl');
+                    document.getElementById('kotakModalImport').classList.add('max-w-4xl');
+
                     document.getElementById('step1Import').classList.add('hidden'); document.getElementById('footerStep1').classList.add('hidden'); document.getElementById('step2Import').classList.remove('hidden'); document.getElementById('footerStep2').classList.remove('hidden');
                 } catch(er) { Swal.fire('Error', 'Format Excel salah.', 'error'); }
             };
             r.readAsArrayBuffer(f.files[0]);
+        };
+        window.lihatDetailImport = (idx) => {
+            let item = window.dataPreviewImport.find(x => x.id_temp === idx);
+            if(!item || !item.data) return;
+            
+            let soal = item.data;
+            let htmlOpsi = '';
+            
+            if (soal.tipe_soal === 'essay') {
+                htmlOpsi = '<p class="text-sm italic text-slate-500 bg-slate-50 p-4 rounded-xl border border-slate-200">📝 Soal Uraian (Penilaian Subjektif / Manual)</p>';
+            } else if (soal.tipe_soal === 'pgk_matriks') {
+                 htmlOpsi = '<div class="bg-rose-50 p-4 rounded-xl border border-rose-100 text-sm"><p class="font-black text-rose-800 mb-3 text-xs uppercase tracking-widest border-b border-rose-200 pb-2">Pernyataan & Kunci:</p><ul class="space-y-3">';
+                 let hMatriks = (soal.opsi[0]?.header || 'Benar|Salah').split('|');
+                 soal.opsi.forEach((o, i) => {
+                     let kunciTeks = o.benar === 'Kiri' ? hMatriks[0] : hMatriks[1];
+                     htmlOpsi += `<li class="flex items-start"><span class="font-black text-rose-400 mr-2">${i+1}.</span> <div class="flex-1">${o.teks}</div> <span class="ml-3 font-black text-rose-700 bg-rose-100 px-2 py-1 rounded-md text-[10px] uppercase shadow-sm">${kunciTeks}</span></li>`;
+                 });
+                 htmlOpsi += '</ul></div>';
+            } else {
+                htmlOpsi = '<div class="space-y-2.5 mt-4">';
+                let huruf = ['A','B','C','D','E'];
+                if(soal.opsi && Array.isArray(soal.opsi)){
+                    soal.opsi.forEach((o, i) => {
+                        let bg = o.benar ? 'bg-emerald-50 border-emerald-300 shadow-sm' : 'bg-white border-slate-200';
+                        let badge = o.benar ? '<span class="ml-3 text-[10px] font-black text-white bg-emerald-500 px-2 py-1 rounded shadow uppercase tracking-widest">Kunci</span>' : '';
+                        let warnaHuruf = o.benar ? 'text-emerald-600' : 'text-slate-400';
+                        htmlOpsi += `<div class="p-3.5 border rounded-xl flex items-start ${bg} transition"><span class="font-black mr-3 text-lg ${warnaHuruf} w-6 text-center">${huruf[i]}</span> <div class="text-sm flex-1 text-slate-700">${o.teks}</div> ${badge}</div>`;
+                    });
+                }
+                htmlOpsi += '</div>';
+            }
+            
+            Swal.fire({
+                html: `
+                    <div class="text-left">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest">MAPEL: ${soal.metadata.mapel} | KLS ${soal.metadata.kelas}</span>
+                            <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest border px-2 py-1 rounded">${soal.tipe_soal.replace('_',' ')}</span>
+                        </div>
+                        <div class="p-5 border border-slate-200 rounded-2xl bg-white shadow-sm text-sm text-slate-800 leading-relaxed mb-4">${soal.pertanyaan}</div>
+                        ${htmlOpsi}
+                        ${soal.pembahasan ? `<div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-sm"><p class="text-[10px] font-black text-yellow-800 uppercase tracking-widest mb-1.5">💡 Pembahasan:</p><div class="text-yellow-900">${soal.pembahasan}</div></div>` : ''}
+                    </div>
+                `,
+                width: 700, showConfirmButton: true, confirmButtonText: 'Tutup Detail', confirmButtonColor: '#4f46e5', customClass: { popup: 'rounded-3xl' }
+            });
         };
         // STEP 2: UPLOAD HANYA YANG DI-CEKLIS
         window.eksekusiSimpanImport = async () => {
@@ -3417,6 +3864,13 @@
             Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
             try {
                 await updateDoc(doc(db, "jadwal_ujian", id), { status: statusTujuan });
+                
+                // 🔥 SUNTIKKAN MESIN HAKIM DI SINI JUGA 🔥
+                let docRef = await getDoc(doc(db, "jadwal_ujian", id));
+                if(docRef.exists() && docRef.data().id_paket) {
+                    await window.evaluasiStatusPaketLokal(docRef.data().id_paket);
+                }
+
                 window.muatPortalPPDB();
                 Swal.close();
             } catch(e) { Swal.fire('Error', 'Gagal merubah status jadwal.', 'error'); }
