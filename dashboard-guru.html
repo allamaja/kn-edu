@@ -1130,28 +1130,46 @@
                     let htmlTanya = soal.pertanyaan && !soal.pertanyaan.startsWith('<') ? `<p>${soal.pertanyaan}</p>` : (soal.pertanyaan || "");
                     let htmlBahas = bahas && !bahas.startsWith('<') ? `<p>${bahas}</p>` : bahas;
 
+                    // HTML Layout Baru: 1 Kolom Lega + Tombol Toggle Rubrik
                     html += `
-                    <div class="border border-gray-200 rounded-2xl p-5 mb-5 bg-white shadow-sm relative overflow-hidden">
+                    <div class="border border-gray-200 rounded-3xl p-5 mb-6 bg-white shadow-sm relative overflow-hidden transition-all">
                         <div class="absolute top-0 left-0 w-2 h-full bg-indigo-500"></div>
-                        <div class="ml-2">
-                            <h4 class="font-black text-gray-800 mb-3 border-b pb-2 flex justify-between"><span>Nomor Soal: ${i+1}</span> <span class="text-indigo-600">ESAI</span></h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="ml-2 flex flex-col">
+                            
+                            <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-4 shrink-0">
+                                <h4 class="font-black text-gray-800 text-lg">Nomor Soal: ${i+1}</h4>
+                                <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest shadow-sm">ESAI</span>
+                            </div>
+                            
+                            <div class="flex flex-col space-y-4">
                                 <div>
-                                    <h5 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Teks Pertanyaan:</h5>
-                                    <div class="bg-gray-50 p-4 rounded-xl text-sm ql-editor border border-gray-200 mb-4">${htmlTanya}</div>
-                                    <h5 class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Jawaban Siswa:</h5>
-                                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-sm text-blue-900 font-medium whitespace-pre-wrap">${jwbSiswa}</div>
+                                    <h5 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Teks Pertanyaan:</h5>
+                                    <div class="bg-gray-50 p-4 rounded-xl text-sm ql-editor border border-gray-200 max-h-48 overflow-y-auto" style="height: auto; min-height: 60px;">${htmlTanya}</div>
                                 </div>
-                                <div class="flex flex-col">
-                                    <h5 class="text-xs font-bold text-yellow-600 uppercase tracking-widest mb-2 flex items-center"><span class="mr-1">💡</span> Kunci / Rubrik Panduan:</h5>
-                                    <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl text-sm ql-editor mb-4 flex-1 overflow-y-auto max-h-60">${htmlBahas}</div>
-                                    
-                                    <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl flex items-center justify-between mt-auto">
-                                        <label class="text-sm font-black text-indigo-900">Beri Nilai Soal Ini <br><span class="text-[10px] font-normal">(Skala 0 - 100)</span></label>
-                                        <input type="number" min="0" max="100" class="input-nilai-essay w-24 px-4 py-3 border border-indigo-300 rounded-xl focus:ring-4 focus:ring-indigo-500 text-xl font-black text-center text-indigo-700 outline-none" data-index="${i}" value="${nilaiLama}" placeholder="0">
-                                    </div>
+                                
+                                <div>
+                                    <h5 class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1.5">Jawaban Siswa:</h5>
+                                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-sm text-blue-900 font-medium whitespace-pre-wrap max-h-64 overflow-y-auto shadow-inner">${jwbSiswa}</div>
                                 </div>
                             </div>
+
+                            <div class="flex flex-col md:flex-row gap-4 items-center justify-between mt-5 pt-4 border-t border-gray-100 bg-slate-50 p-3 rounded-2xl">
+                                
+                                <button onclick="document.getElementById('rubrik_${i}').classList.toggle('hidden')" class="w-full md:w-auto px-5 py-2.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border border-yellow-200 rounded-xl text-xs font-black transition flex items-center justify-center shadow-sm">
+                                    <span class="mr-2 text-base">💡</span> Cek Kunci / Rubrik
+                                </button>
+                                
+                                <div class="flex items-center space-x-4 w-full md:w-auto justify-end">
+                                    <label class="text-xs font-black text-indigo-900 text-right leading-tight">Beri Nilai Soal Ini <br><span class="text-[9px] font-bold text-indigo-500">(Skala 0 - 100)</span></label>
+                                    <input type="number" min="0" max="100" class="input-nilai-essay w-24 px-4 py-2 border-2 border-indigo-300 rounded-xl focus:ring-4 focus:ring-indigo-500 text-xl font-black text-center text-indigo-700 outline-none shadow-sm transition" data-index="${i}" value="${nilaiLama}" placeholder="0">
+                                </div>
+                            </div>
+
+                            <div id="rubrik_${i}" class="hidden mt-4 bg-yellow-50 border border-yellow-200 p-5 rounded-2xl text-sm ql-editor shadow-inner" style="height: auto;">
+                                <h5 class="text-[10px] font-black text-yellow-700 uppercase tracking-widest mb-3 border-b border-yellow-200 pb-2">Panduan Koreksi:</h5>
+                                ${htmlBahas}
+                            </div>
+                            
                         </div>
                     </div>`;
                 }
