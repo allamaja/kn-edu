@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html lang="id" translate="no">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google" content="notranslate">
     <title>Admin Sekolah V2 - SmartKhairunnas</title>
     <link href="style.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1371,12 +1370,29 @@
             s.forEach(d => dataKurikulumGlobal.push({id: d.id, ...d.data()}));
             
             let o = '<option value="">-- Pilih Mapel --</option>'; 
-            // 🔥 FILTER: Saring mapel yang statusnya bukan 'nonaktif'
-            dataKurikulumGlobal.filter(m => m.status !== 'nonaktif').forEach(m => {
+            
+            // 🔥 FILTER JENJANG SUPER AMAN (Kebal format Array maupun String)
+            dataKurikulumGlobal.filter(m => {
+                if (m.status === 'nonaktif') return false; // Buang yang nonaktif
+
+                // Ubah jadi string kecil semua agar kebal terhadap perbedaan format
+                let strJenjang = JSON.stringify(m.jenjang || "").toLowerCase();
+                let targetJenjang = jenjangSekolahGlobal.toLowerCase();
+                
+                // Cek apakah mengandung jenjang sekolah ini atau bersifat umum
+                let isJenjangCocok = strJenjang.includes(targetJenjang) || 
+                                     strJenjang.includes("semua") || 
+                                     strJenjang.includes("tanpa") || 
+                                     strJenjang.includes("umum") || 
+                                     strJenjang === '""' || 
+                                     strJenjang === '[]';
+                                     
+                return isJenjangCocok;
+            }).forEach(m => {
                 o += `<option value="${m.nama_mapel}">${m.nama_mapel}</option>`;
             });
-            
-            // 👇 Suntik opsi khusus PPDB ke semua dropdown Mapel
+
+            // 🎯 Opsi Spesial: Pastikan opsi PPDB selalu ada di paling bawah
             o += `<option value="PPDB" class="font-bold text-indigo-600">PPDB / Tes Masuk</option>`;
             
             document.querySelectorAll('.dinamis-mapel').forEach(el => el.innerHTML = o);
@@ -1507,11 +1523,28 @@
         window.renderCheckboxMapelGuru = (mapelTerpilih = []) => {
             let container = document.getElementById('userMapelContainer');
             let html = '';
+            
             if(dataKurikulumGlobal.length === 0) {
                 html = '<p class="text-xs text-gray-400 italic">Belum ada data Master Kurikulum dari Pusat.</p>';
             } else {
-                // 🔥 FILTER: Guru hanya bisa dipilihkan mapel yang berstatus AKTIF di pusat
-                dataKurikulumGlobal.filter(m => m.status !== 'nonaktif').forEach(m => {
+                // 🔥 FILTER JENJANG SUPER AMAN (Membaca format Array maupun String)
+                dataKurikulumGlobal.filter(m => {
+                    if (m.status === 'nonaktif') return false; // Buang yang nonaktif
+                    
+                    // Ubah jadi string kecil semua agar kebal terhadap perbedaan format
+                    let strJenjang = JSON.stringify(m.jenjang || "").toLowerCase();
+                    let targetJenjang = jenjangSekolahGlobal.toLowerCase();
+                    
+                    // Cek apakah mengandung jenjang sekolah ini atau bersifat umum
+                    let isJenjangCocok = strJenjang.includes(targetJenjang) || 
+                                         strJenjang.includes("semua") || 
+                                         strJenjang.includes("tanpa") || 
+                                         strJenjang.includes("umum") || 
+                                         strJenjang === '""' || 
+                                         strJenjang === '[]';
+                                         
+                    return isJenjangCocok;
+                }).forEach(m => {
                     let isChecked = mapelTerpilih.includes(m.nama_mapel) ? 'checked' : '';
                     html += `
                         <label class="flex items-center space-x-3 p-2 hover:bg-blue-50 rounded-lg cursor-pointer transition border border-transparent hover:border-blue-100">
@@ -1521,7 +1554,7 @@
                 });
             }
             container.innerHTML = html;
-        };
+        };;
         window.bukaModalUser = () => { 
             document.getElementById('userId').value = ""; 
             document.getElementById('userNama').value = ""; 
