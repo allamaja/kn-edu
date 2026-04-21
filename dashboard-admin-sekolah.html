@@ -227,6 +227,7 @@
                         </div>
                         <div id="areaTambahPPDB" class="hidden bg-emerald-50 p-5 rounded-2xl border border-emerald-200 mb-5 transition-all shadow-inner">
                             <p class="text-sm font-black text-emerald-800 mb-3 border-b border-emerald-200 pb-2">Input 1 Calon Santri</p>
+                            
                             <div class="space-y-3 mb-4">
                                 <div>
                                     <label class="text-[10px] font-bold text-emerald-600 uppercase">No. Daftar / PIN</label>
@@ -236,6 +237,7 @@
                                     <label class="text-[10px] font-bold text-emerald-600 uppercase">Nama Lengkap</label>
                                     <input type="text" id="ppdbManualNama" class="w-full text-sm border border-emerald-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                                 </div>
+                                
                                 <div class="flex gap-3">
                                     <div class="w-1/3">
                                         <label class="text-[10px] font-bold text-emerald-600 uppercase">L/P</label>
@@ -248,8 +250,14 @@
                                         <input type="text" id="ppdbManualAsal" placeholder="Cth: SD Al-Falah" class="w-full text-sm border border-emerald-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                                     </div>
                                 </div>
+
+                                <div>
+                                    <label class="text-[10px] font-bold text-emerald-600 uppercase">Target Kelas (Jalur)</label>
+                                    <select id="ppdbManualTarget" class="w-full text-sm border border-emerald-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-bold"></select>
+                                </div>
                             </div>
-                            <div class="flex space-x-3 mt-2">
+                            
+                            <div class="flex space-x-3 mt-4 border-t border-emerald-200 pt-3">
                                 <button onclick="document.getElementById('areaTambahPPDB').classList.add('hidden')" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">Batal</button>
                                 <button onclick="simpanManualPPDB()" class="bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm flex-1">💾 Simpan Pendaftar</button>
                             </div>
@@ -3742,21 +3750,51 @@
         };
         window.bukaTambahPPDB = () => {
             document.getElementById('areaImportPPDB').classList.add('hidden');
+            
             // Auto-generate PIN acak 6 digit saat tombol ditekan
             document.getElementById('ppdbManualPIN').value = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // 🔥 RENDER DINAMIS DROPDOWN TARGET KELAS SESUAI JENJANG SEKOLAH
+            let selectTarget = document.getElementById('ppdbManualTarget');
+            let htmlOpsi = '';
+            let jnj = (jenjangSekolahGlobal || "").toUpperCase();
+            
+            if (jnj === 'SMA') {
+                htmlOpsi = `
+                    <option value="9">Kelas 9 (Jalur Reguler)</option>
+                    <option value="8">Kelas 8 (Jalur Inden)</option>
+                    <option value="7">Kelas 7 (Jalur Inden)</option>`;
+            } else if (jnj === 'SMP') {
+                htmlOpsi = `
+                    <option value="6">Kelas 6 (Jalur Reguler)</option>
+                    <option value="5">Kelas 5 (Jalur Inden)</option>
+                    <option value="4">Kelas 4 (Jalur Inden)</option>`;
+            } else if (jnj === 'SD') {
+                htmlOpsi = `
+                    <option value="TK B">TK B (Jalur Reguler)</option>
+                    <option value="TK A">TK A (Jalur Inden)</option>
+                    <option value="PAUD">PAUD (Jalur Inden)</option>`;
+            } else {
+                // Fallback jika jenjang umum/pusat
+                htmlOpsi = `
+                    <option value="Reguler">Jalur Reguler</option>
+                    <option value="Inden">Jalur Inden</option>`;
+            }
+            
+            if (selectTarget) selectTarget.innerHTML = htmlOpsi;
+
             document.getElementById('areaTambahPPDB').classList.toggle('hidden');
         };
         // MESIN DOWNLOAD TEMPLATE EXCEL PPDB
         window.unduhTemplatePPDB = () => {
             if(typeof XLSX === 'undefined') return Swal.fire('Error', 'Library Excel belum dimuat.', 'error');
-            // Siapkan header sesuai sistem pembacaan
-            const headerRow = ["No_Pendaftaran", "Nama_Lengkap", "L/P", "Asal_Sekolah"];
-            const contohData1 = ["123456", "Ahmad Fulan Al-Fatih", "L", "SD IT Khairunnas"];
-            const contohData2 = ["123457", "Siti Aisyah", "P", "MI Muhammadiyah 1"];
+            // 🔥 UPDATE: Tambah header Target_Kelas
+            const headerRow = ["No_Pendaftaran", "Nama_Lengkap", "L/P", "Asal_Sekolah", "Target_Kelas"];
+            const contohData1 = ["123456", "Ahmad Fulan Al-Fatih", "L", "SD IT Khairunnas", "4"];
+            const contohData2 = ["123457", "Siti Aisyah", "P", "MI Muhammadiyah 1", "6"];
             const dataTemplate = [headerRow, contohData1, contohData2]; 
             const sheetTemplate = XLSX.utils.aoa_to_sheet(dataTemplate); 
-            // Percantik lebar kolom biar admin senang melihatnya
-            sheetTemplate['!cols'] = [ { wch: 20 }, { wch: 35 }, { wch: 10 }, { wch: 30 } ];
+            sheetTemplate['!cols'] = [ { wch: 20 }, { wch: 35 }, { wch: 10 }, { wch: 30 }, { wch: 15 } ];
             const wb = XLSX.utils.book_new(); 
             XLSX.utils.book_append_sheet(wb, sheetTemplate, "Data Peserta PPDB");
             Swal.fire({title: 'Mengunduh Template...', timer: 1000, didOpen: () => Swal.showLoading()});
@@ -3774,11 +3812,13 @@
                 const qCek = query(collection(db, "pendaftaran_ppdb"), where("no_pendaftaran", "==", pin));
                 const snapCek = await getDocs(qCek);
                 if (!snapCek.empty) return Swal.fire('Gagal', 'Nomor Pendaftaran / PIN ini sudah digunakan oleh peserta lain.', 'error');
+                let target = document.getElementById('ppdbManualTarget').value;
                 let payload = { 
                     no_pendaftaran: pin, 
                     nama: nama, 
                     jk: jk, 
                     asal_sekolah: asal || "-", 
+                    target_kelas: target, // 🔥 DISIMPAN KE DB
                     sekolah_id: idSekolahGlobal, 
                     dibuat_pada: new Date() 
                 };
@@ -3807,7 +3847,18 @@
                     let batch = [];
                     for(let rw of a) {
                         let pin = rw["No_Pendaftaran"] || rw["PIN"] || Math.floor(100000 + Math.random() * 900000).toString();
-                        let py = { no_pendaftaran: String(pin), nama: rw["Nama_Lengkap"] || rw["Nama"] || "Anonim", jk: rw["L/P"] || rw["Jenis_Kelamin"] || "-", asal_sekolah: rw["Asal_Sekolah"] || "-", sekolah_id: idSekolahGlobal, dibuat_pada: new Date() };
+                        // 🔥 UPDATE: Ambil data Target_Kelas dari Excel (Default ke 6 jika kosong)
+                        let targetKelas = String(rw["Target_Kelas"] || rw["Kelas"] || "6");
+                        
+                        let py = { 
+                            no_pendaftaran: String(pin), 
+                            nama: rw["Nama_Lengkap"] || rw["Nama"] || "Anonim", 
+                            jk: rw["L/P"] || rw["Jenis_Kelamin"] || "-", 
+                            asal_sekolah: rw["Asal_Sekolah"] || "-", 
+                            target_kelas: targetKelas, // 🔥 DISIMPAN KE DB
+                            sekolah_id: idSekolahGlobal, 
+                            dibuat_pada: new Date() 
+                        };
                         batch.push(addDoc(collection(db, "pendaftaran_ppdb"), py));
                     }
                     await Promise.all(batch);
@@ -3858,34 +3909,54 @@
             let opsiPkt = '<select id="swal-paket-ppdb" class="w-full p-3 border rounded-xl mb-4 text-sm font-bold bg-white">';
             dataPaketLokal.forEach(p => opsiPkt += `<option value="${p.id}">${p.nama_paket}</option>`);
             opsiPkt += '</select>';
+
+            // 🔥 LOGIKA RENDER DINAMIS DROPDOWN KELAS SESUAI JENJANG
+            let htmlOpsiKelas = '<option value="PPDB">Semua Jalur (Umum)</option>';
+            let jnj = (jenjangSekolahGlobal || "").toUpperCase();
+            if (jnj === 'SMA' || jnj === 'SMK' || jnj === 'MA') {
+                htmlOpsiKelas += `<option value="9">Kelas 9 (Reguler)</option><option value="8">Kelas 8 (Inden)</option><option value="7">Kelas 7 (Inden)</option>`;
+            } else if (jnj === 'SMP' || jnj === 'MTS') {
+                htmlOpsiKelas += `<option value="6">Kelas 6 (Reguler)</option><option value="5">Kelas 5 (Inden)</option><option value="4">Kelas 4 (Inden)</option>`;
+            } else if (jnj === 'SD' || jnj === 'MI') {
+                htmlOpsiKelas += `<option value="TK B">TK B (Reguler)</option><option value="TK A">TK A (Inden)</option><option value="PAUD">PAUD (Inden)</option>`;
+            }
+
             const {value: f} = await Swal.fire({
                 title: '📅 Jadwal Seleksi PPDB',
                 html: `
                     <div class="text-left mt-2">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Nama Seleksi (Cth: Seleksi Masuk Gel. 1)</label>
-                        <input type="text" id="swal-nama-ppdb" class="w-full p-3 border rounded-xl mb-4 text-sm font-bold bg-white">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Pilih Paket Soal (Ambil dari Bank Lokal)</label>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Nama Seleksi (Cth: Tes Inden Gel 1)</label>
+                        <input type="text" id="swal-nama-ppdb" class="w-full p-3 border rounded-xl mb-4 text-sm font-bold bg-white outline-none focus:ring-2 focus:ring-emerald-500">
+                        
+                        <label class="block text-xs font-bold text-emerald-600 mb-1">Jalur / Target Kelas Pendaftar</label>
+                        <select id="swal-kelas-ppdb" class="w-full p-3 border border-emerald-300 rounded-xl mb-4 text-sm font-bold bg-emerald-50 outline-none focus:ring-2 focus:ring-emerald-500">
+                            ${htmlOpsiKelas}
+                        </select>
+
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Pilih Paket Soal (Dari Bank Lokal)</label>
                         ${opsiPkt}
+                        
                         <div class="grid grid-cols-2 gap-3 mb-4">
-                            <div><label class="block text-xs font-bold text-gray-500 mb-1">Mulai</label><input type="datetime-local" id="swal-mulai-ppdb" class="w-full p-2 text-xs border rounded-lg"></div>
-                            <div><label class="block text-xs font-bold text-gray-500 mb-1">Berakhir</label><input type="datetime-local" id="swal-akhir-ppdb" class="w-full p-2 text-xs border rounded-lg"></div>
+                            <div><label class="block text-xs font-bold text-gray-500 mb-1">Mulai</label><input type="datetime-local" id="swal-mulai-ppdb" class="w-full p-2 text-xs border rounded-lg outline-none"></div>
+                            <div><label class="block text-xs font-bold text-gray-500 mb-1">Berakhir</label><input type="datetime-local" id="swal-akhir-ppdb" class="w-full p-2 text-xs border rounded-lg outline-none"></div>
                         </div>
                         <label class="block text-xs font-bold text-gray-500 mb-1">Durasi (Menit)</label>
-                        <input type="number" id="swal-durasi-ppdb" value="90" class="w-full p-3 border rounded-xl text-sm font-bold">
+                        <input type="number" id="swal-durasi-ppdb" value="90" class="w-full p-3 border rounded-xl text-sm font-bold outline-none">
                     </div>
                 `,
                 showCancelButton: true, confirmButtonText: 'Terbitkan Ujian!', confirmButtonColor: '#059669', focusConfirm: false,
                 preConfirm: () => {
-                    let n = document.getElementById('swal-nama-ppdb').value, pk = document.getElementById('swal-paket-ppdb').value, wm = document.getElementById('swal-mulai-ppdb').value, wa = document.getElementById('swal-akhir-ppdb').value, du = document.getElementById('swal-durasi-ppdb').value;
+                    let n = document.getElementById('swal-nama-ppdb').value, pk = document.getElementById('swal-paket-ppdb').value, kls = document.getElementById('swal-kelas-ppdb').value, wm = document.getElementById('swal-mulai-ppdb').value, wa = document.getElementById('swal-akhir-ppdb').value, du = document.getElementById('swal-durasi-ppdb').value;
                     if(!n || !pk || !wm || !wa) { Swal.showValidationMessage('Isi semua form jadwal!'); return false; }
-                    return { n, pk, wm, wa, du };
+                    return { n, pk, kls, wm, wa, du };
                 }
             });
             if(f) {
                 Swal.fire({title: 'Menerbitkan Jadwal...', didOpen: () => Swal.showLoading()});
                 let pktTerpilih = dataPaketLokal.find(x => x.id === f.pk);
-                // 🔥 KUNCI RAHASIA: Otomatis masuk Mode PPDB, Kelas PPDB, dan Jenis Seleksi
-                let py = { nama_ujian: f.n, jenis_ujian: "Seleksi Masuk", jenjang: jenjangSekolahGlobal, kelas: "PPDB", mapel: "Campuran", id_paket: f.pk, nama_paket: pktTerpilih.nama_paket, jumlah_soal: pktTerpilih.soal_ids.length, waktu_mulai: f.wm, waktu_selesai: f.wa, durasi_menit: parseInt(f.du), aturan_rilis_bahas: "mode_ppdb", sekolah_id: idSekolahGlobal, status: 'aktif', dibuat_pada: new Date() };
+                
+                // 🔥 KELAS DI-SET SESUAI PILIHAN ADMIN (Bukan hardcode "PPDB" lagi)
+                let py = { nama_ujian: f.n, jenis_ujian: "Seleksi Masuk", jenjang: jenjangSekolahGlobal, kelas: f.kls, mapel: "Campuran", id_paket: f.pk, nama_paket: pktTerpilih.nama_paket, jumlah_soal: pktTerpilih.soal_ids.length, waktu_mulai: f.wm, waktu_selesai: f.wa, durasi_menit: parseInt(f.du), aturan_rilis_bahas: "mode_ppdb", sekolah_id: idSekolahGlobal, status: 'aktif', dibuat_pada: new Date() };
                 try {
                     await addDoc(collection(db, "jadwal_ujian"), py);
                     window.muatPortalPPDB(); Swal.fire('Sukses', 'Jadwal seleksi tertutup berhasil diterbitkan.', 'success');
@@ -3912,18 +3983,30 @@
         // FITUR EDIT JADWAL PPDB (MUNCULKAN POP-UP DENGAN DATA LAMA)
         window.editJadwalPPDB = async (idJadwal) => {
             Swal.fire({title: 'Menyiapkan Data...', didOpen: () => Swal.showLoading()});
-            await window.muatDaftarPaketLokal(); // Pastikan data paket soal sudah dimuat
+            await window.muatDaftarPaketLokal(); 
             try {
-                // Tarik data jadwal lama
                 const docRef = await getDoc(doc(db, "jadwal_ujian", idJadwal));
                 if(!docRef.exists()) return Swal.fire('Error', 'Jadwal tidak ditemukan di database', 'error');
                 let j = docRef.data();
+                
                 let opsiPkt = '<select id="swal-paket-ppdb" class="w-full p-3 border rounded-xl mb-4 text-sm font-bold bg-white outline-none focus:ring-2 focus:ring-emerald-500">';
                 dataPaketLokal.forEach(p => {
                     let isSelected = (p.id === j.id_paket) ? 'selected' : '';
                     opsiPkt += `<option value="${p.id}" ${isSelected}>${p.nama_paket}</option>`;
                 });
                 opsiPkt += '</select>';
+
+                // Opsi Kelas Dinamis dengan Select Lama
+                let htmlOpsiKelas = `<option value="PPDB" ${j.kelas === 'PPDB' ? 'selected' : ''}>Semua Jalur (Umum)</option>`;
+                let jnj = (jenjangSekolahGlobal || "").toUpperCase();
+                if (jnj === 'SMA' || jnj === 'SMK' || jnj === 'MA') {
+                    htmlOpsiKelas += `<option value="9" ${j.kelas === '9' ? 'selected' : ''}>Kelas 9 (Reguler)</option><option value="8" ${j.kelas === '8' ? 'selected' : ''}>Kelas 8 (Inden)</option><option value="7" ${j.kelas === '7' ? 'selected' : ''}>Kelas 7 (Inden)</option>`;
+                } else if (jnj === 'SMP' || jnj === 'MTS') {
+                    htmlOpsiKelas += `<option value="6" ${j.kelas === '6' ? 'selected' : ''}>Kelas 6 (Reguler)</option><option value="5" ${j.kelas === '5' ? 'selected' : ''}>Kelas 5 (Inden)</option><option value="4" ${j.kelas === '4' ? 'selected' : ''}>Kelas 4 (Inden)</option>`;
+                } else if (jnj === 'SD' || jnj === 'MI') {
+                    htmlOpsiKelas += `<option value="TK B" ${j.kelas === 'TK B' ? 'selected' : ''}>TK B (Reguler)</option><option value="TK A" ${j.kelas === 'TK A' ? 'selected' : ''}>TK A (Inden)</option><option value="PAUD" ${j.kelas === 'PAUD' ? 'selected' : ''}>PAUD (Inden)</option>`;
+                }
+
                 Swal.close();
                 const {value: f} = await Swal.fire({
                     title: '✏️ Edit Jadwal PPDB',
@@ -3931,21 +4014,28 @@
                         <div class="text-left mt-2">
                             <label class="block text-xs font-bold text-gray-500 mb-1">Nama Seleksi</label>
                             <input type="text" id="swal-nama-ppdb" value="${j.nama_ujian}" class="w-full p-3 border rounded-xl mb-4 text-sm font-bold bg-white outline-none focus:ring-2 focus:ring-emerald-500">
+                            
+                            <label class="block text-xs font-bold text-emerald-600 mb-1">Jalur / Target Kelas Pendaftar</label>
+                            <select id="swal-kelas-ppdb" class="w-full p-3 border border-emerald-300 rounded-xl mb-4 text-sm font-bold bg-emerald-50 outline-none focus:ring-2 focus:ring-emerald-500">
+                                ${htmlOpsiKelas}
+                            </select>
+
                             <label class="block text-xs font-bold text-gray-500 mb-1">Ganti Paket Soal</label>
                             ${opsiPkt}
+                            
                             <div class="grid grid-cols-2 gap-3 mb-4">
-                                <div><label class="block text-xs font-bold text-gray-500 mb-1">Mulai</label><input type="datetime-local" id="swal-mulai-ppdb" value="${j.waktu_mulai}" class="w-full p-2 text-xs border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500"></div>
-                                <div><label class="block text-xs font-bold text-gray-500 mb-1">Berakhir</label><input type="datetime-local" id="swal-akhir-ppdb" value="${j.waktu_selesai}" class="w-full p-2 text-xs border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                                <div><label class="block text-xs font-bold text-gray-500 mb-1">Mulai</label><input type="datetime-local" id="swal-mulai-ppdb" value="${j.waktu_mulai}" class="w-full p-2 text-xs border rounded-lg outline-none"></div>
+                                <div><label class="block text-xs font-bold text-gray-500 mb-1">Berakhir</label><input type="datetime-local" id="swal-akhir-ppdb" value="${j.waktu_selesai}" class="w-full p-2 text-xs border rounded-lg outline-none"></div>
                             </div>
                             <label class="block text-xs font-bold text-gray-500 mb-1">Durasi (Menit)</label>
-                            <input type="number" id="swal-durasi-ppdb" value="${j.durasi_menit}" class="w-full p-3 border rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500">
+                            <input type="number" id="swal-durasi-ppdb" value="${j.durasi_menit}" class="w-full p-3 border rounded-xl text-sm font-bold outline-none">
                         </div>
                     `,
                     showCancelButton: true, confirmButtonText: 'Simpan Perubahan', confirmButtonColor: '#059669', focusConfirm: false,
                     preConfirm: () => {
-                        let n = document.getElementById('swal-nama-ppdb').value, pk = document.getElementById('swal-paket-ppdb').value, wm = document.getElementById('swal-mulai-ppdb').value, wa = document.getElementById('swal-akhir-ppdb').value, du = document.getElementById('swal-durasi-ppdb').value;
+                        let n = document.getElementById('swal-nama-ppdb').value, pk = document.getElementById('swal-paket-ppdb').value, kls = document.getElementById('swal-kelas-ppdb').value, wm = document.getElementById('swal-mulai-ppdb').value, wa = document.getElementById('swal-akhir-ppdb').value, du = document.getElementById('swal-durasi-ppdb').value;
                         if(!n || !pk || !wm || !wa) { Swal.showValidationMessage('Isi semua form jadwal!'); return false; }
-                        return { n, pk, wm, wa, du };
+                        return { n, pk, kls, wm, wa, du };
                     }
                 });
                 if(f) {
@@ -3954,6 +4044,7 @@
                     
                     let payloadUpdate = { 
                         nama_ujian: f.n, 
+                        kelas: f.kls, // 🔥 UPDATE KELAS JUGA
                         id_paket: f.pk, 
                         nama_paket: pktTerpilih.nama_paket, 
                         jumlah_soal: pktTerpilih.soal_ids.length, 
