@@ -299,15 +299,31 @@
                 let dataLokal = localStorage.getItem(kunciSave);
                 let pesanPemulihan = "";
                 
+                // 🔥 LOGIKA PEMULIHAN TINGKAT TINGGI (CEK LOKAL DAN SERVER)
                 if (dataLokal) {
+                    // Skenario 1: Data lokal masih aman (Tidak ganti PC / Tidak ter-DeepFreeze)
                     let s = JSON.parse(dataLokal);
                     jawabanSiswa = s.jawabanSiswa || jawabanSiswa;
                     raguRagu = s.raguRagu || raguRagu;
                     eliminasiOpsi = s.eliminasiOpsi || eliminasiOpsi;
                     if(s.sisaWaktu) sisaWaktuDetik = s.sisaWaktu;
-                    pesanPemulihan = `<div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg mt-3 text-xs text-yellow-800">⚠️ Kami mendeteksi Anda sempat keluar ujian. Jawaban dipulihkan.</div>`;
+                    pesanPemulihan = `<div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg mt-3 text-xs text-yellow-800 font-medium">⚠️ Koneksi terputus. Jawaban dipulihkan dari memori komputer.</div>`;
+                
+                } else if (dHasil && dHasil.rekam_jawaban_sementara) {
+                    // Skenario 2: Komputer mati & memori terhapus, ambil dari Cloud Auto-Save!
+                    jawabanSiswa = dHasil.rekam_jawaban_sementara || jawabanSiswa;
+                    raguRagu = dHasil.ragu_ragu_sementara || raguRagu;
+                    eliminasiOpsi = dHasil.eliminasi_opsi_sementara || eliminasiOpsi;
+                    
+                    // Gunakan sisa waktu terakhir saat komputer mati
+                    if(dHasil.sisa_waktu_sementara) sisaWaktuDetik = dHasil.sisa_waktu_sementara;
+                    else sisaWaktuDetik = (sisaWaktuDetik > 0) ? sisaWaktuDetik : detailJadwal.durasi_menit * 60;
+                    
+                    pesanPemulihan = `<div class="bg-blue-50 border border-blue-200 p-3 rounded-lg mt-3 text-xs text-blue-800 font-bold">🔄 Komputer mati/restart. Jawaban dan Waktu Anda berhasil dipulihkan dari Server Pusat.</div>`;
+                
                 } else {
-                    sisaWaktuDetik = detailJadwal.durasi_menit * 60;
+                    // Skenario 3: Benar-benar baru mulai ujian
+                    sisaWaktuDetik = (sisaWaktuDetik > 0) ? sisaWaktuDetik : detailJadwal.durasi_menit * 60;
                 }
 
                 document.getElementById('namaUjianHeader').innerText = detailJadwal.nama_ujian;
@@ -636,11 +652,31 @@
             document.getElementById('progressTeks').innerText = `${terjawab}/${daftarSoal.length}`;
         }
 
+        let waktuSaveServer = 0; // Tambahkan variabel ini di atas fungsi
+        
         function simpanStateLokal() {
             if(!ujianSedangBerjalan) return;
             let data = { jawabanSiswa, raguRagu, eliminasiOpsi, sisaWaktu: sisaWaktuDetik };
+            
+            // 1. Simpan di memori komputer (Lokal)
             localStorage.setItem(`ujian_${usernameSiswaAktif}_${detailJadwal.id}`, JSON.stringify(data));
-            if(isOnline) { let st = document.getElementById('teksKoneksi'); if(st){ st.innerText = "Menyimpan..."; setTimeout(()=> { st.innerText = "Online (Tersimpan)"; }, 800); } }
+            
+            if(isOnline) { 
+                let st = document.getElementById('teksKoneksi'); 
+                if(st){ st.innerText = "Menyimpan..."; setTimeout(()=> { st.innerText = "Online (Tersimpan)"; }, 800); }
+                
+                // 2. 🔥 AUTO-SAVE KE SERVER PUSAT (Setiap 15 Detik)
+                let sekarang = Date.now();
+                if (idDokumenHasilAktif && (sekarang - waktuSaveServer > 15000)) {
+                    updateDoc(doc(db, "hasil_ujian", idDokumenHasilAktif), {
+                        rekam_jawaban_sementara: jawabanSiswa,
+                        ragu_ragu_sementara: raguRagu,
+                        eliminasi_opsi_sementara: eliminasiOpsi,
+                        sisa_waktu_sementara: sisaWaktuDetik
+                    }).catch(e => console.warn("Auto-save server tertunda", e));
+                    waktuSaveServer = sekarang;
+                }
+            }
         }
 
         function mulaiTimer() {
