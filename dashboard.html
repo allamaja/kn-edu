@@ -254,31 +254,35 @@
         // ==========================================
         window.muatDataStatistik = async () => {
             try {
-                // Tarik semua nilai di sekolah dan KELAS yang sama
+                // 🔥 SOLUSI ANTI-INDEX ERROR: Kita tarik data berdasarkan "asal_sekolah_siswa" saja (1 parameter).
+                // Filter kelas akan kita lakukan di dalam JavaScript agar tidak diblokir oleh Firestore.
                 const q = query(collection(db, "hasil_ujian"), 
-                    where("sekolah_id", "==", userData.sekolah_id), 
-                    where("kelas", "==", userData.kelas)
+                    where("asal_sekolah_siswa", "==", userData.sekolah_id)
                 );
                 const snap = await getDocs(q);
 
                 let riwayatKu = [];
-                let agregatKelas = {}; // Object untuk menghitung rata-rata semua anak di kelas
+                let agregatKelas = {};
 
                 snap.forEach(doc => {
                     let d = doc.data();
-                    let nilai = parseFloat(d.nilai_akhir || 0);
+                    
+                    // 🔥 Filter Kelas & Status Selesai di sisi Client (Lebih aman & menjaring ujian Global juga)
+                    if(d.kelas === userData.kelas && d.status_pengerjaan === 'selesai') {
+                        let nilai = parseFloat(d.nilai_akhir || 0);
 
-                    // 1. Simpan riwayatku untuk Chart
-                    if (d.username === usernameSiswaAktif) {
-                        riwayatKu.push(d);
-                    }
+                        // 1. Simpan riwayatku untuk Chart
+                        if (d.username === usernameSiswaAktif) {
+                            riwayatKu.push(d);
+                        }
 
-                    // 2. Kumpulkan nilai untuk Leaderboard Kelas
-                    if (!agregatKelas[d.nama_siswa]) {
-                        agregatKelas[d.nama_siswa] = { total: 0, count: 0 };
+                        // 2. Kumpulkan nilai untuk Leaderboard Kelas
+                        if (!agregatKelas[d.nama_siswa]) {
+                            agregatKelas[d.nama_siswa] = { total: 0, count: 0 };
+                        }
+                        agregatKelas[d.nama_siswa].total += nilai;
+                        agregatKelas[d.nama_siswa].count += 1;
                     }
-                    agregatKelas[d.nama_siswa].total += nilai;
-                    agregatKelas[d.nama_siswa].count += 1;
                 });
 
                 // --- PROSES 1: NILAI RATA-RATA SENDIRI ---
@@ -288,17 +292,25 @@
                 document.getElementById('angkaRataRata').innerHTML = `${myAvg}<span class="text-sm text-blue-400">/100</span>`;
 
                 // --- PROSES 2: RENDER CHART.JS ---
-                // Urutkan riwayat berdasarkan waktu, ambil 5 terakhir
-                riwayatKu.sort((a,b) => a.waktu_selesai.toDate() - b.waktu_selesai.toDate());
-                let riwayatTerakhir = riwayatKu.slice(-5);
+                // Urutkan riwayat berdasarkan waktu (Aman dari error object Date)
+                riwayatKu.sort((a,b) => {
+                    let timeA = a.waktu_selesai?.toDate ? a.waktu_selesai.toDate() : new Date(a.waktu_selesai);
+                    let timeB = b.waktu_selesai?.toDate ? b.waktu_selesai.toDate() : new Date(b.waktu_selesai);
+                    return timeA - timeB;
+                });
                 
+                let riwayatTerakhir = riwayatKu.slice(-5);
                 let labelUjian = riwayatTerakhir.map(r => r.nama_ujian.length > 15 ? r.nama_ujian.substring(0, 15) + '...' : r.nama_ujian);
                 let dataNilai = riwayatTerakhir.map(r => parseFloat(r.nilai_akhir));
 
                 const ctx = document.getElementById('chartPerkembangan');
-                if(window.chartPerkembanganObj) window.chartPerkembanganObj.destroy(); // Hapus chart lama jika ada
+                if(window.chartPerkembanganObj) window.chartPerkembanganObj.destroy();
                 
                 if(riwayatKu.length > 0) {
+                    ctx.style.display = 'block'; // Pastikan canvas tampil
+                    let msgKosong = ctx.parentElement.querySelector('.absolute');
+                    if(msgKosong) msgKosong.remove(); // Hapus pesan kosong
+
                     window.chartPerkembanganObj = new Chart(ctx, {
                         type: 'line',
                         data: {
@@ -309,7 +321,7 @@
                                 borderColor: '#3b82f6',
                                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
                                 borderWidth: 3,
-                                tension: 0.4, // Membuat garis melengkung smooth
+                                tension: 0.4,
                                 fill: true,
                                 pointBackgroundColor: '#1d4ed8',
                                 pointRadius: 5,
@@ -323,9 +335,10 @@
                         }
                     });
                 } else {
-                    // Tampilkan pesan kosong di chart
                     ctx.style.display = 'none';
-                    ctx.parentElement.innerHTML += '<div class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm font-medium border-2 border-dashed rounded-xl">Belum ada riwayat ujian untuk ditampilkan.</div>';
+                    if(!ctx.parentElement.querySelector('.absolute')) {
+                        ctx.parentElement.innerHTML += '<div class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm font-medium border-2 border-dashed rounded-xl">Belum ada riwayat ujian untuk ditampilkan.</div>';
+                    }
                 }
 
                 // --- PROSES 3: RENDER LEADERBOARD KELAS ---
@@ -337,13 +350,11 @@
                     leaderboardArray.push({ nama: nama, avg: parseFloat(avg.toFixed(1)) });
                 }
                 
-                // Urutkan dari nilai tertinggi
                 leaderboardArray.sort((a,b) => b.avg - a.avg);
 
                 let htmlLead = '';
                 let rankKu = leaderboardArray.findIndex(x => x.nama === userData.nama) + 1;
 
-                // Tampilkan Top 5
                 leaderboardArray.slice(0, 5).forEach((l, index) => {
                     let medali = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `<span class="w-5 text-center inline-block">${index+1}.</span>`));
                     let isMe = l.nama === userData.nama ? 'bg-blue-100 border-blue-300' : 'bg-gray-50 border-gray-100 hover:bg-gray-100';
@@ -359,7 +370,6 @@
                         </li>`;
                 });
 
-                // Jika aku tidak masuk Top 5, tampilkan namaku di bagian bawah
                 if(rankKu > 5 && myCount > 0) {
                     htmlLead += `<li class="text-center text-xs text-gray-400 my-2 font-bold tracking-widest">...</li>`;
                     htmlLead += `
