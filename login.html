@@ -87,31 +87,38 @@
                 emailUntukFirebase = inputUser + '@smartkhairunnas.com';
             }
 
+            // Munculkan loading duluan agar siswa tenang
             Swal.fire({ title: 'Mencocokkan Kunci...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-            try {
-                // 3. Login menggunakan email yang sudah dimanipulasi
-                const userCredential = await signInWithEmailAndPassword(auth, emailUntukFirebase, password);
-                
-                // Cek Role di Firestore
-                const q = query(collection(db, "users"), where("email", "==", emailUntukFirebase));
-                const querySnapshot = await getDocs(q);
+            
+            // 🔥 JITTER AWAL: Tahan eksekusi login antara 0 sampai 3 detik (3000 ms)
+            let delayLoginAcak = Math.floor(Math.random() * 3000);
 
-                if (!querySnapshot.empty) {
-                    const userData = querySnapshot.docs[0].data();
-                    Swal.fire({icon: 'success', title: 'Akses Diberikan!', text: `Selamat datang, ${userData.nama}`, timer: 1500, showConfirmButton: false})
-                    .then(() => {
-                        if (userData.role === 'admin_yayasan') window.location.replace("dashboard-yayasan.html");
-                        else if (userData.role === 'admin_sekolah') window.location.replace("dashboard-admin-sekolah.html");
-                        else if (userData.role === 'guru') window.location.replace("dashboard-guru.html");
-                        else window.location.replace("dashboard.html"); // default ke siswa
-                    });
-                } else {
-                    Swal.fire('Error', 'Data pengguna tidak ditemukan di database.', 'error');
-                    signOut(auth);
+            setTimeout(async () => {
+                try {
+                    // 3. Login menggunakan email yang sudah dimanipulasi
+                    const userCredential = await signInWithEmailAndPassword(auth, emailUntukFirebase, password);
+                    
+                    // Cek Role di Firestore
+                    const q = query(collection(db, "users"), where("email", "==", emailUntukFirebase));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        const userData = querySnapshot.docs[0].data();
+                        Swal.fire({icon: 'success', title: 'Akses Diberikan!', text: `Selamat datang, ${userData.nama}`, timer: 1500, showConfirmButton: false})
+                        .then(() => {
+                            if (userData.role === 'admin_yayasan') window.location.replace("dashboard-yayasan.html");
+                            else if (userData.role === 'admin_sekolah') window.location.replace("dashboard-admin-sekolah.html");
+                            else if (userData.role === 'guru') window.location.replace("dashboard-guru.html");
+                            else window.location.replace("dashboard.html"); // default ke siswa
+                        });
+                    } else {
+                        Swal.fire('Error', 'Data pengguna tidak ditemukan di database.', 'error');
+                        signOut(auth);
+                    }
+                } catch (error) {
+                    Swal.fire('Login Gagal', 'Username atau password salah!', 'error');
                 }
-            } catch (error) {
-                Swal.fire('Login Gagal', 'Username atau password salah!', 'error');
-            }
+            }, delayLoginAcak); // Eksekusi setelah delay acak
         });
         // Fitur Ikon Mata Password
         window.togglePassword = () => {
