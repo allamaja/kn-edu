@@ -170,10 +170,17 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-        import { getFirestore, collection, query, where, getDocs, doc, getDoc, updateDoc, setDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        // 🔥 UPDATE 1: Tambahkan initializeFirestore
+        import { initializeFirestore, collection, query, where, getDocs, doc, getDoc, updateDoc, setDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
         const fCfg = { apiKey: "AIzaSyCTd3H3E9baMGDQpHbJDBFzupuSaIUn0v0", authDomain: "smartkhairunnas.firebaseapp.com", projectId: "smartkhairunnas", storageBucket: "smartkhairunnas.firebasestorage.app", messagingSenderId: "3009868062", appId: "1:3009868062:web:f6d158a8aa60fabf91590f" };
-        const app = initializeApp(fCfg); const db = getFirestore(app); const auth = getAuth(app);
+        const app = initializeApp(fCfg); 
+        
+        // 🔥 UPDATE 2: Paksa mode Long Polling agar tembus blokiran Router/MikroTik Sekolah
+        const db = initializeFirestore(app, {
+            experimentalForceLongPolling: true
+        }); 
+        const auth = getAuth(app);
 
         let userData = null; let jenjangSekolah = "SMA"; let ujianAktifID = null; let usernameSiswaAktif = "";
 
@@ -195,10 +202,21 @@
                         if(ds.exists()){ jenjangSekolah = ds.data().jenjang || "SMA"; nmSekolah = ds.data().nama; }
                         document.getElementById('infoSiswaBanner').innerText = `${jenjangSekolah} | Kelas ${userData.kelas} | ${nmSekolah}`;
 
-                        // Jalankan Mesin Paralel
-                        window.muatDataStatistik(); // Gantikan kalkulasiRataRata biasa
-                        window.muatPengumumanSiswa();
-                        window.muatJadwalSiswa();
+                        // 🔥 UPDATE 3: URAI KEMACETAN JARINGAN (STAGGERING)
+                        // Jangan panggil 3 fungsi raksasa bersamaan! Kita beri jeda.
+                        
+                        // 1. Prioritas Utama: Munculkan Jadwal Ujian dulu (Tanpa delay)
+                        window.muatJadwalSiswa(); 
+                        
+                        // 2. Prioritas Kedua: Muat Pengumuman (Jeda 1 Detik)
+                        setTimeout(() => {
+                            window.muatPengumumanSiswa();
+                        }, 1000);
+
+                        // 3. Prioritas Terakhir: Hitung Statistik Chart (Jeda 2.5 Detik)
+                        setTimeout(() => {
+                            window.muatDataStatistik();
+                        }, 2500);
                     } else { Swal.fire('Akses Ditolak', 'Gunakan akun Siswa!', 'error').then(()=>window.keluarAplikasi()); }
                 } catch(e) { console.error("Gagal init:", e); }
             } else window.location.replace("index.html");
