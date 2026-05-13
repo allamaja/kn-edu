@@ -165,28 +165,27 @@
         let dataPPDB = sessionStorage.getItem('sesi_ppdb_user');
 
         if (modeUjian === 'PPDB' && dataPPDB) {
-            // 🚪 PINTU 2: PESERTA PPDB (Tanpa Akun Firebase)
+            // 🚪 PINTU 2: PESERTA PPDB
             let parsedPPDB = JSON.parse(dataPPDB);
             usernameSiswaAktif = parsedPPDB.no_pendaftaran;
             namaSiswaAsli = parsedPPDB.nama;
-            
-            // 🔥 PERBAIKAN: Kembalikan identitas cabang, tapi simpan sekolah aslinya
             asalSekolahSiswa = parsedPPDB.sekolah_id || "Pusat"; 
             window.sekolahAsalPPDB = parsedPPDB.asal_sekolah || "Luar Sistem"; 
-            
             kelasSiswaAsli = "PPDB"; 
             jenjangSiswa = "Umum";
             
             document.getElementById('namaSiswaHeader').innerText = `[SELEKSI] ${namaSiswaAsli}`;
             document.getElementById('namaSiswaHeader').classList.replace('text-gray-400', 'text-amber-500'); 
             
-            inisialisasiUjian();
+            // 🔥 JITTER INIT: Delay 0 - 4 detik sebelum menarik soal
+            let delayInitAcak = Math.floor(Math.random() * 4000);
+            setTimeout(() => { inisialisasiUjian(); }, delayInitAcak);
+
         } else {
-            // 🚪 PINTU 1: SANTRI REGULER (Wajib Punya Akun)
+            // 🚪 PINTU 1: SANTRI REGULER
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     usernameSiswaAktif = user.email.split('@')[0];
-                    
                     const qSiswa = query(collection(db, "users"), where("email", "==", user.email));
                     const snapSiswa = await getDocs(qSiswa);
                     
@@ -201,9 +200,11 @@
                         namaSiswaAsli = usernameSiswaAktif; 
                     }
                     
-                    inisialisasiUjian();
+                    // 🔥 JITTER INIT: Delay 0 - 4 detik sebelum menarik soal
+                    let delayInitAcak = Math.floor(Math.random() * 4000);
+                    setTimeout(() => { inisialisasiUjian(); }, delayInitAcak);
+
                 } else {
-                    // Kalau bukan mode PPDB dan tidak punya akun, TENDANG KELUAR!
                     window.location.replace("index.html");
                 }
             });
@@ -652,29 +653,43 @@
             document.getElementById('progressTeks').innerText = `${terjawab}/${daftarSoal.length}`;
         }
 
-        let waktuSaveServer = 0; // Tambahkan variabel ini di atas fungsi
+        let waktuSaveServer = 0; 
+        let jawabanTerakhirDisimpan = ""; // 🔥 BARU: Tracker untuk mendeteksi perubahan
         
         function simpanStateLokal() {
             if(!ujianSedangBerjalan) return;
             let data = { jawabanSiswa, raguRagu, eliminasiOpsi, sisaWaktu: sisaWaktuDetik };
             
-            // 1. Simpan di memori komputer (Lokal)
+            // 1. Simpan di memori komputer (Lokal) -> Selalu jalan tanpa delay
             localStorage.setItem(`ujian_${usernameSiswaAktif}_${detailJadwal.id}`, JSON.stringify(data));
             
             if(isOnline) { 
-                let st = document.getElementById('teksKoneksi'); 
-                if(st){ st.innerText = "Menyimpan..."; setTimeout(()=> { st.innerText = "Online (Tersimpan)"; }, 800); }
-                
-                // 2. 🔥 AUTO-SAVE KE SERVER PUSAT (Setiap 15 Detik)
                 let sekarang = Date.now();
-                if (idDokumenHasilAktif && (sekarang - waktuSaveServer > 15000)) {
-                    updateDoc(doc(db, "hasil_ujian", idDokumenHasilAktif), {
-                        rekam_jawaban_sementara: jawabanSiswa,
-                        ragu_ragu_sementara: raguRagu,
-                        eliminasi_opsi_sementara: eliminasiOpsi,
-                        sisa_waktu_sementara: sisaWaktuDetik
-                    }).catch(e => console.warn("Auto-save server tertunda", e));
-                    waktuSaveServer = sekarang;
+                let stringJawabanLokal = JSON.stringify(jawabanSiswa);
+                
+                // 🔥 JITTER AUTO-SAVE: Delay acak antara 15 detik sampai 25 detik
+                let delayAcak = 15000 + Math.floor(Math.random() * 10000); 
+
+                // Hanya cek server jika waktunya sudah lewat dari delay acak
+                if (idDokumenHasilAktif && (sekarang - waktuSaveServer > delayAcak)) {
+                    
+                    // 🔥 SMART SYNC: HANYA kirim ke server JIKA ada jawaban yang berubah!
+                    if (stringJawabanLokal !== jawabanTerakhirDisimpan) {
+                        
+                        let st = document.getElementById('teksKoneksi'); 
+                        if(st){ st.innerText = "Syncing Cloud..."; setTimeout(()=> { st.innerText = "Online (Tersimpan)"; }, 1000); }
+                        
+                        updateDoc(doc(db, "hasil_ujian", idDokumenHasilAktif), {
+                            rekam_jawaban_sementara: jawabanSiswa,
+                            ragu_ragu_sementara: raguRagu,
+                            eliminasi_opsi_sementara: eliminasiOpsi,
+                            sisa_waktu_sementara: sisaWaktuDetik
+                        }).catch(e => console.warn("Auto-save server tertunda", e));
+                        
+                        // Update tracker waktu dan data terakhir
+                        waktuSaveServer = sekarang;
+                        jawabanTerakhirDisimpan = stringJawabanLokal; 
+                    }
                 }
             }
         }
