@@ -1071,12 +1071,29 @@
             let m = (document.getElementById('filterMapelNilai')?.value || "").toLowerCase();
             
             let f = dataNilaiLokal.filter(n => (n.nama_siswa || "").toLowerCase().includes(kw) && (k === "" || n.kelas == k) && (m === "" || (n.mapel || "").toLowerCase() === m) );
-            f.sort((a,b) => b.waktu_selesai.toDate() - a.waktu_selesai.toDate()); 
+            
+            // 🔥 UPDATE PENTING: SORTING KEBAL DATA KOTOR (Bulletproof Sorting)
+            f.sort((a, b) => {
+                let timeA = 0;
+                if (a.waktu_selesai) {
+                    timeA = typeof a.waktu_selesai.toDate === 'function' ? a.waktu_selesai.toDate().getTime() : new Date(a.waktu_selesai).getTime();
+                }
+                
+                let timeB = 0;
+                if (b.waktu_selesai) {
+                    timeB = typeof b.waktu_selesai.toDate === 'function' ? b.waktu_selesai.toDate().getTime() : new Date(b.waktu_selesai).getTime();
+                }
+                
+                return timeB - timeA; // Urutkan Descending (Terbaru ke Terlama)
+            }); 
             
             let h = '';
             f.forEach(n => {
                 let wna = n.nilai_akhir >= 75 ? 'text-green-600 bg-green-50 border-green-200' : (n.nilai_akhir >= 50 ? 'text-yellow-600 bg-yellow-50 border-yellow-200' : 'text-red-600 bg-red-50 border-red-200');
-                let tgl = n.waktu_selesai ? n.waktu_selesai.toDate().toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) : '-';
+                
+                // Format tanggal aman
+                let tglObj = n.waktu_selesai ? (typeof n.waktu_selesai.toDate === 'function' ? n.waktu_selesai.toDate() : new Date(n.waktu_selesai)) : null;
+                let tgl = tglObj ? tglObj.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) : '-';
                 
                 // Deteksi Kehadiran Esai
                 let punyaEsai = false;
@@ -1100,7 +1117,7 @@
                         <td class="px-6 py-4 text-center font-bold text-gray-500">${n.kelas}</td>
                         <td class="px-6 py-4 text-sm"><b class="text-blue-600">${n.nama_ujian}</b><br><span class="text-xs text-gray-500">${n.mapel} | ${tgl}</span></td>
                         <td class="px-6 py-4 text-center">${btnAksiHtml}</td>
-                        <td class="px-6 py-4 text-center"><span class="px-4 py-2 rounded-xl font-black border shadow-sm ${wna} text-lg">${n.nilai_akhir}</span></td>
+                        <td class="px-6 py-4 text-center"><span class="px-4 py-2 rounded-xl font-black border shadow-sm ${wna} text-lg">${n.nilai_akhir || 0}</span></td>
                       </tr>`;
             });
             document.getElementById('tabelNilai').innerHTML = h || '<tr><td colspan="5" class="text-center py-8 text-gray-500">Tidak ada data nilai yang sesuai.</td></tr>';
