@@ -42,14 +42,14 @@
             </div>
             <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex items-center justify-center gap-4 shrink-0 w-full md:w-auto">
                 <div class="text-right">
-                    <p class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Rata-rata Nilaimu</p>
-                    <p class="text-3xl font-black text-blue-600 leading-none mt-1" id="angkaRataRata">--<span class="text-sm text-blue-400">/100</span></p>
+                    <p class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Status Siswa</p>
+                    <p class="text-xl font-black text-blue-600 leading-none mt-1">Siap Ujian!</p>
                 </div>
-                <div class="text-4xl drop-shadow-sm">🏆</div>
+                <div class="text-4xl drop-shadow-sm">🚀</div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div id="kontainerStatistik" class="grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
             <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-gray-800 text-lg">📈 Grafik Perkembangan (5 Ujian Terakhir)</h3>
@@ -170,15 +170,16 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-        // 🔥 UPDATE 1: Tambahkan initializeFirestore
-        import { initializeFirestore, collection, query, where, getDocs, doc, getDoc, updateDoc, setDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        // 🔥 UPDATE: Tambah setLogLevel untuk membungkam error merah 404
+        import { initializeFirestore, collection, query, where, getDocs, doc, getDoc, updateDoc, setDoc, addDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        setLogLevel('silent'); // 🤫 Membungkam F12 dari error bawaan Long Polling
 
         const fCfg = { apiKey: "AIzaSyCTd3H3E9baMGDQpHbJDBFzupuSaIUn0v0", authDomain: "smartkhairunnas.firebaseapp.com", projectId: "smartkhairunnas", storageBucket: "smartkhairunnas.firebasestorage.app", messagingSenderId: "3009868062", appId: "1:3009868062:web:f6d158a8aa60fabf91590f" };
         const app = initializeApp(fCfg); 
         
-        // 🔥 UPDATE 2: Paksa mode Long Polling agar tembus blokiran Router/MikroTik Sekolah
         const db = initializeFirestore(app, {
-            experimentalForceLongPolling: true
+            experimentalForceLongPolling: true // Tembus router sekolah
         }); 
         const auth = getAuth(app);
 
@@ -214,9 +215,7 @@
                         }, 1000);
 
                         // 3. Prioritas Terakhir: Hitung Statistik Chart (Jeda 2.5 Detik)
-                        setTimeout(() => {
-                            window.muatDataStatistik();
-                        }, 2500);
+                        //setTimeout(() => {window.muatDataStatistik();}, 2500);
                     } else { Swal.fire('Akses Ditolak', 'Gunakan akun Siswa!', 'error').then(()=>window.keluarAplikasi()); }
                 } catch(e) { console.error("Gagal init:", e); }
             } else window.location.replace("index.html");
@@ -248,144 +247,6 @@
             });
         };
         window.menuBelumSiap = () => Swal.fire('Sabar Ya! 🚀', 'Fitur ini sedang dirakit oleh tim developer.', 'info');
-
-        // ==========================================
-        // FITUR BARU: ENGINE STATISTIK (CHART & LEADERBOARD)
-        // ==========================================
-        window.muatDataStatistik = async () => {
-            try {
-                // 🔥 SOLUSI ANTI-INDEX ERROR: Kita tarik data berdasarkan "asal_sekolah_siswa" saja (1 parameter).
-                // Filter kelas akan kita lakukan di dalam JavaScript agar tidak diblokir oleh Firestore.
-                const q = query(collection(db, "hasil_ujian"), 
-                    where("asal_sekolah_siswa", "==", userData.sekolah_id)
-                );
-                const snap = await getDocs(q);
-
-                let riwayatKu = [];
-                let agregatKelas = {};
-
-                snap.forEach(doc => {
-                    let d = doc.data();
-                    
-                    // 🔥 Filter Kelas & Status Selesai di sisi Client (Lebih aman & menjaring ujian Global juga)
-                    if(d.kelas === userData.kelas && d.status_pengerjaan === 'selesai') {
-                        let nilai = parseFloat(d.nilai_akhir || 0);
-
-                        // 1. Simpan riwayatku untuk Chart
-                        if (d.username === usernameSiswaAktif) {
-                            riwayatKu.push(d);
-                        }
-
-                        // 2. Kumpulkan nilai untuk Leaderboard Kelas
-                        if (!agregatKelas[d.nama_siswa]) {
-                            agregatKelas[d.nama_siswa] = { total: 0, count: 0 };
-                        }
-                        agregatKelas[d.nama_siswa].total += nilai;
-                        agregatKelas[d.nama_siswa].count += 1;
-                    }
-                });
-
-                // --- PROSES 1: NILAI RATA-RATA SENDIRI ---
-                let myTotal = 0, myCount = riwayatKu.length;
-                riwayatKu.forEach(r => myTotal += parseFloat(r.nilai_akhir));
-                let myAvg = myCount > 0 ? (myTotal / myCount).toFixed(1) : "--";
-                document.getElementById('angkaRataRata').innerHTML = `${myAvg}<span class="text-sm text-blue-400">/100</span>`;
-
-                // --- PROSES 2: RENDER CHART.JS ---
-                // Urutkan riwayat berdasarkan waktu (Aman dari error object Date)
-                riwayatKu.sort((a,b) => {
-                    let timeA = a.waktu_selesai?.toDate ? a.waktu_selesai.toDate() : new Date(a.waktu_selesai);
-                    let timeB = b.waktu_selesai?.toDate ? b.waktu_selesai.toDate() : new Date(b.waktu_selesai);
-                    return timeA - timeB;
-                });
-                
-                let riwayatTerakhir = riwayatKu.slice(-5);
-                let labelUjian = riwayatTerakhir.map(r => r.nama_ujian.length > 15 ? r.nama_ujian.substring(0, 15) + '...' : r.nama_ujian);
-                let dataNilai = riwayatTerakhir.map(r => parseFloat(r.nilai_akhir));
-
-                const ctx = document.getElementById('chartPerkembangan');
-                if(window.chartPerkembanganObj) window.chartPerkembanganObj.destroy();
-                
-                if(riwayatKu.length > 0) {
-                    ctx.style.display = 'block'; // Pastikan canvas tampil
-                    let msgKosong = ctx.parentElement.querySelector('.absolute');
-                    if(msgKosong) msgKosong.remove(); // Hapus pesan kosong
-
-                    window.chartPerkembanganObj = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: labelUjian,
-                            datasets: [{
-                                label: 'Skor Akhir',
-                                data: dataNilai,
-                                borderColor: '#3b82f6',
-                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                borderWidth: 3,
-                                tension: 0.4,
-                                fill: true,
-                                pointBackgroundColor: '#1d4ed8',
-                                pointRadius: 5,
-                                pointHoverRadius: 8
-                            }]
-                        },
-                        options: {
-                            responsive: true, maintainAspectRatio: false,
-                            scales: { y: { min: 0, max: 100 } },
-                            plugins: { legend: { display: false } }
-                        }
-                    });
-                } else {
-                    ctx.style.display = 'none';
-                    if(!ctx.parentElement.querySelector('.absolute')) {
-                        ctx.parentElement.innerHTML += '<div class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm font-medium border-2 border-dashed rounded-xl">Belum ada riwayat ujian untuk ditampilkan.</div>';
-                    }
-                }
-
-                // --- PROSES 3: RENDER LEADERBOARD KELAS ---
-                document.getElementById('judulLeaderboard').innerText = `Top Peringkat Kelas ${userData.kelas}`;
-                
-                let leaderboardArray = [];
-                for(let nama in agregatKelas) {
-                    let avg = agregatKelas[nama].total / agregatKelas[nama].count;
-                    leaderboardArray.push({ nama: nama, avg: parseFloat(avg.toFixed(1)) });
-                }
-                
-                leaderboardArray.sort((a,b) => b.avg - a.avg);
-
-                let htmlLead = '';
-                let rankKu = leaderboardArray.findIndex(x => x.nama === userData.nama) + 1;
-
-                leaderboardArray.slice(0, 5).forEach((l, index) => {
-                    let medali = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `<span class="w-5 text-center inline-block">${index+1}.</span>`));
-                    let isMe = l.nama === userData.nama ? 'bg-blue-100 border-blue-300' : 'bg-gray-50 border-gray-100 hover:bg-gray-100';
-                    let wTeks = l.nama === userData.nama ? 'text-blue-800' : 'text-gray-700';
-                    
-                    htmlLead += `
-                        <li class="flex justify-between items-center p-3 rounded-xl border transition ${isMe}">
-                            <div class="flex items-center">
-                                <span class="text-lg mr-3">${medali}</span> 
-                                <span class="font-bold text-sm ${wTeks} truncate max-w-[150px] md:max-w-[200px]">${l.nama}</span>
-                            </div>
-                            <span class="font-black text-blue-600 bg-white px-3 py-1 rounded-lg border border-blue-100 shadow-sm">${l.avg}</span>
-                        </li>`;
-                });
-
-                if(rankKu > 5 && myCount > 0) {
-                    htmlLead += `<li class="text-center text-xs text-gray-400 my-2 font-bold tracking-widest">...</li>`;
-                    htmlLead += `
-                        <li class="flex justify-between items-center p-3 rounded-xl border bg-blue-100 border-blue-300 shadow-sm">
-                            <div class="flex items-center">
-                                <span class="text-sm font-black text-gray-600 w-8 text-center mr-1">${rankKu}.</span> 
-                                <span class="font-bold text-sm text-blue-800 truncate">Kamu</span>
-                            </div>
-                            <span class="font-black text-blue-700 bg-white px-3 py-1 rounded-lg border border-blue-200">${myAvg}</span>
-                        </li>`;
-                }
-
-                document.getElementById('listLeaderboard').innerHTML = htmlLead || '<p class="text-sm text-gray-400 text-center py-4">Belum ada persaingan di kelas ini.</p>';
-
-            } catch(e) { console.error("Statistik error:", e); }
-        };
 
         // ==========================================
         // FITUR BARU: TOMBOL SOS (LAPOR KENDALA)
@@ -467,14 +328,33 @@
         });
 
         // ==========================================
-        // JADWAL & PENGUMUMAN (Sama seperti sebelumnya)
+        // JADWAL & PENGUMUMAN (CACHE ENABLED)
         // ==========================================
         window.muatPengumumanSiswa = async () => {
             let kon = document.getElementById('kontainerPengumuman');
             try {
-                const s = await getDocs(collection(db, "pengumuman")); let listP = [];
-                s.forEach(doc => { let d = doc.data(); if (d.target === "GLOBAL" || d.target === userData.sekolah_id) listP.push(d); });
-                listP.sort((a, b) => b.dibuat_pada.toDate() - a.dibuat_pada.toDate());
+                let cacheKey = `pengumuman_${userData.sekolah_id}`;
+                let cacheData = sessionStorage.getItem(cacheKey);
+                let cacheTime = sessionStorage.getItem(`${cacheKey}_time`);
+                let listP = [];
+
+                if (cacheData && cacheTime && (Date.now() - parseInt(cacheTime) < 300000)) { 
+                    listP = JSON.parse(cacheData); 
+                } else {
+                    const s = await getDocs(collection(db, "pengumuman"));
+                    s.forEach(doc => { 
+                        let d = doc.data(); 
+                        if (d.target === "GLOBAL" || d.target === userData.sekolah_id) {
+                            d.dibuat_pada = d.dibuat_pada?.toDate ? d.dibuat_pada.toDate().toISOString() : new Date().toISOString();
+                            listP.push(d); 
+                        }
+                    });
+                    sessionStorage.setItem(cacheKey, JSON.stringify(listP));
+                    sessionStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+                }
+
+                listP.sort((a, b) => new Date(b.dibuat_pada) - new Date(a.dibuat_pada));
+
                 if (listP.length > 0) {
                     let h = '';
                     listP.forEach(p => {
@@ -489,73 +369,152 @@
             } catch(e) {}
         };
 
+        // ==========================================
+        // JADWAL UJIAN (FILTER CERDAS & PAGINASI LOKAL)
+        // ==========================================
+        window.halamanJadwalSiswa = 1; // Variabel pelacak halaman paginasi
+
         window.muatJadwalSiswa = async () => {
             let tb = document.getElementById('tabelJadwal');
             try {
-                const s = await getDocs(query(collection(db, "jadwal_ujian"), where("status", "==", "aktif")));
-                let html = '', adaLive = false, idLive = null, namaLive = ""; let now = new Date();
-                
-                s.forEach(doc => {
-                    let d = doc.data(); d.id = doc.id; 
-                    
-                    // Logika Penapisan (Filtering) Hak Akses Jadwal
-                    let isPusat = !d.sekolah_id || d.sekolah_id.toUpperCase()==="GLOBAL" || d.sekolah_id.toUpperCase()==="YAYASAN";
-                    if(!isPusat && d.sekolah_id !== userData.sekolah_id) return; 
-                    if(isPusat && d.jenjang !== jenjangSekolah && d.jenjang !== "Semua") return; 
-                    if(d.kelas != userData.kelas && d.kelas !== "Semua") return; 
-                    
-                    let wM = new Date(d.waktu_mulai), wS = new Date(d.waktu_selesai); 
-                    let st = "", btn = "";
-                    
-                    // Logika Status Waktu
-                    if(now < wM) { 
-                        st = '<span class="text-yellow-600 font-bold px-2 py-1 bg-yellow-50 rounded-lg">⏳ Belum Mulai</span>'; 
-                        btn = `<button class="px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200">Terkunci</button>`; 
-                    } 
-                    else if(now >= wM && now <= wS) { 
-                        st = '<span class="text-red-600 font-bold px-2 py-1 bg-red-50 rounded-lg animate-pulse border border-red-200">🔴 LIVE</span>'; 
-                        btn = `<button onclick="masukUjian('${d.id}')" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition transform hover:-translate-y-0.5">🚀 Kerjakan</button>`; 
-                        if(!adaLive){ adaLive = true; idLive = d.id; namaLive = d.nama_ujian; } 
-                    } 
-                    else { 
-                        st = '<span class="text-gray-500 font-bold px-2 py-1 bg-gray-100 rounded-lg border border-gray-200">✅ Ditutup</span>'; 
-                        btn = `<button class="px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-50 text-gray-400 cursor-not-allowed border border-gray-200">Selesai</button>`; 
-                    }
-                    
-                    let lblPusat = isPusat ? '<span class="px-2 py-0.5 bg-purple-100 text-purple-700 border border-purple-200 text-[8px] font-black rounded uppercase ml-2 shadow-sm">Ujian Pusat</span>' : '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 border border-emerald-200 text-[8px] font-black rounded uppercase ml-2 shadow-sm">Ujian Lokal</span>';
-                    let tglTampil = wM.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
-                    
-                    html += `
-                    <tr class="border-b hover:bg-blue-50/40 transition">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center mb-1">
-                                <b class="text-gray-800 text-sm md:text-base">${d.nama_ujian}</b> ${lblPusat}
-                            </div>
-                            <span class="text-xs text-blue-600 font-black tracking-wider uppercase">${d.mapel}</span>
-                            <span class="text-xs text-gray-500 font-medium ml-2">| ⏳ ${d.durasi_menit} Menit</span>
-                        </td>
-                        <td class="px-6 py-4 text-xs font-medium text-gray-600">
-                            <span class="block text-gray-800 font-bold mb-0.5">📅 ${tglTampil}</span>
-                            Pukul ${wM.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})} <span class="text-gray-400 mx-1">-</span> ${wS.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})} WIB
-                        </td>
-                        <td class="px-6 py-4 text-center">${st}</td>
-                        <td class="px-6 py-4 text-center">${btn}</td>
-                    </tr>`;
-                });
-                
-                if(tb) tb.innerHTML = html || '<tr><td colspan="4" class="text-center py-12 text-gray-400 font-medium border-2 border-dashed m-4 rounded-xl bg-gray-50">Belum ada jadwal ujian. Santai dulu! 🏖️</td></tr>';
+                let cacheKey = `jadwal_${userData.kelas}_${userData.sekolah_id}`;
+                let cacheData = sessionStorage.getItem(cacheKey);
+                let cacheTime = sessionStorage.getItem(`${cacheKey}_time`);
+                let listJadwal = [];
 
-                // Update Kartu Menu Ujian (Live Status)
-                const kUjian = document.getElementById('kartuUjian'), kIkon = document.getElementById('ikonUjian'), kJudul = document.getElementById('judulUjian'), kStatus = document.getElementById('teksStatusUjian'), kBadge = document.getElementById('badgeLiveUjian');
-                if(adaLive && kUjian) {
-                    ujianAktifID = idLive; 
-                    kUjian.className = "col-span-2 sm:col-span-1 bg-blue-600 p-3 md:p-6 rounded-2xl md:rounded-3xl shadow-lg shadow-blue-300 border border-blue-500 flex flex-col items-center justify-center cursor-pointer transform hover:-translate-y-1 hover:scale-105 transition-all relative group"; 
-                    kIkon.innerText = "⏳"; 
-                    kJudul.className = "font-black text-white text-sm md:text-xl mt-2"; kJudul.innerText = "Masuk Ujian"; 
-                    kStatus.className = "text-[10px] md:text-xs text-blue-200 mt-1 text-center font-bold px-2 line-clamp-1"; kStatus.innerText = namaLive; 
-                    kBadge.classList.remove('hidden');
+                // Cek Cache (2 Menit)
+                if (cacheData && cacheTime && (Date.now() - parseInt(cacheTime) < 120000)) { 
+                    listJadwal = JSON.parse(cacheData); 
+                } else {
+                    const s = await getDocs(query(collection(db, "jadwal_ujian"), where("status", "==", "aktif")));
+                    s.forEach(doc => {
+                        let d = doc.data(); d.id = doc.id; 
+                        let isPusat = !d.sekolah_id || d.sekolah_id.toUpperCase()==="GLOBAL" || d.sekolah_id.toUpperCase()==="YAYASAN";
+                        if(!isPusat && d.sekolah_id !== userData.sekolah_id) return; 
+                        if(isPusat && d.jenjang !== jenjangSekolah && d.jenjang !== "Semua") return; 
+                        if(d.kelas != userData.kelas && d.kelas !== "Semua") return; 
+                        
+                        d.waktu_mulai = d.waktu_mulai?.toDate ? d.waktu_mulai.toDate().toISOString() : d.waktu_mulai;
+                        d.waktu_selesai = d.waktu_selesai?.toDate ? d.waktu_selesai.toDate().toISOString() : d.waktu_selesai;
+                        d.isPusat = isPusat; 
+                        listJadwal.push(d);
+                    });
+                    sessionStorage.setItem(cacheKey, JSON.stringify(listJadwal));
+                    sessionStorage.setItem(`${cacheKey}_time`, Date.now().toString());
                 }
-            } catch(e) {}
+
+                // Setelah data siap, lempar ke Mesin Cetak Tabel
+                window.renderTabelJadwal(listJadwal);
+            } catch(e) { console.error(e); }
+        };
+
+        // Mesin Cetak Tabel & Paginasi (Berjalan di memori lokal, 0 Reads Firebase!)
+        window.renderTabelJadwal = (listJadwal) => {
+            let tb = document.getElementById('tabelJadwal');
+            let now = new Date();
+            let jadwalLive = [];
+            let jadwalMendatang = [];
+            
+            // 1. FILTERING: Pisahkan yang Live dan yang Belum Mulai (Buang yang Selesai)
+            listJadwal.forEach(d => {
+                let wM = new Date(d.waktu_mulai), wS = new Date(d.waktu_selesai); 
+                if(now >= wM && now <= wS) {
+                    jadwalLive.push(d); // Masuk kotak LIVE
+                } else if (now < wM) {
+                    jadwalMendatang.push(d); // Masuk kotak MENDATANG
+                }
+                // Jika now > wS (Selesai), datanya langsung dibuang dari memori tampilan
+            });
+
+            // 2. SORTING: Urutkan agar yang jadwalnya paling dekat ada di paling atas
+            jadwalLive.sort((a,b) => new Date(a.waktu_selesai) - new Date(b.waktu_selesai));
+            jadwalMendatang.sort((a,b) => new Date(a.waktu_mulai) - new Date(b.waktu_mulai));
+
+            // Gabungkan (Live selalu diprioritaskan di atas)
+            let semuaJadwalValid = [...jadwalLive, ...jadwalMendatang];
+            
+            // 3. PAGINASI: Potong array per 5 baris
+            const itemPerHalaman = 5;
+            const totalHalaman = Math.ceil(semuaJadwalValid.length / itemPerHalaman) || 1;
+            
+            // Pengaman batas halaman
+            if(window.halamanJadwalSiswa > totalHalaman) window.halamanJadwalSiswa = totalHalaman;
+            if(window.halamanJadwalSiswa < 1) window.halamanJadwalSiswa = 1;
+            
+            let startIdx = (window.halamanJadwalSiswa - 1) * itemPerHalaman;
+            let jadwalPaginasi = semuaJadwalValid.slice(startIdx, startIdx + itemPerHalaman);
+
+            // 4. RENDER HTML
+            let html = '';
+            jadwalPaginasi.forEach(d => {
+                let wM = new Date(d.waktu_mulai), wS = new Date(d.waktu_selesai); 
+                let st = "", btn = "";
+                let isLive = (now >= wM && now <= wS);
+                
+                if (isLive) {
+                    st = '<span class="text-red-600 font-bold px-2 py-1 bg-red-50 rounded-lg animate-pulse border border-red-200">🔴 LIVE</span>'; 
+                    btn = `<button onclick="masukUjian('${d.id}')" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition transform hover:-translate-y-0.5">🚀 Kerjakan</button>`; 
+                } else {
+                    st = '<span class="text-yellow-600 font-bold px-2 py-1 bg-yellow-50 rounded-lg">⏳ Belum Mulai</span>'; 
+                    btn = `<button class="px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200">Terkunci</button>`; 
+                }
+
+                let lblPusat = d.isPusat ? '<span class="px-2 py-0.5 bg-purple-100 text-purple-700 border border-purple-200 text-[8px] font-black rounded uppercase ml-2 shadow-sm">Ujian Pusat</span>' : '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 border border-emerald-200 text-[8px] font-black rounded uppercase ml-2 shadow-sm">Ujian Lokal</span>';
+                let tglTampil = wM.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+                
+                html += `
+                <tr class="border-b hover:bg-blue-50/40 transition">
+                    <td class="px-6 py-4"><div class="flex items-center mb-1"><b class="text-gray-800 text-sm md:text-base">${d.nama_ujian}</b> ${lblPusat}</div><span class="text-xs text-blue-600 font-black tracking-wider uppercase">${d.mapel}</span><span class="text-xs text-gray-500 font-medium ml-2">| ⏳ ${d.durasi_menit} Menit</span></td>
+                    <td class="px-6 py-4 text-xs font-medium text-gray-600"><span class="block text-gray-800 font-bold mb-0.5">📅 ${tglTampil}</span>Pukul ${wM.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})} <span class="text-gray-400 mx-1">-</span> ${wS.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})} WIB</td>
+                    <td class="px-6 py-4 text-center">${st}</td>
+                    <td class="px-6 py-4 text-center">${btn}</td>
+                </tr>`;
+            });
+
+            // Tambahkan Navigasi Paginasi di Bawah Tabel
+            if (totalHalaman > 1) {
+                html += `
+                <tr class="bg-gray-50/50">
+                    <td colspan="4" class="px-6 py-3">
+                        <div class="flex justify-between items-center text-xs font-bold text-gray-600">
+                            <span>Halaman ${window.halamanJadwalSiswa} dari ${totalHalaman}</span>
+                            <div class="space-x-2">
+                                <button onclick="gantiHalamanJadwal(-1)" class="${window.halamanJadwalSiswa === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-100 text-blue-600'} bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm transition">⬅️ Prev</button>
+                                <button onclick="gantiHalamanJadwal(1)" class="${window.halamanJadwalSiswa === totalHalaman ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-100 text-blue-600'} bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm transition">Next ➡️</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>`;
+            }
+
+            if(tb) tb.innerHTML = html || '<tr><td colspan="4" class="text-center py-12 text-gray-400 font-medium border-2 border-dashed m-4 rounded-xl bg-gray-50">Belum ada agenda ujian baru. Santai dulu! 🏖️</td></tr>';
+
+            // 5. UPDATE MENU KARTU UJIAN DI ATAS (Berdasarkan Array Live)
+            const kUjian = document.getElementById('kartuUjian'), kIkon = document.getElementById('ikonUjian'), kJudul = document.getElementById('judulUjian'), kStatus = document.getElementById('teksStatusUjian'), kBadge = document.getElementById('badgeLiveUjian');
+            if(jadwalLive.length > 0 && kUjian) {
+                ujianAktifID = jadwalLive[0].id; 
+                kUjian.className = "col-span-2 sm:col-span-1 bg-blue-600 p-3 md:p-6 rounded-2xl md:rounded-3xl shadow-lg shadow-blue-300 border border-blue-500 flex flex-col items-center justify-center cursor-pointer transform hover:-translate-y-1 hover:scale-105 transition-all relative group"; 
+                kIkon.innerText = "⏳"; 
+                kJudul.className = "font-black text-white text-sm md:text-xl mt-2"; kJudul.innerText = "Masuk Ujian"; 
+                kStatus.className = "text-[10px] md:text-xs text-blue-200 mt-1 text-center font-bold px-2 line-clamp-1"; kStatus.innerText = jadwalLive[0].nama_ujian; 
+                kBadge.classList.remove('hidden');
+            } else if(kUjian) {
+                ujianAktifID = null;
+                kUjian.className = "col-span-2 sm:col-span-1 bg-white p-3 md:p-6 rounded-2xl md:rounded-3xl border border-gray-200 flex flex-col items-center justify-center cursor-not-allowed opacity-75 relative transition-all duration-300";
+                kIkon.innerText = "🔒";
+                kJudul.className = "font-bold text-gray-800 text-sm md:text-lg text-center mt-2"; kJudul.innerText = "Ujian";
+                kStatus.className = "text-[10px] md:text-xs text-gray-500 mt-0.5 md:text-1 text-center font-medium px-2"; kStatus.innerText = "Belum ada sesi aktif";
+                kBadge.classList.add('hidden');
+            }
+        };
+
+        // Fungsi Tombol Paginasi
+        window.gantiHalamanJadwal = (arah) => {
+            window.halamanJadwalSiswa += arah;
+            // Panggil render ulang dengan mengambil data mentah dari CACHE LOKAL (Sangat Cepat, Tanpa Fetch Server!)
+            let cacheKey = `jadwal_${userData.kelas}_${userData.sekolah_id}`;
+            let cacheData = sessionStorage.getItem(cacheKey);
+            if(cacheData) window.renderTabelJadwal(JSON.parse(cacheData));
         };
 
         window.klikUjian = () => {
