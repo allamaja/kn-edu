@@ -1136,6 +1136,13 @@
         const app = initializeApp(fCfg); const db = getFirestore(app); const auth = getAuth(app);
         const appB = initializeApp(fCfg, "AppSekolah"); const authB = getAuth(appB);
         let idSekolahGlobal = "", jenjangSekolahGlobal = "SMA", dataUsersLokal = [], dataSoalSeluruhnya = [], dataSoalLokal = [], dataAntreanPaket = [], dataPaketLokal = [], dataKurikulumGlobal = [], pilihanSoalSementara = new Set(), dataJadwalTabel = [];
+        // === CACHE SYSTEM: Mencegah fetch berulang saat pindah tab ===
+        const tabSudahDimuat = new Set(); // Menyimpan tab yang sudah di-fetch
+        function invalidasiTab(...idTabs) { idTabs.forEach(t => tabSudahDimuat.delete(t)); }
+        // Cache data statis (kurikulum & jenis ujian — jarang berubah)
+        let _cacheKurikulum = null, _cacheJenisUjian = null;
+        // Cache jadwal (dipakai bersama tabJadwal, tabAnalitik, tabEvaluasiSoal, tabRuanganMaster)
+        let _cacheJadwal = null;
         // 1. INIT QUILL, MATHLIVE & AUTO-COMPRESSOR V2
         Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
         const toolbarOpsi = [['bold', 'italic', 'underline', 'strike'], [{ 'script': 'sub'}, { 'script': 'super' }], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['formula', 'image'], ['clean']];
@@ -1277,8 +1284,8 @@
                     await window.muatKurikulumDataSaja(); 
                     await window.muatJenisUjianDataSaja(); 
                     await window.muatDashboardLokal(); 
-                    await window.muatAntreanVerifikasi(); 
-                    await window.muatLaporanKendala();
+                    await invalidasiTab("tabVerifikasi"); window.muatAntreanVerifikasi(); 
+                    await invalidasiTab("tabLaporan"); window.muatLaporanKendala();
                     Swal.close();
                 } else { 
                     Swal.fire('Akses Ditolak', 'Bukan Admin Sekolah!', 'error').then(() => window.keluarAplikasi()); 
@@ -1333,18 +1340,21 @@
                 if(idTab === 'tabPPDB') warnaAktif = 'bg-amber-500/10 text-amber-500 border-amber-500/20';
                 m.className = `${baseActiveClass} ${warnaAktif}`;
             }
+            // Guard: hanya fetch jika tab belum pernah dimuat sejak login
+            if(tabSudahDimuat.has(idTab)) return;
+            tabSudahDimuat.add(idTab);
             if(idTab === 'tabDashboard') window.muatDashboardLokal();
             if(idTab === 'tabSemuaSoal') window.muatBankSoalLokal();
             if(idTab === 'tabUser') window.muatDataUserLokal();
-            if(idTab === 'tabVerifikasi') window.muatAntreanVerifikasi();
+            if(idTab === 'tabVerifikasi') invalidasiTab("tabVerifikasi"); window.muatAntreanVerifikasi();
             if(idTab === 'tabPaket') { window.muatBankSoalGlobalLokal(); window.muatDaftarPaketLokal(); }
-            if(idTab === 'tabJadwal') { window.muatDaftarPaketLokal(); window.muatDaftarJadwal(); }
-            if(idTab === 'tabLaporan') window.muatLaporanKendala();
+            if(idTab === 'tabJadwal') { window.muatDaftarPaketLokal(); invalidasiTab("tabJadwal","tabAnalitik","tabEvaluasiSoal","tabRuanganMaster"); _cacheJadwal = null; jadwalTersediaLokal.length = 0; window.muatDaftarJadwal(); }
+            if(idTab === 'tabLaporan') invalidasiTab("tabLaporan"); window.muatLaporanKendala();
             if(idTab === 'tabAnalitik') window.muatFilterRaporSekolah();
             if(idTab === 'tabEvaluasiSoal') window.muatFilterEvaluasiSoalLokal();
             if(idTab === 'tabRuanganMaster') window.muatDaftarSemuaRuangan();
-            if(idTab === 'tabRombel') window.muatMasterRombel();
-            if(idTab === 'tabPPDB') window.muatPortalPPDB();
+            if(idTab === 'tabRombel') invalidasiTab("tabRombel"); window.muatMasterRombel();
+            if(idTab === 'tabPPDB') invalidasiTab("tabPPDB"); window.muatPortalPPDB();
             if(idTab === 'tabPanduan') window.muatVideoTutorial();
         };
         window.muatDashboardLokal = async () => {
@@ -1373,41 +1383,39 @@
             }
         };
         window.muatKurikulumDataSaja = async () => {
+            if (_cacheKurikulum) { dataKurikulumGlobal = _cacheKurikulum; window._renderDropdownMapel(); return; }
             const s = await getDocs(collection(db, "kurikulum")); 
             dataKurikulumGlobal = []; 
             s.forEach(d => dataKurikulumGlobal.push({id: d.id, ...d.data()}));
-            
+            _cacheKurikulum = dataKurikulumGlobal; // simpan ke cache
+            window._renderDropdownMapel();
+        };
+        window._renderDropdownMapel = () => {
             let o = '<option value="">-- Pilih Mapel --</option>'; 
-            
             // 🔥 FILTER JENJANG SUPER AMAN (Kebal format Array maupun String)
             dataKurikulumGlobal.filter(m => {
-                if (m.status === 'nonaktif') return false; // Buang yang nonaktif
-
-                // Ubah jadi string kecil semua agar kebal terhadap perbedaan format
+                if (m.status === 'nonaktif') return false;
                 let strJenjang = JSON.stringify(m.jenjang || "").toLowerCase();
                 let targetJenjang = jenjangSekolahGlobal.toLowerCase();
-                
-                // Cek apakah mengandung jenjang sekolah ini atau bersifat umum
                 let isJenjangCocok = strJenjang.includes(targetJenjang) || 
                                      strJenjang.includes("semua") || 
                                      strJenjang.includes("tanpa") || 
                                      strJenjang.includes("umum") || 
                                      strJenjang === '""' || 
                                      strJenjang === '[]';
-                                     
                 return isJenjangCocok;
             }).forEach(m => {
                 o += `<option value="${m.nama_mapel}">${m.nama_mapel}</option>`;
             });
-
             // 🎯 Opsi Spesial: Pastikan opsi PPDB selalu ada di paling bawah
             o += `<option value="PPDB" class="font-bold text-indigo-600">PPDB / Tes Masuk</option>`;
-            
             document.querySelectorAll('.dinamis-mapel').forEach(el => el.innerHTML = o);
         };
         window.muatJenisUjianDataSaja = async () => {
+            if (_cacheJenisUjian) { document.querySelectorAll('.dinamis-jenis').forEach(el => el.innerHTML = _cacheJenisUjian); return; }
             const s = await getDocs(collection(db, "master_ujian")); let o = '<option value="">-- Pilih Jenis --</option>';
             s.forEach(d => o += `<option value="${d.data().nama}">${d.data().nama} (${d.data().skala})</option>`);
+            _cacheJenisUjian = o; // simpan ke cache
             document.querySelectorAll('.dinamis-jenis').forEach(el => el.innerHTML = o);
         };
         const setupMB = (m, b, f) => { let em = document.getElementById(m), eb = document.getElementById(b); if(em && eb) { em.addEventListener('change', e => { let v = e.target.value; if(!v) { eb.innerHTML = '<option value="">Semua Bab</option>'; eb.disabled = true; } else { eb.disabled = false; eb.innerHTML = '<option value="">Semua Bab</option>'; let o = dataKurikulumGlobal.find(x => x.nama_mapel === v); if(o?.sub_bab) o.sub_bab.forEach(x => eb.innerHTML += `<option value="${x}">${x}</option>`); } if(f) f(); }); } };
@@ -1490,7 +1498,7 @@
                         listCek.forEach(cb => { batchPromises.push(deleteDoc(doc(db, "users", cb.value))); });
                         await Promise.all(batchPromises); // Tembak request hapus secara paralel
                         Swal.fire('Berhasil', `${listCek.length} akun pengguna telah musnah.`, 'success');
-                        window.muatDataUserLokal(); window.muatDashboardLokal();
+                        invalidasiTab("tabUser","tabDashboard"); window.muatDataUserLokal(); window.muatDashboardLokal();
                     } catch(e) { Swal.fire('Error', 'Gagal menghapus sebagian data. Cek koneksi.', 'error'); }
                 }
             });
@@ -1623,7 +1631,7 @@
                     await updateDoc(doc(db, "users", id), py); 
                     Swal.fire('Diperbarui!', 'Data diedit.', 'success'); 
                 }
-                window.tutupModalUser(); window.muatDataUserLokal(); window.muatDashboardLokal();
+                window.tutupModalUser(); invalidasiTab("tabUser","tabDashboard"); window.muatDataUserLokal(); window.muatDashboardLokal();
             } catch(er) { Swal.fire('Error', 'Gagal menyimpan. Email/Username mungkin sudah dipakai.', 'error'); }
         };
         window.toggleKelasUser = () => { document.getElementById('divUserKelas').style.display = document.getElementById('userRole').value === 'siswa' ? 'block' : 'none'; };
@@ -1636,7 +1644,7 @@
                         let py = il ? {role: 'alumni', lulus_pada: new Date()} : {kelas: (ki+1).toString()};
                         await updateDoc(doc(db, "users", id), py); 
                         Swal.fire('Berhasil!', il ? `${nm} berhasil lulus.` : `${nm} berhasil naik kelas.`, 'success'); 
-                        window.muatDataUserLokal(); 
+                        invalidasiTab("tabUser","tabDashboard"); window.muatDataUserLokal(); 
                         window.muatDashboardLokal();
                     } catch(er) { Swal.fire('Error', 'Gagal memproses.', 'error'); }
                 }
@@ -1659,13 +1667,13 @@
                         tg.forEach(s => { let py = il ? {role: 'alumni', lulus_pada: new Date()} : {kelas: (parseInt(kp)+1).toString()}; jp.push(updateDoc(doc(db, "users", s.id), py)); });
                         await Promise.all(jp); 
                         Swal.fire('Sukses!', `${tg.length} siswa berhasil diproses.`, 'success'); 
-                        window.muatDataUserLokal(); 
+                        invalidasiTab("tabUser","tabDashboard"); window.muatDataUserLokal(); 
                         window.muatDashboardLokal();
                     } catch(er) { Swal.fire('Error', 'Gagal mengeksekusi.', 'error'); }
                 }
             }
         };
-        window.hapusUser = i => { Swal.fire({title: 'Hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33'}).then(async r => { if(r.isConfirmed){ await deleteDoc(doc(db, "users", i)); window.muatDataUserLokal(); window.muatDashboardLokal(); } }); };
+        window.hapusUser = i => { Swal.fire({title: 'Hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33'}).then(async r => { if(r.isConfirmed){ await deleteDoc(doc(db, "users", i)); invalidasiTab("tabUser","tabDashboard"); window.muatDataUserLokal(); window.muatDashboardLokal(); } }); };
         window.bukaModalImportUser = () => { document.getElementById('fileImportUser').value = ''; document.getElementById('modalImportUser').classList.remove('hidden'); };
         window.tutupModalImportUser = () => { document.getElementById('modalImportUser').classList.add('hidden'); };
         window.downloadTemplateExcel = () => { 
@@ -1828,7 +1836,7 @@
                 if(res.isConfirmed) {
                     Swal.fire({title: 'Memproses...', didOpen: () => Swal.showLoading()});
                     await updateDoc(doc(db, "paket_soal", id), { status_paket: 'disetujui', disetujui_oleh: "Admin " + idSekolahGlobal, disetujui_pada: new Date() });
-                    window.muatAntreanVerifikasi();
+                    invalidasiTab("tabVerifikasi"); window.muatAntreanVerifikasi();
                     window.muatDaftarPaketLokal();
                     Swal.fire('Disetujui!', 'Paket siap digunakan.', 'success');
                 }
@@ -2008,10 +2016,10 @@
 
                 // Jika simpan normal
                 document.getElementById('modalEditor').classList.add('hidden'); Swal.fire({title: 'Tersimpan!', icon: 'success', timer: 1000, showConfirmButton: false}); 
-                if(a === 'review') window.muatAntreanVerifikasi(); else window.muatBankSoalLokal();
+                if(a === 'review') { invalidasiTab("tabVerifikasi"); window.muatAntreanVerifikasi(); } else { invalidasiTab("tabSemuaSoal"); window.muatBankSoalLokal(); }
             } catch(e) { Swal.fire('Error', 'Gagal menyimpan.', 'error'); }
         };
-        window.hapusSoalPermanen = i => { Swal.fire({title: 'Hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33'}).then(async r => { if(r.isConfirmed) { await deleteDoc(doc(db, "bank_soal", i)); window.muatBankSoalLokal(); window.muatDashboardLokal(); } }); };
+        window.hapusSoalPermanen = i => { Swal.fire({title: 'Hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33'}).then(async r => { if(r.isConfirmed) { await deleteDoc(doc(db, "bank_soal", i)); invalidasiTab("tabSemuaSoal","tabDashboard"); window.muatBankSoalLokal(); window.muatDashboardLokal(); } }); };
         // 5. PAKET UJIAN & JADWAL
         window.muatBankSoalGlobalLokal = async () => { 
             // KHUSUS GLOBAL: Kita saring otomatis agar hanya menarik soal dari jenjang sekolah ini saja (Misal: SMA tidak melihat soal SD)
@@ -2122,11 +2130,11 @@
                 let py = { nama_paket: n, mapel: m, kelas: k, soal_ids: Array.from(pilihanSoalSementara), sekolah_id: idSekolahGlobal, update_terakhir: new Date() };
                 if (idPaketAktifEdit) { await updateDoc(doc(db, "paket_soal", idPaketAktifEdit), py); Swal.fire('Diperbarui!', 'Paket berhasil disimpan.', 'success'); } 
                 else { py.dibuat_pada = new Date(); py.status_paket = 'ready'; await addDoc(collection(db, "paket_soal"), py); Swal.fire({title: 'Berhasil!', icon: 'success', timer: 1000, showConfirmButton: false}); }
-                window.tutupModalPaket(); window.muatDaftarPaketLokal(); 
+                window.tutupModalPaket(); invalidasiTab("tabPaket"); window.muatDaftarPaketLokal(); 
             } catch(e) { Swal.fire('Error', 'Gagal menyimpan.', 'error'); }
         };
 
-        window.hapusPaket = async (i) => { if((await Swal.fire({title:'Hapus Paket?', icon:'warning', showCancelButton:true, confirmButtonColor:'#d33'})).isConfirmed){ await deleteDoc(doc(db, "paket_soal", i)); window.muatDaftarPaketLokal(); } };
+        window.hapusPaket = async (i) => { if((await Swal.fire({title:'Hapus Paket?', icon:'warning', showCancelButton:true, confirmButtonColor:'#d33'})).isConfirmed){ await deleteDoc(doc(db, "paket_soal", i)); invalidasiTab("tabPaket"); window.muatDaftarPaketLokal(); } };
         window.tutupModalPaket = () => document.getElementById('modalPaket').classList.add('hidden');
         
         // RENDER KOTAK CHECKBOX DI DALAM MODAL PAKET
@@ -2321,7 +2329,7 @@
                 }
 
                 document.getElementById('modalEditor').classList.add('hidden'); Swal.fire({title: 'Tersimpan!', icon: 'success', timer: 1000, showConfirmButton: false}); 
-                if(a === 'review') window.muatAntreanVerifikasi(); else window.muatBankSoalLokal();
+                if(a === 'review') { invalidasiTab("tabVerifikasi"); window.muatAntreanVerifikasi(); } else { invalidasiTab("tabSemuaSoal"); window.muatBankSoalLokal(); }
             } catch(e) { Swal.fire('Error', 'Gagal menyimpan.', 'error'); }
         };
 
@@ -2361,16 +2369,17 @@
             let tb = document.getElementById('tabelDaftarJadwal'); 
             if(tb) tb.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-blue-600 animate-pulse font-bold">Menarik data jadwal dari server...</td></tr>';
             try { 
-                const s = await getDocs(collection(db, "jadwal_ujian")); 
-                dataJadwalTabel = []; let h = ''; 
-                s.forEach(doc => { 
-                    let d = doc.data(); d.id = doc.id; 
-                    let ip = !d.sekolah_id || d.sekolah_id.toUpperCase() === "GLOBAL" || d.sekolah_id.toUpperCase() === "YAYASAN"; 
-                    if(idSekolahGlobal !== ""){ 
-                        if(!ip && d.sekolah_id !== idSekolahGlobal) return; 
-                        if(ip && d.jenjang !== jenjangSekolahGlobal && d.jenjang !== "Semua") return; 
-                    } 
-                    dataJadwalTabel.push(d); 
+                // ✅ FIX: 2 query terfokus menggantikan scan seluruh collection
+                const [snapLokal, snapPusat] = await Promise.all([
+                    getDocs(query(collection(db, "jadwal_ujian"), where("sekolah_id", "==", idSekolahGlobal))),
+                    getDocs(query(collection(db, "jadwal_ujian"), where("sekolah_id", "==", "GLOBAL")))
+                ]);
+                dataJadwalTabel = []; let h = '';
+                const prosesDoc = (doc, isPusat) => {
+                    let d = doc.data(); d.id = doc.id;
+                    if(isPusat && d.jenjang !== jenjangSekolahGlobal && d.jenjang !== "Semua") return;
+                    dataJadwalTabel.push(d);
+                    let ip = isPusat;
                     let w = d.status === 'aktif' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-red-100 text-red-700 border-red-200'; 
                     let hk = ip ? '<span class="px-2.5 py-1 bg-purple-100 text-purple-700 text-[9px] font-black rounded-md uppercase mt-2.5 inline-block shadow-sm">PUSAT</span>' : '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded-md uppercase mt-2.5 inline-block shadow-sm">LOKAL</span>'; 
                     let statusLabel = `<span class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-sm border ${w}">${d.status}</span>`; 
@@ -2383,7 +2392,11 @@
                         <td class="px-6 py-4 text-xs font-medium text-slate-600 space-y-1.5"><div class="flex items-center"><span class="w-4">🟢</span> Mulai: <b class="ml-1 text-slate-800">${d.waktu_mulai.replace('T',' ')}</b></div><div class="flex items-center"><span class="w-4">🔴</span> Akhir: <b class="ml-1 text-slate-800">${d.waktu_selesai.replace('T',' ')}</b></div><div class="mt-2 pt-1.5"><span class="text-teal-700 font-black bg-teal-50 px-2 py-1 rounded-md border border-teal-100">⏳ Durasi: ${d.durasi_menit} Menit</span></div></td>
                         <td class="px-6 py-4 w-36"><div class="flex flex-col">${btnEdit}${btnRuang}${btnSuspend}</div></td>
                     </tr>`; 
-                }); 
+                };
+                snapLokal.forEach(doc => prosesDoc(doc, false));
+                snapPusat.forEach(doc => prosesDoc(doc, true));
+                // Simpan ke cache untuk dipakai tabAnalitik, tabEvaluasiSoal, tabRuanganMaster
+                _cacheJadwal = dataJadwalTabel.map(d => ({id: d.id, nama: d.nama_ujian, tgl: d.waktu_mulai, mapel: d.mapel, kelas: d.kelas, isPusat: !d.sekolah_id || d.sekolah_id.toUpperCase()==="GLOBAL"}));
                 if(tb) tb.innerHTML = h || '<tr><td colspan="4" class="text-center py-12 text-slate-500 font-medium">Belum ada jadwal tersedia.</td></tr>'; 
             } catch(er) { if(tb) tb.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-red-500 font-bold">Gagal memuat jadwal.</td></tr>'; } 
         };
@@ -2444,7 +2457,7 @@
                     await window.evaluasiStatusPaketLokal(j.id_paket);
                 }
 
-                window.muatDaftarJadwal(); 
+                invalidasiTab("tabJadwal","tabAnalitik","tabEvaluasiSoal","tabRuanganMaster"); _cacheJadwal = null; jadwalTersediaLokal.length = 0; window.muatDaftarJadwal(); 
                 window.muatDaftarPaketLokal(); // Refresh layar paket di background
                 Swal.close(); 
             } catch(e) { Swal.fire('Error', 'Gagal merubah status jadwal.', 'error'); } 
@@ -2546,7 +2559,7 @@
                     }
 
                     window.tutupModalJadwal(); 
-                    window.muatDaftarJadwal(); 
+                    invalidasiTab("tabJadwal","tabAnalitik","tabEvaluasiSoal","tabRuanganMaster"); _cacheJadwal = null; jadwalTersediaLokal.length = 0; window.muatDaftarJadwal(); 
                     window.muatDaftarPaketLokal();
                 } catch(er) { Swal.fire('Error', 'Gagal memproses jadwal.', 'error'); } 
             }); 
@@ -2827,7 +2840,7 @@
                     }
                     // 3. Tandai laporan kendala menjadi Selesai
                     await updateDoc(doc(db, "laporan_kendala", idLaporan), { status: 'Selesai', tindakan_admin: 'Toleransi Lanjut (Resume)', diselesaikan_pada: new Date() });
-                    window.muatLaporanKendala();
+                    invalidasiTab("tabLaporan"); window.muatLaporanKendala();
                     Swal.fire('Berhasil', `${namaSiswa} sudah bisa melanjutkan ujiannya.`, 'success');
                 } catch(e) {
                     console.error(e);
@@ -2855,7 +2868,7 @@
                     }
                     // 3. Tandai laporan kendala menjadi Selesai
                     await updateDoc(doc(db, "laporan_kendala", idLaporan), { status: 'Selesai', tindakan_admin: 'Reset Sesi Ujian (Hapus Nilai)', diselesaikan_pada: new Date() });
-                    window.muatLaporanKendala();
+                    invalidasiTab("tabLaporan"); window.muatLaporanKendala();
                     Swal.fire('Ter-Reset!', `Data ujian ${namaSiswa} telah dihapus. Silakan suruh siswa login kembali.`, 'success');
                 } catch(e) {
                     console.error(e);
@@ -3105,15 +3118,20 @@
             let tglAkhir = document.getElementById('filterTglAkhirUjian').value;
             try {
                 if(jadwalTersediaLokal.length === 0) {
-                    const snapJadwal = await getDocs(collection(db, "jadwal_ujian"));
-                    snapJadwal.forEach(doc => {
-                        let d = doc.data();
-                        let isPusat = !d.sekolah_id || d.sekolah_id.toUpperCase() === "GLOBAL" || d.sekolah_id.toUpperCase() === "YAYASAN";
-                        if (d.sekolah_id === idSekolahGlobal || isPusat) {
-                            jadwalTersediaLokal.push({id: doc.id, nama: d.nama_ujian, tgl: d.waktu_mulai, mapel: d.mapel, kelas: d.kelas, isPusat: isPusat});
-                        }
-                    });
-                    jadwalTersediaLokal.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+                    // ✅ FIX: pakai cache dari muatDaftarJadwal jika sudah ada
+                    if (_cacheJadwal && _cacheJadwal.length > 0) {
+                        jadwalTersediaLokal = [..._cacheJadwal];
+                        jadwalTersediaLokal.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+                    } else {
+                        const [_snapL, _snapP] = await Promise.all([
+                            getDocs(query(collection(db, "jadwal_ujian"), where("sekolah_id", "==", idSekolahGlobal))),
+                            getDocs(query(collection(db, "jadwal_ujian"), where("sekolah_id", "==", "GLOBAL")))
+                        ]);
+                        _snapL.forEach(doc => { let d = doc.data(); jadwalTersediaLokal.push({id: doc.id, nama: d.nama_ujian, tgl: d.waktu_mulai, mapel: d.mapel, kelas: d.kelas, isPusat: false}); });
+                        _snapP.forEach(doc => { let d = doc.data(); if(d.jenjang === jenjangSekolahGlobal || d.jenjang === "Semua") jadwalTersediaLokal.push({id: doc.id, nama: d.nama_ujian, tgl: d.waktu_mulai, mapel: d.mapel, kelas: d.kelas, isPusat: true}); });
+                        jadwalTersediaLokal.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+                        _cacheJadwal = [...jadwalTersediaLokal];
+                    }
                 }
                 let html = ''; let countAda = 0;
                 jadwalTersediaLokal.forEach(j => {
@@ -3229,15 +3247,20 @@
             select.innerHTML = '<option value="">Memuat daftar ujian...</option>';
             try {
                 if(jadwalTersediaLokal.length === 0) {
-                    const snapJadwal = await getDocs(collection(db, "jadwal_ujian"));
-                    snapJadwal.forEach(doc => {
-                        let d = doc.data();
-                        let isPusat = !d.sekolah_id || d.sekolah_id.toUpperCase() === "GLOBAL" || d.sekolah_id.toUpperCase() === "YAYASAN";
-                        if (d.sekolah_id === idSekolahGlobal || isPusat) {
-                            jadwalTersediaLokal.push({id: doc.id, nama: d.nama_ujian, tgl: d.waktu_mulai, mapel: d.mapel, kelas: d.kelas, isPusat: isPusat});
-                        }
-                    });
-                    jadwalTersediaLokal.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+                    // ✅ FIX: pakai cache dari muatDaftarJadwal jika sudah ada
+                    if (_cacheJadwal && _cacheJadwal.length > 0) {
+                        jadwalTersediaLokal = [..._cacheJadwal];
+                        jadwalTersediaLokal.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+                    } else {
+                        const [_snapL, _snapP] = await Promise.all([
+                            getDocs(query(collection(db, "jadwal_ujian"), where("sekolah_id", "==", idSekolahGlobal))),
+                            getDocs(query(collection(db, "jadwal_ujian"), where("sekolah_id", "==", "GLOBAL")))
+                        ]);
+                        _snapL.forEach(doc => { let d = doc.data(); jadwalTersediaLokal.push({id: doc.id, nama: d.nama_ujian, tgl: d.waktu_mulai, mapel: d.mapel, kelas: d.kelas, isPusat: false}); });
+                        _snapP.forEach(doc => { let d = doc.data(); if(d.jenjang === jenjangSekolahGlobal || d.jenjang === "Semua") jadwalTersediaLokal.push({id: doc.id, nama: d.nama_ujian, tgl: d.waktu_mulai, mapel: d.mapel, kelas: d.kelas, isPusat: true}); });
+                        jadwalTersediaLokal.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+                        _cacheJadwal = [...jadwalTersediaLokal];
+                    }
                 }
                 let html = '<option value="">-- Klik untuk memilih ujian --</option>';
                 jadwalTersediaLokal.forEach(j => { 
@@ -3476,10 +3499,18 @@
             let kontainer = document.getElementById('gridSemuaRuangan');
             kontainer.innerHTML = '<div class="col-span-full text-center py-12 text-slate-500 font-bold animate-pulse">Menarik data seluruh ruangan...</div>';
             try {
-                // Tarik Jadwal (Untuk mencocokkan nama ujian)
-                const snapJadwal = await getDocs(collection(db, "jadwal_ujian"));
+                // Tarik Jadwal (Untuk mencocokkan nama ujian) — pakai cache jika ada
                 let mapJadwal = {};
-                snapJadwal.forEach(d => { mapJadwal[d.id] = d.data().nama_ujian; });
+                if (_cacheJadwal && _cacheJadwal.length > 0) {
+                    _cacheJadwal.forEach(j => { mapJadwal[j.id] = j.nama; });
+                } else {
+                    const [_snapJL, _snapJP] = await Promise.all([
+                        getDocs(query(collection(db, "jadwal_ujian"), where("sekolah_id", "==", idSekolahGlobal))),
+                        getDocs(query(collection(db, "jadwal_ujian"), where("sekolah_id", "==", "GLOBAL")))
+                    ]);
+                    _snapJL.forEach(d => { mapJadwal[d.id] = d.data().nama_ujian; });
+                    _snapJP.forEach(d => { mapJadwal[d.id] = d.data().nama_ujian; });
+                }
                 // Tarik Guru (Untuk nama pengawas)
                 const snapGuru = await getDocs(query(collection(db, "users"), where("sekolah_id", "==", idSekolahGlobal), where("role", "==", "guru")));
                 let mapGuru = {};
@@ -3678,7 +3709,7 @@
                 if(id === "") await addDoc(collection(db, "rombel"), py);
                 else await updateDoc(doc(db, "rombel", id), py);
                 window.tutupModalRombel();
-                window.muatMasterRombel();
+                invalidasiTab("tabRombel"); window.muatMasterRombel();
                 Swal.fire('Berhasil!', 'Struktur Rombel diperbarui.', 'success');
             } catch(e) { Swal.fire('Error', 'Gagal menyimpan rombel.', 'error'); }
         };
@@ -3697,7 +3728,7 @@
             if((await Swal.fire({title: 'Hapus Rombel?', text: 'Siswa akan terlepas dari kelas ini (tapi akun mereka tetap aman).', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48'})).isConfirmed) {
                 Swal.fire({title: 'Menghapus...', didOpen: () => Swal.showLoading()});
                 await deleteDoc(doc(db, "rombel", id));
-                window.muatMasterRombel();
+                invalidasiTab("tabRombel"); window.muatMasterRombel();
                 Swal.close();
             }
         };
@@ -3827,7 +3858,7 @@
                 document.getElementById('ppdbManualNama').value = '';
                 document.getElementById('ppdbManualAsal').value = '';
                 document.getElementById('areaTambahPPDB').classList.add('hidden');
-                window.muatPortalPPDB();
+                invalidasiTab("tabPPDB"); window.muatPortalPPDB();
                 Swal.fire('Berhasil', 'Calon santri berhasil didaftarkan.', 'success');
             } catch(e) {
                 console.error(e);
@@ -3864,7 +3895,7 @@
                     await Promise.all(batch);
                     document.getElementById('filePPDB').value = '';
                     window.bukaImportPPDB();
-                    window.muatPortalPPDB();
+                    invalidasiTab("tabPPDB"); window.muatPortalPPDB();
                     Swal.fire('Berhasil', `${a.length} peserta sukses di-upload.`, 'success');
                 } catch(er) { Swal.fire('Error', 'Gagal membaca format Excel.', 'error'); }
             };
@@ -3872,7 +3903,7 @@
         };
         window.hapusPesertaPPDB = async (id) => {
             if((await Swal.fire({title:'Hapus?', icon:'warning', showCancelButton:true})).isConfirmed) {
-                await deleteDoc(doc(db, "pendaftaran_ppdb", id)); window.muatPortalPPDB();
+                await deleteDoc(doc(db, "pendaftaran_ppdb", id)); invalidasiTab("tabPPDB"); window.muatPortalPPDB();
             }
         };
         // CETAK KARTU ELEGAN DENGAN TAB BARU
@@ -3959,7 +3990,7 @@
                 let py = { nama_ujian: f.n, jenis_ujian: "Seleksi Masuk", jenjang: jenjangSekolahGlobal, kelas: f.kls, mapel: "Campuran", id_paket: f.pk, nama_paket: pktTerpilih.nama_paket, jumlah_soal: pktTerpilih.soal_ids.length, waktu_mulai: f.wm, waktu_selesai: f.wa, durasi_menit: parseInt(f.du), aturan_rilis_bahas: "mode_ppdb", sekolah_id: idSekolahGlobal, status: 'aktif', dibuat_pada: new Date() };
                 try {
                     await addDoc(collection(db, "jadwal_ujian"), py);
-                    window.muatPortalPPDB(); Swal.fire('Sukses', 'Jadwal seleksi tertutup berhasil diterbitkan.', 'success');
+                    invalidasiTab("tabPPDB"); window.muatPortalPPDB(); Swal.fire('Sukses', 'Jadwal seleksi tertutup berhasil diterbitkan.', 'success');
                 } catch(er) { Swal.fire('Error', 'Gagal membuat jadwal.', 'error'); }
             }
         };
@@ -3976,7 +4007,7 @@
                     await window.evaluasiStatusPaketLokal(docRef.data().id_paket);
                 }
 
-                window.muatPortalPPDB();
+                invalidasiTab("tabPPDB"); window.muatPortalPPDB();
                 Swal.close();
             } catch(e) { Swal.fire('Error', 'Gagal merubah status jadwal.', 'error'); }
         };
@@ -4053,7 +4084,7 @@
                         durasi_menit: parseInt(f.du) 
                     };
                     await updateDoc(doc(db, "jadwal_ujian", idJadwal), payloadUpdate);
-                    window.muatPortalPPDB(); 
+                    invalidasiTab("tabPPDB"); window.muatPortalPPDB(); 
                     Swal.fire('Sukses', 'Jadwal seleksi PPDB berhasil diperbarui.', 'success');
                 }
             } catch(er) { Swal.fire('Error', 'Gagal memuat atau menyimpan data edit.', 'error'); }
