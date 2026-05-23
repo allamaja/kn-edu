@@ -1011,7 +1011,17 @@
                     
                     window.setDinamisKelas();
                     Swal.fire({title:'Menyiapkan Ruang Kerja...', didOpen:()=>Swal.showLoading()});
-                    await window.cekStatusWaliKelas(); await window.muatMasterKurikulum(); await window.muatPengumumanGuru(); await window.muatBankSoalPribadi(); await window.muatDataNilai();
+
+                    // 🔥 FIX: jalankan paralel dengan Promise.all
+                    // Semua fungsi init tidak saling bergantung satu sama lain,
+                    // jadi bisa dieksekusi bersamaan — waktu loading turun signifikan
+                    await Promise.all([
+                        window.cekStatusWaliKelas(),
+                        window.muatMasterKurikulum(),
+                        window.muatPengumumanGuru(),
+                        window.muatBankSoalPribadi(),
+                        window.muatDataNilai()
+                    ]);
                     Swal.close();
                 } else { window.location.replace("index.html"); }
             } else window.location.replace("index.html");
@@ -1052,12 +1062,34 @@
 };
 
         // ==========================================
+        // ==========================================
         // 3. FITUR KOREKSI ESAI (GRADING DESK V2)
         // ==========================================
-        // ✅ FIX: helper untuk ambil hasil_ujian dengan cache bersama (dipakai tabNilai & tabAnalitik)
+        // Helper: ambil hasil_ujian dengan cache bersama (dipakai tabNilai & tabAnalitik)
+        // 🔥 FIX: tambah filter mapel di query Firestore (bukan filter JS)
+        //   Sebelum: tarik SEMUA hasil sekolah → filter di JS
+        //   Sekarang: tarik hanya mapel yang guru ampu → 50-90% lebih hemat
+        // Catatan: butuh composite index di Firestore Console:
+        //   Collection: hasil_ujian | Fields: sekolah_id (ASC) + mapel (ASC)
         async function _getHasilUjianGuru(forceRefresh = false) {
             if (!_cacheHasilUjian || forceRefresh) {
-                const snap = await getDocs(query(collection(db, "hasil_ujian"), where("sekolah_id", "==", profilGuru.sekolah_id)));
+                let q;
+                if (profilGuru.mapel_diampu && profilGuru.mapel_diampu.length > 0) {
+                    // Filter mapel di server — hanya tarik yang relevan untuk guru ini
+                    // Operator 'in' max 30 value, cukup untuk semua mapel guru
+                    q = query(
+                        collection(db, "hasil_ujian"),
+                        where("sekolah_id", "==", profilGuru.sekolah_id),
+                        where("mapel", "in", [...profilGuru.mapel_diampu, "Campuran"])
+                    );
+                } else {
+                    // Guru belum di-set mapelnya — fallback tarik semua
+                    q = query(
+                        collection(db, "hasil_ujian"),
+                        where("sekolah_id", "==", profilGuru.sekolah_id)
+                    );
+                }
+                const snap = await getDocs(q);
                 _cacheHasilUjian = snap.docs.map(d => { let n = d.data(); n.id = d.id; return n; });
             }
             return _cacheHasilUjian;
@@ -2333,6 +2365,7 @@ const [sG,sL]=await Promise.all([getDocs(query(collection(db,"pengumuman"),where
         let daftarSesiTugas = [];
         let sesiAktifProctor = null; // Menyimpan detail sesi yang sedang dibuka
         let jadwalSesiAktif = null;
+        let cacheNamaSiswa = null;   // Cache nama siswa per sesi panel — reset saat ganti ruangan
 
         window.muatDaftarSesiPengawasan = async () => {
             let grid = document.getElementById('gridRuangProctor');
@@ -2387,6 +2420,9 @@ const [sG,sL]=await Promise.all([getDocs(query(collection(db,"pengumuman"),where
         window.bukaPanelMonitor = async (idSesi) => {
             sesiAktifProctor = daftarSesiTugas.find(x => x.id === idSesi);
             if(!sesiAktifProctor) return;
+
+            // Reset cache nama siswa — beda ruangan bisa beda peserta
+            cacheNamaSiswa = null;
 
             document.getElementById('viewDaftarRuang').classList.add('hidden');
             document.getElementById('viewLiveMonitor').classList.remove('hidden');
@@ -2444,17 +2480,23 @@ const [sG,sL]=await Promise.all([getDocs(query(collection(db,"pengumuman"),where
         window.refreshRadarSiswa = async () => {
             if(!sesiAktifProctor) return;
             let arrayPeserta = sesiAktifProctor.peserta || [];
-            
-            // 1. Tarik Data Target Siswa (Nama lengkap berdasarkan Username)
-            let mapNamaSiswa = {};
-            if(arrayPeserta.length > 0) {
-                // Chunk query max 10 untuk in array Firestore (Simulasi sederhana dengan filter lokal)
-                const snapSiswa = await getDocs(query(collection(db, "users"), where("sekolah_id", "==", profilGuru.sekolah_id), where("role", "==", "siswa")));
+
+            // 1. Nama siswa — fetch SEKALI per sesi panel, cache di cacheNamaSiswa
+            //    🔥 FIX: getDocs(users) tidak lagi diulang setiap klik "Segarkan Radar"
+            //    cacheNamaSiswa direset di bukaPanelMonitor() saat ganti ruangan
+            if (!cacheNamaSiswa && arrayPeserta.length > 0) {
+                cacheNamaSiswa = {};
+                const snapSiswa = await getDocs(query(
+                    collection(db, "users"),
+                    where("sekolah_id", "==", profilGuru.sekolah_id),
+                    where("role", "==", "siswa")
+                ));
                 snapSiswa.forEach(d => {
                     let un = d.data().email.split('@')[0];
-                    if(arrayPeserta.includes(un)) mapNamaSiswa[un] = d.data().nama;
+                    if(arrayPeserta.includes(un)) cacheNamaSiswa[un] = d.data().nama;
                 });
             }
+            let mapNamaSiswa = cacheNamaSiswa || {};
 
             // 2. Tarik Hasil Ujian berjalan
             const snapHasil = await getDocs(query(collection(db, "hasil_ujian"), where("id_jadwal", "==", sesiAktifProctor.jadwal_id), where("asal_sekolah_siswa", "==", profilGuru.sekolah_id)));
