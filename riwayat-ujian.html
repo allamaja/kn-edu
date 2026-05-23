@@ -115,17 +115,55 @@
             const kontainer = document.getElementById('kontainerRiwayat');
             
             try {
-                // A. Tarik Semua Master Jadwal Ujian (Untuk Cek Deadline Penahanan Pembahasan)
-                const snapJadwal = await getDocs(collection(db, "jadwal_ujian"));
+                // A. Tarik Jadwal Ujian yang relevan untuk siswa ini
+                //    🔥 FIX: tambah filter sekolah_id + cache sessionStorage 5 menit
+                //    (sebelumnya: getDocs(collection(db,"jadwal_ujian")) — scan SEMUA jadwal)
                 let jadwalMap = {};
-                snapJadwal.forEach(doc => { jadwalMap[doc.id] = doc.data(); });
+                const cacheKeyJadwal = `jadwal_map_${usernameSiswaAktif}`;
+                const cacheJadwal = sessionStorage.getItem(cacheKeyJadwal);
+                const cacheJadwalTime = sessionStorage.getItem(`${cacheKeyJadwal}_time`);
 
-                // B. Tarik Hasil Ujian si Siswa ini saja
-                const qHasil = query(collection(db, "hasil_ujian"), where("username", "==", usernameSiswaAktif));
-                const snapHasil = await getDocs(qHasil);
-                
+                if (cacheJadwal && cacheJadwalTime && (Date.now() - parseInt(cacheJadwalTime) < 300000)) {
+                    // Gunakan dari cache (5 menit)
+                    jadwalMap = JSON.parse(cacheJadwal);
+                } else {
+                    // Ambil dari server: hanya jadwal yang pernah dikerjakan siswa ini
+                    // Kita kumpulkan id_jadwal unik dari hasil ujian siswa, lalu batch fetch jadwalnya
+                    // Ini jauh lebih hemat dari scan seluruh koleksi jadwal_ujian
+                    const hasilSementara = await getDocs(query(
+                        collection(db, "hasil_ujian"),
+                        where("username", "==", usernameSiswaAktif)
+                    ));
+                    const idJadwalUnik = [...new Set(
+                        hasilSementara.docs.map(d => d.data().id_jadwal).filter(Boolean)
+                    )];
+
+                    // Batch fetch jadwal per 10 (batas operator 'in')
+                    const chunkSize = 10;
+                    for (let i = 0; i < idJadwalUnik.length; i += chunkSize) {
+                        const chunk = idJadwalUnik.slice(i, i + chunkSize);
+                        const snapJadwal = await getDocs(query(
+                            collection(db, "jadwal_ujian"),
+                            where("__name__", "in", chunk)
+                        ));
+                        snapJadwal.forEach(doc => {
+                            jadwalMap[doc.id] = doc.data();
+                        });
+                    }
+
+                    // Simpan ke cache
+                    sessionStorage.setItem(cacheKeyJadwal, JSON.stringify(jadwalMap));
+                    sessionStorage.setItem(`${cacheKeyJadwal}_time`, Date.now().toString());
+                }
+
+                // B. Tarik Hasil Ujian si Siswa ini
+                //    Fetch sekali, pakai di bawah untuk render kartu riwayat
+                const snapHasil = await getDocs(query(
+                    collection(db, "hasil_ujian"),
+                    where("username", "==", usernameSiswaAktif)
+                ));
                 let arrayHasil = [];
-                snapHasil.forEach(doc => { arrayHasil.push({ id: doc.id, ...doc.data() }) });
+                snapHasil.forEach(doc => { arrayHasil.push({ id: doc.id, ...doc.data() }); });
 
                 // Urutkan dari ujian yang paling baru dikerjakan (Descending)
                 arrayHasil.sort((a,b) => b.waktu_selesai.toDate() - a.waktu_selesai.toDate());
