@@ -13,8 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 
     <style>
-        body { user-select: none; -webkit-user-select: none; } /* MEMATIKAN FITUR BLOK TEKS */
-        input, textarea { user-select: text; -webkit-user-select: text; } /* Kecuali saat ngetik Essay */
+        body { user-select: none; -webkit-user-select: none; }
+        input, textarea { user-select: text; -webkit-user-select: text; }
         
         .grid-nav::-webkit-scrollbar { width: 6px; } 
         .grid-nav::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
@@ -124,15 +124,15 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, addDoc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"; // TAMBAH UPDATE & ONSNAPSHOT
+        import { getFirestore, collection, getDocs, doc, getDoc, addDoc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
         const app = initializeApp({ apiKey: "AIzaSyCTd3H3E9baMGDQpHbJDBFzupuSaIUn0v0", authDomain: "smartkhairunnas.firebaseapp.com", projectId: "smartkhairunnas", storageBucket: "smartkhairunnas.firebasestorage.app", messagingSenderId: "3009868062", appId: "1:3009868062:web:f6d158a8aa60fabf91590f" });
         const db = getFirestore(app); const auth = getAuth(app);
 
         // STATE UJIAN UTAMA
         let usernameSiswaAktif = ""; let namaSiswaAsli = ""; let jenjangSiswa = "SMA";
-        let asalSekolahSiswa = ""; let kelasSiswaAsli = ""; // BARU: UNTUK SINKRONISASI
-        let idDokumenHasilAktif = null; // BARU: UNTUK LIVE PROCTOR
+        let asalSekolahSiswa = ""; let kelasSiswaAsli = "";
+        let idDokumenHasilAktif = null;
 
         let detailJadwal = null;
         let daftarSoal = [];     
@@ -147,25 +147,66 @@
 
         let jumlahPelanggaran = 0; const MAKSIMAL_PELANGGARAN = 3; let sedangDihukum = false; let ujianSedangBerjalan = false;
 
-        // 🛡️ FITUR ALWAYS AWAKE (BARU)
+        // ============================================================
+        // 🔒 FIX #2: Variabel untuk menyimpan fungsi unsubscribe
+        // ============================================================
+        let unsubProctor = null;       // listener ujian (dari guru)
+        let unsubLaporKendala = null;  // listener tiket SOS
+
+        // Matikan semua listener saat halaman ditutup / redirect
+        function matikanSemuaListener() {
+            if (unsubProctor) { unsubProctor(); unsubProctor = null; }
+            if (unsubLaporKendala) { unsubLaporKendala(); unsubLaporKendala = null; }
+        }
+
+        // Otomatis matikan saat tab/browser ditutup
+        window.addEventListener('beforeunload', matikanSemuaListener);
+
+        // 🛡️ FITUR ALWAYS AWAKE
         let wakeLock = null;
         const requestWakeLock = async () => {
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Screen Wake Lock aktif!');
                 }
             } catch (err) { console.error('Wake Lock error:', err.message); }
         };
 
-       // ====================================================
-        // 🔥 LOGIKA PINTU GANDA (REGULER vs PPDB)
-        // ====================================================
+        // ============================================================
+        // 🔥 FIX #1: BATCH FETCH SOAL (hemat ~75% reads)
+        // ============================================================
+        async function fetchSoalByIds(arrIds) {
+            const hasil = [];
+            const chunkSize = 10; // batas maksimal operator 'in' di Firestore
+
+            // Bagi array ID menjadi potongan 10, fetch paralel per chunk
+            const chunks = [];
+            for (let i = 0; i < arrIds.length; i += chunkSize) {
+                chunks.push(arrIds.slice(i, i + chunkSize));
+            }
+
+            // Fetch semua chunk secara paralel (Promise.all lebih cepat dari for-await)
+            await Promise.all(chunks.map(async (chunk) => {
+                const q = query(
+                    collection(db, "bank_soal"),
+                    where("__name__", "in", chunk)
+                );
+                const snap = await getDocs(q);
+                snap.forEach(d => hasil.push({ id: d.id, ...d.data() }));
+            }));
+
+            // ⚠️ KUNCI PENGACAKAN: kembalikan sesuai urutan arrIds, BUKAN urutan Firestore
+            // Ini memastikan urutan Fisher-Yates siswa tetap terjaga
+            return arrIds
+                .map(id => hasil.find(s => s.id === id))
+                .filter(Boolean); // buang soal yang sudah dihapus dari bank
+        }
+
+        // LOGIKA PINTU GANDA (REGULER vs PPDB)
         let modeUjian = sessionStorage.getItem('mode_ujian') || 'REGULER';
         let dataPPDB = sessionStorage.getItem('sesi_ppdb_user');
 
         if (modeUjian === 'PPDB' && dataPPDB) {
-            // 🚪 PINTU 2: PESERTA PPDB
             let parsedPPDB = JSON.parse(dataPPDB);
             usernameSiswaAktif = parsedPPDB.no_pendaftaran;
             namaSiswaAsli = parsedPPDB.nama;
@@ -177,12 +218,10 @@
             document.getElementById('namaSiswaHeader').innerText = `[SELEKSI] ${namaSiswaAsli}`;
             document.getElementById('namaSiswaHeader').classList.replace('text-gray-400', 'text-amber-500'); 
             
-            // 🔥 JITTER INIT: Delay 0 - 4 detik sebelum menarik soal
             let delayInitAcak = Math.floor(Math.random() * 4000);
             setTimeout(() => { inisialisasiUjian(); }, delayInitAcak);
 
         } else {
-            // 🚪 PINTU 1: SANTRI REGULER
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     usernameSiswaAktif = user.email.split('@')[0];
@@ -200,7 +239,6 @@
                         namaSiswaAsli = usernameSiswaAktif; 
                     }
                     
-                    // 🔥 JITTER INIT: Delay 0 - 4 detik sebelum menarik soal
                     let delayInitAcak = Math.floor(Math.random() * 4000);
                     setTimeout(() => { inisialisasiUjian(); }, delayInitAcak);
 
@@ -213,7 +251,6 @@
         async function inisialisasiUjian() {
             let idTitipan = sessionStorage.getItem('id_jadwal_aktif');
             
-            // Kalau tidak ada jadwal, kembalikan ke tempat asalnya
             if(!idTitipan) {
                 return Swal.fire('Akses Ditolak', 'Silakan masuk melalui pintu yang benar!', 'error').then(() => {
                     if (modeUjian === 'PPDB') window.location.replace("ppdb.html");
@@ -251,23 +288,22 @@
                 let arrIdSoal = [];
 
                 if (!dHasil) {
-                    // 🎲 PESERTA BARU: AMBIL DARI PAKET LALU ACAK URUTANNYA
+                    // 🎲 PESERTA BARU: ambil dari paket lalu acak
                     const pDoc = await getDoc(doc(db, "paket_soal", detailJadwal.id_paket));
                     if (!pDoc.exists()) return Swal.fire('Error', 'Paket soal hilang dari server.', 'error');
                     
                     arrIdSoal = pDoc.data().soal_ids || [];
                     
-                    // ALGORITMA PENGACAK FISHER-YATES
+                    // ALGORITMA FISHER-YATES
                     for (let i = arrIdSoal.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
                         [arrIdSoal[i], arrIdSoal[j]] = [arrIdSoal[j], arrIdSoal[i]];
                     }
                 } else {
-                    // 🔄 PESERTA MELANJUTKAN (RESUME)
+                    // 🔄 RESUME: pakai urutan yang sudah tersimpan di server
                     arrIdSoal = dHasil.urutan_id_soal || [];
                     idDokumenHasilAktif = snapH.docs[0].id;
                     
-                    // Kunci Waktu: Hitung selisih dari waktu mulai di server
                     let waktuMulai = dHasil.waktu_mulai_pengerjaan.toDate(); 
                     let selisihDetik = Math.floor((new Date() - waktuMulai) / 1000);
                     let durasiAsliDetik = detailJadwal.durasi_menit * 60;
@@ -276,17 +312,15 @@
                     if (sisaWaktuDetik < 0) sisaWaktuDetik = 0; 
                 }
 
-                // Simpan ke memori lokal untuk dipush ke Firebase nanti
                 window.urutanSoalSiswaIni = arrIdSoal;
 
-                // Fetch Soal Asli Berdasarkan Urutan Acakan Peserta Tersebut
-                daftarSoal = [];
-                for (let i = 0; i < arrIdSoal.length; i++) {
-                    const sDoc = await getDoc(doc(db, "bank_soal", arrIdSoal[i]));
-                    if (sDoc.exists()) daftarSoal.push({ id: sDoc.id, ...sDoc.data() });
-                }
+                // ============================================================
+                // 🔥 FIX #1 DITERAPKAN: ganti loop getDoc satu-per-satu
+                // dengan fetchSoalByIds yang batch per 10
+                // ============================================================
+                daftarSoal = await fetchSoalByIds(arrIdSoal);
 
-                // INISIALISASI STRUKTUR JAWABAN V2
+                // INISIALISASI STRUKTUR JAWABAN
                 for(let i=0; i<daftarSoal.length; i++) { 
                     let tipe = daftarSoal[i].tipe_soal || 'pg';
                     if (tipe === 'pg_kompleks') jawabanSiswa[i] = []; 
@@ -300,9 +334,7 @@
                 let dataLokal = localStorage.getItem(kunciSave);
                 let pesanPemulihan = "";
                 
-                // 🔥 LOGIKA PEMULIHAN TINGKAT TINGGI (CEK LOKAL DAN SERVER)
                 if (dataLokal) {
-                    // Skenario 1: Data lokal masih aman (Tidak ganti PC / Tidak ter-DeepFreeze)
                     let s = JSON.parse(dataLokal);
                     jawabanSiswa = s.jawabanSiswa || jawabanSiswa;
                     raguRagu = s.raguRagu || raguRagu;
@@ -311,19 +343,16 @@
                     pesanPemulihan = `<div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg mt-3 text-xs text-yellow-800 font-medium">⚠️ Koneksi terputus. Jawaban dipulihkan dari memori komputer.</div>`;
                 
                 } else if (dHasil && dHasil.rekam_jawaban_sementara) {
-                    // Skenario 2: Komputer mati & memori terhapus, ambil dari Cloud Auto-Save!
                     jawabanSiswa = dHasil.rekam_jawaban_sementara || jawabanSiswa;
                     raguRagu = dHasil.ragu_ragu_sementara || raguRagu;
                     eliminasiOpsi = dHasil.eliminasi_opsi_sementara || eliminasiOpsi;
                     
-                    // Gunakan sisa waktu terakhir saat komputer mati
                     if(dHasil.sisa_waktu_sementara) sisaWaktuDetik = dHasil.sisa_waktu_sementara;
                     else sisaWaktuDetik = (sisaWaktuDetik > 0) ? sisaWaktuDetik : detailJadwal.durasi_menit * 60;
                     
                     pesanPemulihan = `<div class="bg-blue-50 border border-blue-200 p-3 rounded-lg mt-3 text-xs text-blue-800 font-bold">🔄 Komputer mati/restart. Jawaban dan Waktu Anda berhasil dipulihkan dari Server Pusat.</div>`;
                 
                 } else {
-                    // Skenario 3: Benar-benar baru mulai ujian
                     sisaWaktuDetik = (sisaWaktuDetik > 0) ? sisaWaktuDetik : detailJadwal.durasi_menit * 60;
                 }
 
@@ -349,7 +378,6 @@
             Swal.fire({title: 'Memasuki Ruangan...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
             
             try {
-                // 1. CARI ATAU BUAT DOKUMEN HASIL UJIAN (UNTUK RADAR GURU)
                 const qH = query(collection(db, "hasil_ujian"), where("username", "==", usernameSiswaAktif), where("id_jadwal", "==", detailJadwal.id));
                 const snapH = await getDocs(qH);
                 
@@ -359,7 +387,7 @@
                         sekolah_id: detailJadwal.sekolah_id || "Pusat", mapel: detailJadwal.mapel || "Campuran", id_jadwal: detailJadwal.id,
                         nama_ujian: detailJadwal.nama_ujian || "Ujian", nilai_akhir: 0, status_pengerjaan: 'berjalan', waktu_mulai_pengerjaan: new Date(),
                         urutan_id_soal: window.urutanSoalSiswaIni,
-                        asal_sekolah_luar: window.sekolahAsalPPDB || null // 🔥 TAMBAHAN INI
+                        asal_sekolah_luar: window.sekolahAsalPPDB || null
                     });
                     idDokumenHasilAktif = docRef.id;
                 } else {
@@ -368,16 +396,20 @@
                     idDokumenHasilAktif = d.id;
                 }
 
-                // 2. PASANG SENSOR LIVE DARI GURU
-                onSnapshot(doc(db, "hasil_ujian", idDokumenHasilAktif), (docSnap) => {
+                // ============================================================
+                // 🔒 FIX #2: Simpan unsubscribe ke variabel, bukan dibuang
+                // ============================================================
+                unsubProctor = onSnapshot(doc(db, "hasil_ujian", idDokumenHasilAktif), (docSnap) => {
                     if(!docSnap.exists()) {
-                        Swal.fire('Sesi Direset', 'Pengawas telah mereset sesi Anda. Anda harus mengulang dari awal.', 'warning').then(() => window.location.reload());
+                        matikanSemuaListener(); // matikan semua listener dulu
+                        Swal.fire('Sesi Direset', 'Pengawas telah mereset sesi Anda. Anda harus mengulang dari awal.', 'warning')
+                            .then(() => window.location.reload());
                     }
                 });
 
-                requestWakeLock(); // PANGGIL WAKE LOCK
+                requestWakeLock();
 
-                try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(e => console.warn('Fullscreen diblokir VS Code, lanjut jalan!')); } catch (e) {}
+                try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(e => console.warn('Fullscreen diblokir, lanjut jalan!')); } catch (e) {}
                 document.getElementById('layarGerbang').classList.add('hidden');
                 document.getElementById('layarUjian').classList.remove('hidden');
                 document.getElementById('panelTimer').classList.remove('hidden'); 
@@ -390,7 +422,7 @@
             } catch(e) { Swal.fire('Error', 'Gagal terhubung ke server pengawas.', 'error'); }
         });
 
-        // MESIN LAPOR KENDALA IT (SOS) - (BARU)
+        // MESIN LAPOR KENDALA IT (SOS)
         window.laporKendalaIT = async () => {
             const { value: formValues } = await Swal.fire({
                 title: '🆘 Lapor Kendala',
@@ -420,15 +452,18 @@
                     
                     let docRef = await addDoc(collection(db, "laporan_kendala"), payloadLapor);
                     
-                    // Pause Timer & Kunci Layar Sampai Guru Bertindak
                     clearInterval(hitungMundur); ujianSedangBerjalan = false;
                     
                     Swal.fire({ title: 'Laporan Terkirim! 📡', html: 'Waktu ujian Anda <b>dihentikan sementara</b>.<br><br>Silakan angkat tangan dan panggil Ustadz/Ustadzah pengawas untuk mengecek komputer/HP Anda.', icon: 'info', allowOutsideClick: false, showConfirmButton: false });
 
-                    const unsubscribe = onSnapshot(doc(db, "laporan_kendala", docRef.id), (docSnap) => {
+                    // ============================================================
+                    // 🔒 FIX #2: Simpan unsubscribe tiket SOS ke variabel
+                    // ============================================================
+                    unsubLaporKendala = onSnapshot(doc(db, "laporan_kendala", docRef.id), (docSnap) => {
                         let data = docSnap.data();
                         if(data && data.status === 'Selesai') {
-                            unsubscribe(); 
+                            // Matikan listener SOS setelah selesai ditangani
+                            if (unsubLaporKendala) { unsubLaporKendala(); unsubLaporKendala = null; }
                             Swal.fire('Diizinkan Lanjut!', 'Pengawas telah membuka gembok ujian Anda.', 'success').then(() => {
                                 ujianSedangBerjalan = true; mulaiTimer(); 
                                 if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>{});
@@ -611,14 +646,12 @@
             document.getElementById('areaSoalOpsi').style.fontSize = ukuranHuruf + 'px';
         };
 
-        // ZOOM GAMBAR (BARU)
         document.addEventListener('click', (e) => {
             if(e.target.tagName === 'IMG' && e.target.closest('.ql-editor')) {
                 Swal.fire({ imageUrl: e.target.src, imageAlt: 'Zoom', width: '90%', showConfirmButton: false, showCloseButton: true, backdrop: `rgba(15, 23, 42, 0.9)` });
             }
         });
 
-        // RENDER GRID (DI-UPDATE BUG KOTAK BIRU)
         function renderGridNavigasi() {
             const grid = document.getElementById('gridNavigasi'); grid.innerHTML = ''; let terjawab = 0;
             for (let i = 0; i < daftarSoal.length; i++) {
@@ -654,28 +687,21 @@
         }
 
         let waktuSaveServer = 0; 
-        let jawabanTerakhirDisimpan = ""; // 🔥 BARU: Tracker untuk mendeteksi perubahan
+        let jawabanTerakhirDisimpan = "";
         
         function simpanStateLokal() {
             if(!ujianSedangBerjalan) return;
             let data = { jawabanSiswa, raguRagu, eliminasiOpsi, sisaWaktu: sisaWaktuDetik };
             
-            // 1. Simpan di memori komputer (Lokal) -> Selalu jalan tanpa delay
             localStorage.setItem(`ujian_${usernameSiswaAktif}_${detailJadwal.id}`, JSON.stringify(data));
             
             if(isOnline) { 
                 let sekarang = Date.now();
                 let stringJawabanLokal = JSON.stringify(jawabanSiswa);
-                
-                // 🔥 JITTER AUTO-SAVE: Delay acak antara 15 detik sampai 25 detik
-                let delayAcak = 15000 + Math.floor(Math.random() * 10000); 
+                let delayAcak = 15000 + Math.floor(Math.random() * 10000);
 
-                // Hanya cek server jika waktunya sudah lewat dari delay acak
                 if (idDokumenHasilAktif && (sekarang - waktuSaveServer > delayAcak)) {
-                    
-                    // 🔥 SMART SYNC: HANYA kirim ke server JIKA ada jawaban yang berubah!
                     if (stringJawabanLokal !== jawabanTerakhirDisimpan) {
-                        
                         let st = document.getElementById('teksKoneksi'); 
                         if(st){ st.innerText = "Syncing Cloud..."; setTimeout(()=> { st.innerText = "Online (Tersimpan)"; }, 1000); }
                         
@@ -686,7 +712,6 @@
                             sisa_waktu_sementara: sisaWaktuDetik
                         }).catch(e => console.warn("Auto-save server tertunda", e));
                         
-                        // Update tracker waktu dan data terakhir
                         waktuSaveServer = sekarang;
                         jawabanTerakhirDisimpan = stringJawabanLokal; 
                     }
@@ -737,7 +762,6 @@
             }
         };
 
-        // PENYIMPANAN KE FIREBASE (DI-UPDATE SINKRONISASI DATABASE)
         async function hitungDanSimpanSkor() {
             Swal.fire({ title: 'Memproses Jawaban...', text: 'Menyimpan Bukti Pengerjaan ke Server...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
             
@@ -814,20 +838,23 @@
                     waktu_selesai: new Date(), status_pengerjaan: 'selesai',
                     aturan_rilis_bahas: detailJadwal.aturan_rilis_bahas || "setelah_ujian_tutup", 
                     rekam_jawaban: jawabanSiswa, rekam_soal: rekamSoalDiet,
-                    asal_sekolah_luar: window.sekolahAsalPPDB || null // 🔥 TAMBAHAN INI
+                    asal_sekolah_luar: window.sekolahAsalPPDB || null
                 };
 
-                // CEK APAKAH INI UPDATE (Dari Resume) ATAU BARU
                 if(idDokumenHasilAktif) {
                     await updateDoc(doc(db, "hasil_ujian", idDokumenHasilAktif), py);
                 } else {
                     await addDoc(collection(db, "hasil_ujian"), py);
                 }
 
+                // ============================================================
+                // 🔒 FIX #2: Matikan semua listener sebelum redirect
+                // ============================================================
+                matikanSemuaListener();
+
                 localStorage.removeItem(`ujian_${usernameSiswaAktif}_${detailJadwal.id}`); 
                 sessionStorage.removeItem('id_jadwal_aktif'); 
                 
-                // Jika PPDB, hapus juga sesi login PIN-nya agar mereka tidak bisa ngerjakan ulang
                 if(modeUjian === 'PPDB') sessionStorage.removeItem('sesi_ppdb_user');
                 
                 Swal.fire({ 
@@ -852,7 +879,6 @@
                     text: 'Koneksi terputus saat mengirim data. Jangan tutup halaman ini! Cek internet Anda dan klik Kumpulkan lagi.',
                     confirmButtonText: 'Oke, Saya Paham'
                 });
-                // Kembalikan status agar tombol bisa diklik lagi nanti
                 ujianSedangBerjalan = true; 
             }
         }
@@ -864,8 +890,6 @@
         let waktuPelanggaranTerakhir = 0;
         function prosesPelanggaran(jenis) {
             if (!ujianSedangBerjalan || sedangDihukum) return;
-            
-            // 🛡️ SISTEM KEBAL (COOLDOWN 2 DETIK)
             let sekarang = Date.now();
             if (sekarang - waktuPelanggaranTerakhir < 2000) return; 
             waktuPelanggaranTerakhir = sekarang;
@@ -882,12 +906,10 @@
         window.addEventListener("blur", () => { prosesPelanggaran('blur'); });
         ["fullscreenchange", "webkitfullscreenchange", "mozfullscreenchange", "MSFullscreenChange"].forEach(evt => { document.addEventListener(evt, () => { if (!document.fullscreenElement && !document.webkitIsFullScreen && !document.mozFullScreen && !document.msFullscreenElement) prosesPelanggaran('fullscreen'); }); });
         
-        // 🔒 BLOKIR COPY, CUT, PASTE KLIK KANAN
         document.addEventListener('copy', (e) => { e.preventDefault(); Swal.fire('Dilarang!', 'Fitur Copy dimatikan selama ujian.', 'warning'); });
         document.addEventListener('cut', (e) => { e.preventDefault(); });
         document.addEventListener('paste', (e) => { e.preventDefault(); });
 
-        // 🔒 BLOKIR SHORTCUT KEYBOARD
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && (e.key === 'c' || e.key === 'C' || e.key === 'v' || e.key === 'V' || e.key === 'u' || e.key === 'U')) { e.preventDefault(); prosesPelanggaran('shortcut'); }
             if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c'))) { e.preventDefault(); }
