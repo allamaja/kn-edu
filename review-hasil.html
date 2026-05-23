@@ -51,7 +51,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
         const app = initializeApp({ apiKey: "AIzaSyCTd3H3E9baMGDQpHbJDBFzupuSaIUn0v0", authDomain: "smartkhairunnas.firebaseapp.com", projectId: "smartkhairunnas", storageBucket: "smartkhairunnas.firebasestorage.app", messagingSenderId: "3009868062", appId: "1:3009868062:web:f6d158a8aa60fabf91590f" });
         const db = getFirestore(app);
@@ -66,9 +66,37 @@
             else { Swal.fire('Sesi Berakhir', 'Silakan login kembali.', 'warning').then(()=>window.location.replace("index.html")); }
         });
 
-        // ==========================================
-        // MESIN BONGKAR ARSIP (METODE SNAPSHOT)
-        // ==========================================
+        // ============================================================
+        // 🔥 BATCH FETCH SOAL — hemat ~75% reads vs loop getDoc
+        // Menerima array ID, mengembalikan array soal dengan urutan
+        // terjaga (urutan arrIds, bukan urutan kembalian Firestore)
+        // ============================================================
+        async function fetchSoalByIds(arrIds) {
+            if (!arrIds || arrIds.length === 0) return [];
+            const hasil = [];
+            const chunkSize = 10; // batas operator 'in' Firestore
+
+            const chunks = [];
+            for (let i = 0; i < arrIds.length; i += chunkSize) {
+                chunks.push(arrIds.slice(i, i + chunkSize));
+            }
+
+            // Fetch semua chunk paralel — lebih cepat dari for-await
+            await Promise.all(chunks.map(async (chunk) => {
+                const q = query(
+                    collection(db, "bank_soal"),
+                    where("__name__", "in", chunk)
+                );
+                const snap = await getDocs(q);
+                snap.forEach(d => hasil.push({ id: d.id, ...d.data() }));
+            }));
+
+            // Kembalikan sesuai urutan arrIds (urutan Firestore tidak dijamin)
+            return arrIds
+                .map(id => hasil.find(s => s.id === id))
+                .filter(Boolean); // buang soal yang sudah dihapus dari bank
+        }
+
         // ==========================================
         // MESIN BONGKAR ARSIP & RESTORASI GAMBAR
         // ==========================================
@@ -102,20 +130,19 @@
                         
                         if (butuhRestorasi) {
                             Swal.fire({ title: 'Merestorasi Gambar...', text: 'Menarik gambar asli dari Bank Soal...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                            
-                            for (let i = 0; i < soalArraySnapshot.length; i++) {
-                                let idSoal = soalArraySnapshot[i].id;
-                                if (idSoal) {
-                                    const sDoc = await getDoc(doc(db, "bank_soal", idSoal));
-                                    if (sDoc.exists()) {
-                                        soalArrayFinal.push({ id: sDoc.id, ...sDoc.data() }); // Tarik soal utuh berserta gambar
-                                    } else {
-                                        soalArrayFinal.push(soalArraySnapshot[i]); // Fallback jika soal dihapus admin
-                                    }
-                                } else {
-                                    soalArrayFinal.push(soalArraySnapshot[i]);
-                                }
-                            }
+
+                            // 🔥 FIX: batch fetch gantikan loop getDoc satu per satu
+                            // Pisahkan ID yang valid dari yang tidak punya ID
+                            const arrIds = soalArraySnapshot.map(s => s.id).filter(Boolean);
+                            const soalDariBatch = await fetchSoalByIds(arrIds);
+
+                            // Map hasil batch ke posisi semula, fallback ke snapshot jika soal dihapus
+                            soalArrayFinal = soalArraySnapshot.map(snapSoal => {
+                                if (!snapSoal.id) return snapSoal; // soal tanpa ID, pakai snapshot
+                                const soalAsli = soalDariBatch.find(s => s.id === snapSoal.id);
+                                return soalAsli || snapSoal; // fallback ke snapshot jika soal dihapus admin
+                            });
+
                             Swal.close();
                         } else {
                             soalArrayFinal = soalArraySnapshot; // Aman, tidak ada gambar yang dipotong
@@ -127,11 +154,15 @@
                         const pDoc = await getDoc(doc(db, "paket_soal", data.id_paket));
                         if(pDoc.exists()) {
                             const arrIdSoal = pDoc.data().soal_ids || [];
-                            for(let i=0; i<arrIdSoal.length; i++){
-                                const sDoc = await getDoc(doc(db, "bank_soal", arrIdSoal[i]));
-                                if(sDoc.exists()) soalArrayFinal.push({ id: sDoc.id, ...sDoc.data() });
-                                else soalArrayFinal.push({ pertanyaan: "<i>Soal telah dihapus oleh Admin dari Bank Soal.</i>", tipe_soal: 'pg' });
-                            }
+
+                            // 🔥 FIX: batch fetch gantikan loop getDoc satu per satu
+                            const soalDariBatch = await fetchSoalByIds(arrIdSoal);
+
+                            // Soal yang tidak ditemukan di batch = sudah dihapus admin, sisipkan placeholder
+                            soalArrayFinal = arrIdSoal.map(id => {
+                                const soal = soalDariBatch.find(s => s.id === id);
+                                return soal || { pertanyaan: "<i>Soal telah dihapus oleh Admin dari Bank Soal.</i>", tipe_soal: 'pg' };
+                            });
                         }
                         Swal.close();
                     }
