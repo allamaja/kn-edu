@@ -778,6 +778,12 @@
         // STATE GURU SPESIALIS
         let profilGuru = { email: "", nama: "", sekolah_id: "", jenjang: "SMA", mapel_diampu: [] };
         let dataKurikulumGlobal=[], soalPribadi=[], dataSoalSeluruhnya=[], dataPaketLokal=[], pilihanSoalSementara=new Set(), dataNilaiLokal=[];
+        // === CACHE SYSTEM ===
+        const tabSudahDimuat = new Set();
+        function invalidasiTab(...idTabs) { idTabs.forEach(t => tabSudahDimuat.delete(t)); }
+        let _cacheKurikulum = null;       // kurikulum — jarang berubah
+        let _cacheHasilUjian = null;      // hasil_ujian sekolah — dipakai tabNilai & tabAnalitik
+        let _cacheJadwalGuru = null;      // jadwal_ujian — dipakai tabPengawasan
         let modeStudioActive = false;
         let studioData = { idPaketDraft: null, namaPaket: '', mapel: '', kelas: '', total: 0, current: 1, soalIds: [] };
         // ==========================================
@@ -1029,6 +1035,10 @@
     let mBtn = document.getElementById('menu' + t.substring(3)); 
     if(mBtn) mBtn.className = "w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center text-xs font-medium border bg-orange-500/10 text-orange-400 border-orange-500/20";
 
+    // Guard: hanya fetch jika tab belum pernah dimuat sejak login
+    if(tabSudahDimuat.has(t)) return;
+    tabSudahDimuat.add(t);
+
     // Triggers
     if(t === 'tabDashboard') window.updateStatistik();
     if(t === 'tabPengawasan') window.muatDaftarSesiPengawasan(); // Trigger Live Proctor
@@ -1036,7 +1046,7 @@
     if(t === 'tabPaket') { window.muatBankSoalGlobalLokal(); window.muatDaftarPaketLokal(); }
     if(t === 'tabNilai') window.muatDataNilai();
     if(t === 'tabAnalitik') window.muatDataAnalitikGuru();
-    if(t === 'tabKuisGuru') window.muatDaftarKuisGuru();
+    if(t === 'tabKuisGuru') invalidasiTab("tabKuisGuru"); window.muatDaftarKuisGuru();
     if(t === 'tabWaliKelas') window.muatDataWaliKelas();
     if(t === 'tabPanduan') window.muatVideoTutorial();
 };
@@ -1044,21 +1054,26 @@
         // ==========================================
         // 3. FITUR KOREKSI ESAI (GRADING DESK V2)
         // ==========================================
+        // ✅ FIX: helper untuk ambil hasil_ujian dengan cache bersama (dipakai tabNilai & tabAnalitik)
+        async function _getHasilUjianGuru(forceRefresh = false) {
+            if (!_cacheHasilUjian || forceRefresh) {
+                const snap = await getDocs(query(collection(db, "hasil_ujian"), where("sekolah_id", "==", profilGuru.sekolah_id)));
+                _cacheHasilUjian = snap.docs.map(d => { let n = d.data(); n.id = d.id; return n; });
+            }
+            return _cacheHasilUjian;
+        }
+
         window.muatDataNilai = async () => {
             document.getElementById('tabelNilai').innerHTML = '<tr><td colspan="5" class="text-center py-8 text-orange-600">Menarik data dari server...</td></tr>';
             try {
-                // Tarik nilai siswa di cabang ini
-                const s = await getDocs(query(collection(db, "hasil_ujian"), where("sekolah_id", "==", profilGuru.sekolah_id)));
-                dataNilaiLokal = []; 
-                s.forEach(d => {
-                    let n = d.data(); n.id = d.id;
+                const semua = await _getHasilUjianGuru();
+                dataNilaiLokal = [];
+                semua.forEach(n => {
                     // KUNCI SPESIALISASI: Guru HANYA melihat ujian dari mapel yang diampunya
                     if (profilGuru.mapel_diampu && profilGuru.mapel_diampu.length > 0) {
-                        if (profilGuru.mapel_diampu.includes(n.mapel) || n.mapel === 'Campuran') {
-                            dataNilaiLokal.push(n);
-                        }
+                        if (profilGuru.mapel_diampu.includes(n.mapel) || n.mapel === 'Campuran') dataNilaiLokal.push(n);
                     } else {
-                        dataNilaiLokal.push(n); // Tampilkan semua jika guru belum di-set
+                        dataNilaiLokal.push(n);
                     }
                 });
                 window.renderTabelNilai();
@@ -1259,7 +1274,7 @@
                 });
                 
                 window.tutupModalKoreksi();
-                window.muatDataNilai(); // Segarkan tabel agar nilai baru muncul
+                invalidasiTab("tabNilai","tabAnalitik","tabWaliKelas"); _cacheHasilUjian = null; window.muatDataNilai(); // Segarkan tabel agar nilai baru muncul
                 Swal.fire('Koreksi Selesai!', `Nilai akhir siswa ter-update menjadi: <b>${nilaiAkhirBaru}</b>`, 'success');
             } catch(e) { Swal.fire('Error', 'Gagal menyimpan ke server.', 'error'); }
         };
@@ -1268,7 +1283,8 @@
         // 4. BLOK KODE LAMA DISINI (Minified)
         // ==========================================
         // (Fungsi Manajemen Soal, Import, dan Master Kurikulum yang sama persis tidak saya ubah, cukup diload di latar belakang)
-        window.muatPengumumanGuru=async()=>{let k=document.getElementById('kontainerPengumuman');try{const s=await getDocs(collection(db,"pengumuman"));let l=[];s.forEach(d=>{let x=d.data();if(x.target==="GLOBAL"||x.target===profilGuru.sekolah_id)l.push(x);});l.sort((a,b)=>b.dibuat_pada.toDate()-a.dibuat_pada.toDate());if(l.length>0){let h='';l.forEach(p=>{let wBg=p.tipe==='warning'?'bg-yellow-50 border-yellow-300':(p.tipe==='success'?'bg-emerald-50 border-emerald-300':'bg-blue-50 border-blue-300'),wJ=p.tipe==='warning'?'text-yellow-800':(p.tipe==='success'?'text-emerald-800':'text-blue-800');h+=`<div class="${wBg} border p-4 rounded-xl shadow-sm"><h4 class="${wJ} font-black">${p.judul} <span class="text-[9px] text-gray-500 font-normal ml-2">${p.pembuat}</span></h4><p class="text-sm text-gray-700 mt-1">${p.isi}</p></div>`;});k.innerHTML=h;k.classList.remove('hidden');}}catch(e){}};
+        window.muatPengumumanGuru=async()=>{let k=document.getElementById('kontainerPengumuman');try{// ✅ FIX: filter di query, bukan client-side
+const [sG,sL]=await Promise.all([getDocs(query(collection(db,"pengumuman"),where("target","==","GLOBAL"))),getDocs(query(collection(db,"pengumuman"),where("target","==",profilGuru.sekolah_id)))]);let l=[];sG.forEach(d=>l.push(d.data()));sL.forEach(d=>l.push(d.data()));l.sort((a,b)=>b.dibuat_pada.toDate()-a.dibuat_pada.toDate());if(l.length>0){let h='';l.forEach(p=>{let wBg=p.tipe==='warning'?'bg-yellow-50 border-yellow-300':(p.tipe==='success'?'bg-emerald-50 border-emerald-300':'bg-blue-50 border-blue-300'),wJ=p.tipe==='warning'?'text-yellow-800':(p.tipe==='success'?'text-emerald-800':'text-blue-800');h+=`<div class="${wBg} border p-4 rounded-xl shadow-sm"><h4 class="${wJ} font-black">${p.judul} <span class="text-[9px] text-gray-500 font-normal ml-2">${p.pembuat}</span></h4><p class="text-sm text-gray-700 mt-1">${p.isi}</p></div>`;});k.innerHTML=h;k.classList.remove('hidden');}}catch(e){}};
         // ==========================================
         // MESIN WALI KELAS (YANG SEMPAT HILANG)
         // ==========================================
@@ -1303,8 +1319,8 @@
             
             tb.innerHTML = '<tr><td colspan="3" class="text-center py-8 animate-pulse text-amber-600 font-bold">Menarik data rapor kelas Anda...</td></tr>';
             try {
-                // Tarik semua hasil ujian di sekolah ini
-                const snapHasil = await getDocs(query(collection(db, "hasil_ujian"), where("asal_sekolah_siswa", "==", profilGuru.sekolah_id)));
+                // ✅ FIX: pakai cache bersama — tidak perlu fetch ulang jika tabNilai sudah dibuka
+                const _hasilWali = await _getHasilUjianGuru();
                 let keranjangSiswa = {};
                 
                 // Siapkan wadah hanya untuk anak-anak di kelas ini
@@ -1317,8 +1333,7 @@
                     if(keranjangSiswa[u]) keranjangSiswa[u].nama = d.data().nama;
                 });
 
-                snapHasil.forEach(doc => {
-                    let d = doc.data();
+                _hasilWali.forEach(d => {
                     let uname = d.username;
                     if(keranjangSiswa[uname]) {
                         keranjangSiswa[uname].totalSkor += parseFloat(d.nilai_akhir || 0);
@@ -1368,35 +1383,24 @@
         // ==========================================
         window.muatMasterKurikulum = async () => {
             try {
-                const s = await getDocs(collection(db, "kurikulum"));
-                dataKurikulumGlobal = [];
-                
-                // 1. Tarik semua kurikulum dari pusat, KECUALI yang statusnya 'nonaktif'
-                s.forEach(d => {
-                    let m = d.data();
-                    if (m.status !== 'nonaktif') {
-                        dataKurikulumGlobal.push(m);
-                    }
-                });
-
+                // ✅ FIX: pakai cache, kurikulum hampir tidak pernah berubah saat sesi aktif
+                if (!_cacheKurikulum) {
+                    const s = await getDocs(collection(db, "kurikulum"));
+                    _cacheKurikulum = [];
+                    s.forEach(d => { let m = d.data(); if (m.status !== 'nonaktif') _cacheKurikulum.push(m); });
+                }
+                dataKurikulumGlobal = _cacheKurikulum;
                 let o = '<option value="">-- Pilih Mapel --</option>';
-                
-                // 2. Filter: Guru HANYA melihat mapel spesialisasi yang dia ampu (dan yang masih aktif di pusat)
                 if (profilGuru.mapel_diampu && profilGuru.mapel_diampu.length > 0) {
                     dataKurikulumGlobal.forEach(m => {
-                        // Jika mapel aktif ini ada di dalam daftar spesialisasi guru
-                        if (profilGuru.mapel_diampu.includes(m.nama_mapel)) {
+                        if (profilGuru.mapel_diampu.includes(m.nama_mapel))
                             o += `<option value="${m.nama_mapel}">${m.nama_mapel}</option>`;
-                        }
                     });
                 } else {
-                    // Fallback: Jika admin belum mengatur mapel guru ini, tampilkan semua mapel aktif
                     dataKurikulumGlobal.forEach(m => {
                         o += `<option value="${m.nama_mapel}">${m.nama_mapel}</option>`;
                     });
                 }
-
-                // 3. Tembak ke semua dropdown mapel di UI Guru (Buat Soal, Rakit Paket, Kuis, dll)
                 document.querySelectorAll('.dinamis-mapel').forEach(el => el.innerHTML = o);
             } catch (e) {
                 console.error("Gagal memuat kurikulum:", e);
@@ -1516,7 +1520,7 @@
                             modeStudioActive = false;
                             Swal.fire('Selesai! 🎉', 'Paket ujian berhasil diterbitkan.', 'success');
                             window.batalEditForm();
-                            window.muatDaftarPaketLokal();
+                            invalidasiTab("tabPaket"); window.muatDaftarPaketLokal();
                             window.bukaTab('tabPaket');
                         }
                         return; // Hentikan eksekusi standar
@@ -1528,7 +1532,7 @@
                     await updateDoc(doc(db, "bank_soal", id), py); 
                     Swal.fire('Diperbarui!', 'Masuk antrean Review.', 'success'); 
                 }
-                window.batalEditForm(); window.muatBankSoalPribadi();
+                window.batalEditForm(); invalidasiTab("tabBankSoal","tabPaket"); window.muatBankSoalPribadi();
             } catch (er) { Swal.fire('Error', 'Gagal menyimpan.', 'error'); }
         });
         
@@ -1627,7 +1631,7 @@
             window.bukaTab('tabBuatSoal'); window.scrollTo({top: 0, behavior: 'smooth'});
         };
 
-       window.hapusSoalSaya = id => { Swal.fire({title:'Hapus Soal?', icon:'warning', showCancelButton:true, confirmButtonColor:'#d33'}).then(async r => { if(r.isConfirmed){ await deleteDoc(doc(db,"bank_soal",id)); window.muatBankSoalPribadi(); }}); };
+       window.hapusSoalSaya = id => { Swal.fire({title:'Hapus Soal?', icon:'warning', showCancelButton:true, confirmButtonColor:'#d33'}).then(async r => { if(r.isConfirmed){ await deleteDoc(doc(db,"bank_soal",id)); invalidasiTab("tabBankSoal","tabPaket"); window.muatBankSoalPribadi(); }}); };
 
         // ==========================================
         // FITUR IMPORT SOAL EXCEL V2 (KHUSUS GURU)
@@ -1895,7 +1899,7 @@
             window.tutupModalImportSoal();
             Swal.fire('Berhasil!', `<b>${suksesCount} Soal ter-upload</b> dan masuk antrean Review Admin.<br>${failCount > 0 ? `<span class="text-red-500">${failCount} gagal jaringan.</span>` : ''}`, 'success');
             
-            window.muatBankSoalPribadi(); // Segarkan tabel karya soal
+            invalidasiTab("tabBankSoal","tabPaket"); window.muatBankSoalPribadi(); // Segarkan tabel karya soal
         };
         window.muatBankSoalGlobalLokal=async()=>{const sg=await getDocs(query(collection(db,"bank_soal"),where("kuadran","==","Global"),where("status","==","aktif"))),sl=await getDocs(query(collection(db,"bank_soal"),where("sekolah_id","==",profilGuru.sekolah_id),where("status","==","aktif")));dataSoalSeluruhnya=[];sg.forEach(d=>dataSoalSeluruhnya.push({id:d.id,...d.data()}));sl.forEach(d=>dataSoalSeluruhnya.push({id:d.id,...d.data()}));};
         // ==========================================
@@ -2086,8 +2090,8 @@
         };
         window.renderPilihanSoal=()=>{let kw=(document.getElementById('filterCariPaket')?.value||"").toLowerCase(),k=document.getElementById('filterKelasPaket')?.value||"",m=(document.getElementById('filterMapelPaket')?.value||"").toLowerCase(),sm=document.getElementById('filterSumberPaket')?.value||"Lokal",h='';dataSoalSeluruhnya.filter(s=>sm==="Global"?s.kuadran==="Global":s.kuadran==="Lokal").forEach(s=>{let dm=(s.metadata?.mapel||"").toLowerCase(),sk=s.metadata?.kelas||"";let dt=document.createElement('div');dt.innerHTML=s.pertanyaan;let dp=(dt.innerText||"").toLowerCase();if((dm.includes(kw)||dp.includes(kw))&&(k===""||sk==k)&&(m===""||dm===m)){let c=pilihanSoalSementara.has(s.id)?'checked':'';h+=`<label class="flex items-start p-4 border border-gray-200 rounded-2xl cursor-pointer mb-2 transition ${c?'bg-orange-50 border-orange-300':'bg-white hover:bg-gray-50'}"><input type="checkbox" value="${s.id}" class="mt-1 w-5 h-5 text-orange-600 rounded cursor-pointer" onchange="toggleSoalPaket(this)" ${c}><div class="ml-4"><p class="text-[10px] font-black text-orange-700 bg-orange-100 px-2 py-0.5 rounded w-max mb-1 uppercase">${s.metadata?.mapel||'-'} | Kls ${sk} <span class="text-gray-400 font-normal">(${s.kuadran})</span></p><p class="text-sm line-clamp-2 text-gray-700 font-medium">${dt.innerText}</p></div></label>`;}});let l=document.getElementById('listPilihanSoal');if(l)l.innerHTML=h||'<p class="text-center text-sm py-4 text-gray-400">Soal tidak ditemukan.</p>';document.getElementById('counterSoalPaket').innerText=`${pilihanSoalSementara.size} TERPILIH`;};
         window.toggleSoalPaket=c=>{if(c.checked)pilihanSoalSementara.add(c.value);else pilihanSoalSementara.delete(c.value);document.getElementById('counterSoalPaket').innerText=`${pilihanSoalSementara.size} TERPILIH`;};
-        window.simpanPaketBaru=async()=>{let n=document.getElementById('namaPaketBaru').value;if(!n||pilihanSoalSementara.size===0)return Swal.fire('Oops','Isi nama dan pilih soal!','warning');Swal.fire({title:'Merakit...',didOpen:()=>Swal.showLoading()});await addDoc(collection(db,"paket_soal"),{nama_paket:n,soal_ids:Array.from(pilihanSoalSementara),sekolah_id:profilGuru.sekolah_id,dibuat_pada:new Date()});window.tutupModalPaket();Swal.fire({title:'Berhasil!',icon:'success',timer:1000,showConfirmButton:false});window.muatDaftarPaketLokal();};
-        window.hapusPaket=async(i)=>{if((await Swal.fire({title:'Hapus Paket?',icon:'warning',showCancelButton:true,confirmButtonColor:'#d33'})).isConfirmed){await deleteDoc(doc(db,"paket_soal",i));window.muatDaftarPaketLokal();}};
+        window.simpanPaketBaru=async()=>{let n=document.getElementById('namaPaketBaru').value;if(!n||pilihanSoalSementara.size===0)return Swal.fire('Oops','Isi nama dan pilih soal!','warning');Swal.fire({title:'Merakit...',didOpen:()=>Swal.showLoading()});await addDoc(collection(db,"paket_soal"),{nama_paket:n,soal_ids:Array.from(pilihanSoalSementara),sekolah_id:profilGuru.sekolah_id,dibuat_pada:new Date()});window.tutupModalPaket();Swal.fire({title:'Berhasil!',icon:'success',timer:1000,showConfirmButton:false});invalidasiTab("tabPaket");window.muatDaftarPaketLokal();};
+        window.hapusPaket=async(i)=>{if((await Swal.fire({title:'Hapus Paket?',icon:'warning',showCancelButton:true,confirmButtonColor:'#d33'})).isConfirmed){await deleteDoc(doc(db,"paket_soal",i));invalidasiTab("tabPaket");window.muatDaftarPaketLokal();}};
        // FITUR BUKA-TUTUP MENU DI HP
         window.toggleSidebarMobile = () => {
             const sidebar = document.getElementById('sidebarUtama');
@@ -2119,12 +2123,9 @@
         window.muatDataAnalitikGuru = async () => {
             let sel = document.getElementById('pilihUjianAnalisisGuru');
             sel.innerHTML = '<option>Memuat data ujian...</option>';
-            
             try {
-                // Tarik hasil ujian dari sekolah tempat guru bernaung
-                const snap = await getDocs(query(collection(db, "hasil_ujian"), where("sekolah_id", "==", profilGuru.sekolah_id)));
-                dataHasilUjianGuru = [];
-                snap.forEach(d => dataHasilUjianGuru.push({id: d.id, ...d.data()}));
+                // ✅ FIX: pakai cache bersama dengan tabNilai
+                dataHasilUjianGuru = await _getHasilUjianGuru();
                 
                 // Ambil daftar ujian yang unik
                 let unikUjian = [...new Set(dataHasilUjianGuru.map(item => item.id_jadwal + "|||" + item.nama_ujian))];
@@ -2348,9 +2349,15 @@
                     return;
                 }
 
-                // Tarik nama ujian untuk label
-                const snapJadwal = await getDocs(collection(db, "jadwal_ujian"));
-                let mapJadwal = {}; snapJadwal.forEach(d => mapJadwal[d.id] = d.data().nama_ujian);
+                // ✅ FIX: hanya tarik jadwal yang relevan (lokal + global), bukan seluruh collection
+                const [_snapJL, _snapJP] = await Promise.all([
+                    getDocs(query(collection(db, "jadwal_ujian"), where("sekolah_id", "==", profilGuru.sekolah_id))),
+                    getDocs(query(collection(db, "jadwal_ujian"), where("sekolah_id", "==", "GLOBAL")))
+                ]);
+                let mapJadwal = {};
+                _snapJL.forEach(d => { mapJadwal[d.id] = d.data().nama_ujian; });
+                _snapJP.forEach(d => { mapJadwal[d.id] = d.data().nama_ujian; });
+                _cacheJadwalGuru = mapJadwal;
 
                 let html = '';
                 daftarSesiTugas.sort((a,b) => b.dibuat_pada.toDate() - a.dibuat_pada.toDate()).forEach(s => {
@@ -2402,7 +2409,7 @@
         window.tutupLiveMonitor = () => {
             document.getElementById('viewLiveMonitor').classList.add('hidden');
             document.getElementById('viewDaftarRuang').classList.remove('hidden');
-            window.muatDaftarSesiPengawasan(); // Refresh daftar utama
+            invalidasiTab("tabPengawasan"); window.muatDaftarSesiPengawasan(); // Refresh daftar utama
         };
 
         window.renderTombolStatusSesi = () => {
@@ -2634,13 +2641,13 @@
 
                     fKuis.reset();
                     Swal.fire('Berhasil', 'Kuis langsung tayang di layar siswa kelas tersebut!', 'success');
-                    window.muatDaftarKuisGuru();
+                    invalidasiTab("tabKuisGuru"); window.muatDaftarKuisGuru();
                 } catch(er) { Swal.fire('Error', 'Gagal membuat kuis.', 'error'); }
             });
         }
 
-        window.toggleStatusKuis = async (id, status) => { await updateDoc(doc(db, "jadwal_ujian", id), { status: status === 'aktif' ? 'nonaktif' : 'aktif' }); window.muatDaftarKuisGuru(); };
-        window.hapusKuisGuru = id => { Swal.fire({title: 'Hapus Kuis?', icon: 'warning', showCancelButton: true}).then(async r => { if(r.isConfirmed) { await deleteDoc(doc(db, "jadwal_ujian", id)); window.muatDaftarKuisGuru(); } }); };
+        window.toggleStatusKuis = async (id, status) => { await updateDoc(doc(db, "jadwal_ujian", id), { status: status === 'aktif' ? 'nonaktif' : 'aktif' }); invalidasiTab("tabKuisGuru"); window.muatDaftarKuisGuru(); };
+        window.hapusKuisGuru = id => { Swal.fire({title: 'Hapus Kuis?', icon: 'warning', showCancelButton: true}).then(async r => { if(r.isConfirmed) { await deleteDoc(doc(db, "jadwal_ujian", id)); invalidasiTab("tabKuisGuru"); window.muatDaftarKuisGuru(); } }); };
         // ==========================================
         // LOGIKA BIOSKOP PANDUAN (YOUTUBE EMBED)
         // ==========================================
